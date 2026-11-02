@@ -21,6 +21,7 @@ function formatFx(t: TFunction, fx: Fx): string {
 export function formatLogEntry(t: TFunction, entry: LogEntry): string {
   const params: Record<string, string | number> = { ...entry.params };
   if (typeof params.jobId === 'string') params.job = t(`jobs.${params.jobId}`).toLowerCase();
+  if (typeof params.productId === 'string') params.product = t(`wallet.products.${params.productId}.name`);
   if (typeof params.month === 'number') params.age = formatAge(t, params.month);
 
   const text = t(entry.key, params);
@@ -36,4 +37,14 @@ export function formatSigned(n: number, lng: string): string {
   const r = Math.round(n * 10) / 10;
   if (r === 0) return '0';
   return `${r > 0 ? '+' : '−'}${new Intl.NumberFormat(lng, { maximumFractionDigits: 1 }).format(Math.abs(r))}`;
+}
+
+/** Montant en euros, avec le nombre de décimales demandé (0 pour les gros chiffres, 2 pour l'épargne). */
+export function formatMoney(n: number, lng: string, decimals = 0): string {
+  return `${new Intl.NumberFormat(lng, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)} €`;
+}
+
+/** Taux en pourcentage : 0.017 -> « 1,7 % ». */
+export function formatPercent(rate: number, lng: string): string {
+  return new Intl.NumberFormat(lng, { style: 'percent', maximumFractionDigits: 2 }).format(rate);
 }

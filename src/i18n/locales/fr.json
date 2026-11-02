@@ -17,7 +17,59 @@
   "windows": {
     "schedule": "Emploi du temps",
     "status": "Statut",
+    "wallet": "Portefeuille",
     "journal": "Journal"
+  },
+  "wallet": {
+    "checking": "Compte courant",
+    "total": "Patrimoine total",
+    "split": "Répartition de ton argent",
+    "deposit": "Verser",
+    "withdraw": "Retirer",
+    "close": "Clôturer",
+    "max": "Max",
+    "all": "Tout",
+    "amountPlaceholder": "Montant",
+    "enterAmount": "Saisis un montant",
+    "depositAmount": "Verser {{amount}}",
+    "withdrawAmount": "Retirer {{amount}}",
+    "openWith": "Ouvrir avec {{amount}}",
+    "closePel": "Clôturer le PEL",
+    "open": "Ouvrir un {{name}}",
+    "unavailable": "Indisponible",
+    "used": "{{used}} versés",
+    "ceiling": "Plafond {{ceiling}}",
+    "hintDeposit": "Disponible : {{available}} • {{room}} possibles avant le plafond",
+    "hintWithdraw": "Solde : {{balance}}",
+    "reasons": {
+      "invalid": "Montant invalide",
+      "unavailable": "Opération impossible",
+      "min": "Minimum {{min}}",
+      "notOpen": "Compte non ouvert",
+      "insufficient": "Fonds insuffisants",
+      "ceiling": "Plafond dépassé : {{room}} possibles"
+    },
+    "products": {
+      "livretA": { "name": "Livret A", "desc": "Disponible à tout moment • intérêts non imposables" },
+      "ldds": { "name": "LDDS", "desc": "Disponible à tout moment • intérêts non imposables • un seul par personne" },
+      "livretJeune": { "name": "Livret Jeune", "desc": "Réservé aux 12-25 ans • intérêts non imposables" },
+      "pel": { "name": "PEL", "desc": "Taux fixe garanti • bloqué 4 ans • intérêts imposés à 30 %" }
+    },
+    "jeune": {
+      "yearsLeft_one": "Se ferme à tes 25 ans : encore {{count}} an",
+      "yearsLeft_other": "Se ferme à tes 25 ans : encore {{count}} ans",
+      "closed": "Fermé : tu as atteint 25 ans"
+    },
+    "pel": {
+      "notOpen": "Ouverture : {{min}} minimum, puis {{next}} minimum par versement",
+      "netRate": "Soit {{net}} net après impôt",
+      "lock": "Blocage : {{done}} / {{total}} mois",
+      "unlocked": "Disponible sans pénalité",
+      "closePreview": "Tu récupères {{amount}}",
+      "penalty": "Clôture avant 4 ans : tu perds la moitié des intérêts ({{penalty}})",
+      "noPenalty": "Aucune pénalité : le blocage de 4 ans est passé",
+      "noPartial": "Un PEL ne permet pas de retrait partiel : il se clôture en entier."
+    }
   },
   "board": {
     "close": "Fermer",
@@ -163,6 +215,14 @@
     "overdraft": "Tu es à découvert : stress.",
     "pay": "Salaire de {{job}} : +{{amount, number}} €.",
     "studied": "Tu as étudié : +{{gain, number}} savoir.",
+    "deposit": "{{product}} : versement de {{amount, number}} €.",
+    "withdraw": "{{product}} : retrait de {{amount, number}} €.",
+    "opened": "{{product}} ouvert.",
+    "interest": "Intérêts du mois : +{{amount, number}} €.",
+    "pelClosed": "PEL clôturé : {{amount, number}} € récupérés.",
+    "pelClosedEarly": "PEL clôturé avant 4 ans : {{amount, number}} € récupérés ({{penalty, number}} € d'intérêts perdus).",
+    "pelMatured": "Ton PEL arrive à son terme (10 ans) : {{amount, number}} € versés sur ton compte.",
+    "jeuneClosed": "Tu as 25 ans : ton Livret Jeune est clôturé, {{amount, number}} € versés sur ton compte.",
     "jobFound": "Tu décroches un poste : {{job}} ({{salary, number}} €/mois).",
     "jobNone": "Aucune offre intéressante pour le moment.",
     "eventLine": "{{title}} : {{text}}",

@@ -40,6 +40,29 @@ export interface Profile {
 export type ScheduleKey = 'sleep' | 'leisure' | 'study' | 'sport' | 'search';
 export type Schedule = Record<ScheduleKey, number>;
 
+export type SavingsProduct = 'livretA' | 'ldds' | 'livretJeune' | 'pel';
+
+/** Compte d'épargne : `interest` = part du solde qui vient d'intérêts capitalisés (hors plafond de versements). */
+export interface Account {
+  balance: number;
+  interest: number;
+}
+
+export interface PelAccount extends Account {
+  /** Mois de la partie où le plan a été ouvert. */
+  openedMonth: number;
+  /** Taux brut annuel, fixé à l'ouverture pour toute la vie du plan. */
+  rate: number;
+}
+
+/** Un produit à `null` n'est pas ouvert : le joueur doit l'ouvrir lui-même. */
+export interface Savings {
+  livretA: Account | null;
+  ldds: Account | null;
+  livretJeune: Account | null;
+  pel: PelAccount | null;
+}
+
 export interface GameState {
   firstName: string;
   lastName: string;
@@ -52,6 +75,8 @@ export interface GameState {
   /** Textes : cars.<id>. */
   car: string | null;
   schedule: Schedule;
+  /** `money` est le compte courant ; l'épargne est placée ici. */
+  savings: Savings;
   lastEvent: string | null;
   pendingEvent: string | null;
   /** Raison de la fin de partie, ou null si la partie continue. */

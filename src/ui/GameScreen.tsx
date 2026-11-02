@@ -9,6 +9,7 @@ import { PauseMenu } from './PauseMenu';
 import { SchedulePanel } from './SchedulePanel';
 import { StatusCard } from './StatusCard';
 import { TopBar } from './TopBar';
+import { WalletCard } from './WalletCard';
 
 export function GameScreen({ game }: { game: GameState }) {
   const { t } = useTranslation();
@@ -33,6 +34,9 @@ export function GameScreen({ game }: { game: GameState }) {
         </BoardWindow>
         <BoardWindow id="status" title={t('windows.status')}>
           <StatusCard game={game} />
+        </BoardWindow>
+        <BoardWindow id="wallet" title={t('windows.wallet')}>
+          <WalletCard game={game} />
         </BoardWindow>
         <BoardWindow id="journal" title={t('windows.journal')}>
           <LogPanel log={game.log} />

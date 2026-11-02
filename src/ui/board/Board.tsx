@@ -12,7 +12,7 @@ export function Board({ children }: { children: ReactNode }) {
     if (!el) return;
     const apply = () => {
       const { clientWidth: width, clientHeight: height } = el; // zone utile, bordure exclue
-      if (!useLayout.getState().saved) reset(width); // première ouverture : disposition adaptée à la fenêtre
+      if (!useLayout.getState().saved) reset(width, height); // première ouverture : disposition adaptée à la fenêtre
       fit(width, height);
     };
     apply();

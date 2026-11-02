@@ -1,6 +1,9 @@
 import { create } from 'zustand';
-import { createGame, endTurn, resolveChoice, setSchedule } from './game/engine';
-import type { GameState, Profile, ScheduleKey } from './game/types';
+import {
+  closePel, createGame, depositSavings, endTurn, migrateSavings, openSavings, resolveChoice, setSchedule,
+  withdrawSavings,
+} from './game/engine';
+import type { GameState, Profile, SavingsProduct, ScheduleKey } from './game/types';
 
 const SAVE_KEY = 'newdawn-save-v5';
 
@@ -9,7 +12,10 @@ export type Screen = 'menu' | 'create' | 'settings' | 'game';
 function readSave(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    return raw ? (JSON.parse(raw) as GameState) : null;
+    if (!raw) return null;
+    const game = JSON.parse(raw) as GameState;
+    game.savings = migrateSavings(game.savings); // sauvegardes d'avant le portefeuille ou l'ouverture à la demande
+    return game;
   } catch {
     return null;
   }
@@ -34,6 +40,10 @@ interface Store {
   setSchedule: (key: ScheduleKey, value: number) => void;
   endTurn: () => void;
   choose: (index: number) => void;
+  openSavings: (product: SavingsProduct) => void;
+  deposit: (product: SavingsProduct, amount: number) => void;
+  withdraw: (product: SavingsProduct, amount: number) => void;
+  closePel: () => void;
   save: () => void;
   /** Retour au menu principal (la partie est déjà sauvegardée à chaque action). */
   quit: () => void;
@@ -61,6 +71,10 @@ export const useStore = create<Store>((set, get) => {
     setSchedule: (key, value) => { const g = get().game; if (g) update(setSchedule(g, key, value)); },
     endTurn: () => { const g = get().game; if (g) update(endTurn(g)); },
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
+    openSavings: (product) => { const g = get().game; if (g) update(openSavings(g, product)); },
+    deposit: (product, amount) => { const g = get().game; if (g) update(depositSavings(g, product, amount)); },
+    withdraw: (product, amount) => { const g = get().game; if (g) update(withdrawSavings(g, product, amount)); },
+    closePel: () => { const g = get().game; if (g) update(closePel(g)); },
     save: () => writeSave(get().game),
     quit: () => set({ game: null, screen: 'menu', hasSave: readSave() !== null }),
   };

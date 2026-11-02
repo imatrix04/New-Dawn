@@ -17,7 +17,59 @@
   "windows": {
     "schedule": "Schedule",
     "status": "Status",
+    "wallet": "Wallet",
     "journal": "Journal"
+  },
+  "wallet": {
+    "checking": "Checking account",
+    "total": "Total wealth",
+    "split": "How your money is split",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "close": "Close",
+    "max": "Max",
+    "all": "All",
+    "amountPlaceholder": "Amount",
+    "enterAmount": "Enter an amount",
+    "depositAmount": "Deposit {{amount}}",
+    "withdrawAmount": "Withdraw {{amount}}",
+    "openWith": "Open with {{amount}}",
+    "closePel": "Close the PEL",
+    "open": "Open {{name}}",
+    "unavailable": "Unavailable",
+    "used": "{{used}} deposited",
+    "ceiling": "Ceiling {{ceiling}}",
+    "hintDeposit": "Available: {{available}} • {{room}} left under the ceiling",
+    "hintWithdraw": "Balance: {{balance}}",
+    "reasons": {
+      "invalid": "Invalid amount",
+      "unavailable": "Not possible",
+      "min": "Minimum {{min}}",
+      "notOpen": "Account not open",
+      "insufficient": "Insufficient funds",
+      "ceiling": "Over the ceiling: {{room}} left"
+    },
+    "products": {
+      "livretA": { "name": "Livret A", "desc": "Available any time • tax-free interest" },
+      "ldds": { "name": "LDDS", "desc": "Available any time • tax-free interest • one per person" },
+      "livretJeune": { "name": "Livret Jeune", "desc": "For ages 12-25 • tax-free interest" },
+      "pel": { "name": "PEL", "desc": "Guaranteed fixed rate • locked 4 years • interest taxed at 30%" }
+    },
+    "jeune": {
+      "yearsLeft_one": "Closes at your 25th birthday: {{count}} year left",
+      "yearsLeft_other": "Closes at your 25th birthday: {{count}} years left",
+      "closed": "Closed: you turned 25"
+    },
+    "pel": {
+      "notOpen": "Opening: {{min}} minimum, then {{next}} minimum per deposit",
+      "netRate": "That is {{net}} net after tax",
+      "lock": "Locked: {{done}} / {{total}} months",
+      "unlocked": "Available without penalty",
+      "closePreview": "You get back {{amount}}",
+      "penalty": "Closing before 4 years: you lose half the interest ({{penalty}})",
+      "noPenalty": "No penalty: the 4-year lock has passed",
+      "noPartial": "A PEL has no partial withdrawals: it is closed in full."
+    }
   },
   "board": {
     "close": "Close",
@@ -163,6 +215,14 @@
     "overdraft": "You're overdrawn: stress.",
     "pay": "{{job}} pay: +€{{amount, number}}.",
     "studied": "You studied: +{{gain, number}} knowledge.",
+    "deposit": "{{product}}: deposit of €{{amount, number}}.",
+    "withdraw": "{{product}}: withdrawal of €{{amount, number}}.",
+    "opened": "{{product}} opened.",
+    "interest": "Interest this month: +€{{amount, number}}.",
+    "pelClosed": "PEL closed: €{{amount, number}} recovered.",
+    "pelClosedEarly": "PEL closed before 4 years: €{{amount, number}} recovered (€{{penalty, number}} of interest lost).",
+    "pelMatured": "Your PEL reaches its term (10 years): €{{amount, number}} paid into your account.",
+    "jeuneClosed": "You turned 25: your Livret Jeune is closed, €{{amount, number}} paid into your account.",
     "jobFound": "You land a job: {{job}} (€{{salary, number}}/month).",
     "jobNone": "No interesting offers right now.",
     "eventLine": "{{title}}: {{text}}",

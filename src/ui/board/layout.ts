@@ -2,10 +2,10 @@
 // C'est une préférence d'affichage du joueur, stockée à part de la partie.
 import { create } from 'zustand';
 
-export type WindowId = 'schedule' | 'status' | 'journal';
-export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'journal'];
+export type WindowId = 'schedule' | 'status' | 'wallet' | 'journal';
+export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'wallet', 'journal'];
 /** Largeur par défaut de chaque carte. */
-export const WINDOW_WIDTH: Record<WindowId, number> = { schedule: 620, status: 330, journal: 330 };
+export const WINDOW_WIDTH: Record<WindowId, number> = { schedule: 620, status: 330, wallet: 400, journal: 330 };
 /** Taille minimale d'une carte redimensionnée. */
 export const MIN_SIZE = { w: 260, h: 140 };
 
@@ -23,31 +23,37 @@ type Layout = Record<WindowId, WinState>;
 const LAYOUT_KEY = 'newdawn-layout-v1';
 /** Part minimale d'une carte qui doit rester visible pour pouvoir la rattraper. */
 const MIN_VISIBLE = 100;
-
 /** Hauteur approximative de la carte Statut, pour empiler le Journal juste en dessous. */
 const STATUS_HEIGHT = 380;
+const GAP = 16;
 
-export function defaultLayout(boardWidth: number): Layout {
+/**
+ * Disposition par défaut selon la taille du tableau.
+ * Écran large : Emploi du temps | Statut + Journal empilés | Portefeuille.
+ * Écran étroit : le Portefeuille est rangé (fermé), on l'ouvre depuis la barre du haut.
+ */
+export function defaultLayout(boardWidth: number, boardHeight = 600): Layout {
   const size = (id: WindowId) => ({ w: WINDOW_WIDTH[id], h: null });
-  const gap = 16;
-  const scheduleRight = gap + WINDOW_WIDTH.schedule;
-  const threeColumns = boardWidth >= scheduleRight + gap + WINDOW_WIDTH.status + gap + WINDOW_WIDTH.journal + gap;
+  const middleX = GAP + WINDOW_WIDTH.schedule + GAP;
+  const walletX = middleX + WINDOW_WIDTH.status + GAP;
+  const wide = boardWidth >= walletX + WINDOW_WIDTH.wallet + GAP;
 
-  if (threeColumns) {
-    // Écran large : trois colonnes côte à côte.
-    const statusX = scheduleRight + gap;
-    return {
-      schedule: { open: true, x: gap, y: gap, z: 1, ...size('schedule') },
-      status: { open: true, x: statusX, y: gap, z: 2, ...size('status') },
-      journal: { open: true, x: statusX + WINDOW_WIDTH.status + gap, y: gap, z: 3, ...size('journal') },
-    };
-  }
-  // Écran plus étroit : Statut et Journal empilés à droite.
-  const right = Math.max(gap, boardWidth - WINDOW_WIDTH.status - gap);
+  const stackX = wide ? middleX : Math.max(GAP, boardWidth - WINDOW_WIDTH.status - GAP);
+  const journalY = GAP + STATUS_HEIGHT + GAP;
+  // Le Journal occupe le reste de la colonne, sans dépasser du tableau.
+  const journalH = Math.max(MIN_SIZE.h, boardHeight - journalY - GAP);
+
   return {
-    schedule: { open: true, x: gap, y: gap, z: 1, ...size('schedule') },
-    status: { open: true, x: right, y: gap, z: 2, ...size('status') },
-    journal: { open: true, x: right, y: gap + STATUS_HEIGHT + gap, z: 3, ...size('journal') },
+    schedule: { open: true, x: GAP, y: GAP, z: 1, ...size('schedule') },
+    status: { open: true, x: stackX, y: GAP, z: 2, ...size('status') },
+    journal: { open: true, x: stackX, y: journalY, z: 3, ...size('journal'), h: journalH },
+    wallet: {
+      open: wide,
+      x: wide ? walletX : Math.max(GAP, stackX - WINDOW_WIDTH.wallet - GAP),
+      y: GAP,
+      z: 4,
+      ...size('wallet'),
+    },
   };
 }
 
@@ -60,8 +66,9 @@ function readSaved(): Layout | null {
     const layout = { ...base };
     for (const id of WINDOW_IDS) {
       const w = parsed[id];
-      if (!w || typeof w.x !== 'number' || typeof w.y !== 'number' || typeof w.open !== 'boolean') return null;
-      // Les sauvegardes d'avant le redimensionnement n'ont ni largeur ni hauteur.
+      // Une carte absente de la sauvegarde (ajoutée depuis) reprend sa disposition par défaut.
+      if (!w) continue;
+      if (typeof w.x !== 'number' || typeof w.y !== 'number' || typeof w.open !== 'boolean') return null;
       layout[id] = {
         ...base[id],
         ...w,
@@ -81,15 +88,16 @@ interface LayoutStore {
   windows: Layout;
   /** Vrai si la disposition vient d'une sauvegarde (sinon on la calcule selon la taille du tableau). */
   saved: boolean;
-  /** Dernière largeur mesurée du tableau (mise à jour par `fit`). */
+  /** Dernières dimensions mesurées du tableau (mises à jour par `fit`). */
   boardWidth: number;
+  boardHeight: number;
   toggle: (id: WindowId) => void;
   close: (id: WindowId) => void;
   focus: (id: WindowId) => void;
   move: (id: WindowId, x: number, y: number) => void;
   resize: (id: WindowId, w: number, h: number | null) => void;
-  /** Disposition par défaut ; sans argument, utilise la dernière largeur mesurée du tableau. */
-  reset: (boardWidth?: number) => void;
+  /** Disposition par défaut ; sans argument, utilise les dernières dimensions mesurées du tableau. */
+  reset: (boardWidth?: number, boardHeight?: number) => void;
   /** Ramène les cartes dans le tableau après un redimensionnement de la fenêtre. */
   fit: (boardWidth: number, boardHeight: number) => void;
 }
@@ -100,6 +108,7 @@ export const useLayout = create<LayoutStore>((set) => ({
   windows: initial ?? defaultLayout(1000),
   saved: initial !== null,
   boardWidth: 1000,
+  boardHeight: 600,
   toggle: (id) =>
     set((s) => {
       const w = s.windows[id];
@@ -115,7 +124,11 @@ export const useLayout = create<LayoutStore>((set) => ({
     }),
   move: (id, x, y) => set((s) => ({ windows: { ...s.windows, [id]: { ...s.windows[id], x, y } } })),
   resize: (id, w, h) => set((s) => ({ windows: { ...s.windows, [id]: { ...s.windows[id], w, h } } })),
-  reset: (boardWidth) => set((s) => ({ windows: defaultLayout(boardWidth ?? s.boardWidth), saved: true })),
+  reset: (boardWidth, boardHeight) =>
+    set((s) => ({
+      windows: defaultLayout(boardWidth ?? s.boardWidth, boardHeight ?? s.boardHeight),
+      saved: true,
+    })),
   fit: (boardWidth, boardHeight) =>
     set((s) => {
       const next = { ...s.windows };
@@ -131,9 +144,9 @@ export const useLayout = create<LayoutStore>((set) => ({
           changed = true;
         }
       }
-      const boardChanged = s.boardWidth !== boardWidth;
+      const boardChanged = s.boardWidth !== boardWidth || s.boardHeight !== boardHeight;
       if (!changed && !boardChanged) return s;
-      return { windows: changed ? next : s.windows, boardWidth };
+      return { windows: changed ? next : s.windows, boardWidth, boardHeight };
     }),
 }));
 

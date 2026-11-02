@@ -11,7 +11,7 @@ import { HoldButton } from './HoldButton';
 import { WeekDonut } from './WeekDonut';
 
 /** Durée à maintenir le bouton pour passer le mois (limite les clics accidentels). */
-const HOLD_MS = 2000;
+const HOLD_MS = 1000;
 
 const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'sport', 'search'];
 const FIXED = ['work', 'commute', 'essentials'] as const;
