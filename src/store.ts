@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import { createGame, performAction, resolveChoice } from './game/engine';
-import type { ActionId, GameState, Profile } from './game/types';
+import { createGame, endTurn, resolveChoice, setSchedule } from './game/engine';
+import type { GameState, Profile, ScheduleKey } from './game/types';
 
-const SAVE_KEY = 'newdawn-save-v4';
+const SAVE_KEY = 'newdawn-save-v5';
 
 export type Screen = 'menu' | 'create' | 'settings' | 'game';
 
@@ -31,7 +31,8 @@ interface Store {
   go: (screen: Screen) => void;
   start: (profile: Profile) => void;
   loadSave: () => void;
-  act: (id: ActionId) => void;
+  setSchedule: (key: ScheduleKey, value: number) => void;
+  endTurn: () => void;
   choose: (index: number) => void;
   save: () => void;
   /** Retour au menu principal (la partie est déjà sauvegardée à chaque action). */
@@ -57,7 +58,8 @@ export const useStore = create<Store>((set, get) => {
       const game = readSave();
       if (game) set({ game, screen: 'game' });
     },
-    act: (id) => { const g = get().game; if (g) update(performAction(g, id)); },
+    setSchedule: (key, value) => { const g = get().game; if (g) update(setSchedule(g, key, value)); },
+    endTurn: () => { const g = get().game; if (g) update(endTurn(g)); },
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
     save: () => writeSave(get().game),
     quit: () => set({ game: null, screen: 'menu', hasSave: readSave() !== null }),

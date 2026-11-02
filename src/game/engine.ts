@@ -1,11 +1,13 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  ACTIONS, CARS, DEBT_LIMIT, EVENT_CHANCE, FOOD_COST, HOUSING, JOBS, START, START_STATS,
+  CARS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE, FOOD_COST, HOURS_PER_WEEK,
+  HOUSING, INERTIA, JOBS, KNOWLEDGE_PER_STUDY_HOUR, LEISURE_COST_PER_WEEKLY_HOUR, SCHEDULE,
+  SEARCH_CHANCE_MAX, SEARCH_CHANCE_PER_HOUR, START, START_STATS,
 } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
-  ActionDef, ActionId, Fx, GameState, Job, LogClass, LogEntry, Profile,
+  Fx, GameState, Job, LogClass, LogEntry, Profile, Schedule, ScheduleKey, StatKey,
 } from './types';
 
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
@@ -22,12 +24,14 @@ export function createGame(profile: Profile): GameState {
     job: profile.job,
     housing: start.housing,
     car: start.car,
+    schedule: { ...DEFAULT_SCHEDULE },
     lastEvent: null,
     pendingEvent: null,
     over: null,
     stats: { ...START_STATS },
     log: [],
   };
+  fitSchedule(state);
   addLog(state, profile.path === 'comfort' ? 'log.startComfort' : 'log.startTight', {}, 'month');
   return state;
 }
@@ -41,22 +45,123 @@ function bestJob(state: GameState): Job {
 
 const jobRank = (id: string | null) => JOBS.findIndex((j) => j.id === id);
 
-/** Nourriture + loyer + entretien de la voiture. */
+/** Peut-on encore progresser professionnellement ? (sinon la recherche d'emploi est inutile) */
+export function canSearch(state: GameState): boolean {
+  return jobRank(bestJob(state).id) > jobRank(state.job);
+}
+
+// ---------- Planning de la semaine ----------
+
+const weeklyHours = (schedule: Schedule, key: ScheduleKey) =>
+  schedule[key] * (SCHEDULE[key].perDay ? 7 : 1);
+
+export interface WeekBreakdown {
+  sleep: number;
+  work: number;
+  commute: number;
+  essentials: number;
+  leisure: number;
+  study: number;
+  sport: number;
+  search: number;
+  /** Heures non planifiées sur les 168 h. */
+  free: number;
+}
+
+export function weekBreakdown(state: GameState): WeekBreakdown {
+  const job = jobById(state.job);
+  const planned = {
+    sleep: weeklyHours(state.schedule, 'sleep'),
+    work: job?.hours ?? 0,
+    commute: job?.commute ?? 0,
+    essentials: ESSENTIALS_PER_WEEK,
+    leisure: weeklyHours(state.schedule, 'leisure'),
+    study: weeklyHours(state.schedule, 'study'),
+    sport: weeklyHours(state.schedule, 'sport'),
+    search: weeklyHours(state.schedule, 'search'),
+  };
+  const used = Object.values(planned).reduce((a, h) => a + h, 0);
+  return { ...planned, free: HOURS_PER_WEEK - used };
+}
+
+/** Règle un curseur du planning, borné par son min/max et par le temps libre restant. */
+export function setSchedule(state: GameState, key: ScheduleKey, value: number): GameState {
+  if (key === 'search' && !canSearch(state)) return state;
+  const def = SCHEDULE[key];
+  const unit = def.perDay ? 7 : 1;
+  const cap = Math.min(def.max, state.schedule[key] + Math.max(0, Math.floor(weekBreakdown(state).free / unit)));
+  const next = clamp(Math.round(value), def.min, Math.max(def.min, cap));
+  if (next === state.schedule[key]) return state;
+  const s = structuredClone(state);
+  s.schedule[key] = next;
+  return s;
+}
+
+/**
+ * Remet le planning dans les 168 h (après un changement d'emploi par exemple) en rognant
+ * d'abord la recherche, les études, le sport, les loisirs, puis le sommeil en dernier recours.
+ */
+function fitSchedule(s: GameState) {
+  if (!canSearch(s)) s.schedule.search = 0;
+  for (const key of ['search', 'study', 'sport', 'leisure', 'sleep'] as const) {
+    const free = weekBreakdown(s).free;
+    if (free >= 0) return;
+    const def = SCHEDULE[key];
+    const unit = def.perDay ? 7 : 1;
+    s.schedule[key] -= Math.min(s.schedule[key] - def.min, Math.ceil(-free / unit));
+  }
+}
+
+// ---------- Effets du planning ----------
+
+export const monthlyIncome = (state: GameState): number => jobById(state.job)?.salary ?? 0;
+
+/** Nourriture + loyer + entretien de la voiture + coût des loisirs. */
 export function monthlyExpenses(state: GameState): number {
-  return FOOD_COST + (HOUSING[state.housing]?.rent ?? 0) + (state.car ? CARS[state.car]?.upkeep ?? 0 : 0);
+  const leisureCost = Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR);
+  return FOOD_COST + (HOUSING[state.housing]?.rent ?? 0) + (state.car ? CARS[state.car]?.upkeep ?? 0 : 0) + leisureCost;
 }
 
-export function availableActions(state: GameState): ActionDef[] {
-  return ACTIONS.filter((a) => {
-    if (a.id === 'work') return state.job !== null;
-    if (a.id === 'search') return jobRank(bestJob(state).id) > jobRank(state.job);
-    return true;
-  });
+/**
+ * Valeurs vers lesquelles tendent santé, bonheur et énergie avec le planning actuel.
+ * La santé n'est pas bornée à 0 : une cible négative signifie que la partie finira mal.
+ */
+function statTargets(state: GameState): Record<'health' | 'happiness' | 'energy', number> {
+  const { sleep, leisure, study, sport, search } = state.schedule;
+  const job = jobById(state.job);
+  const load = (job?.hours ?? 0) + (job?.commute ?? 0) * 0.5 + study * 0.6 + sport * 0.4 + search * 0.5;
+
+  const energy = clamp(70 + 15 * (sleep - 7) - 0.7 * (load - 30));
+
+  const happiness = clamp(
+    35 + leisure * 7
+    - Math.max(0, load - 40) * 0.4
+    - (state.money < 0 ? 15 : 0)
+    - Math.max(0, 6 - sleep) * 4
+    - Math.max(0, 40 - energy) * 0.3,
+  );
+
+  const sleepHealth = sleep >= 7 ? 10 : sleep >= 5 ? 10 - (7 - sleep) * 9 : -8 - (5 - sleep) * 22;
+  const health = 60
+    + Math.min(sport, 6) * 3
+    + sleepHealth
+    - Math.max(0, 30 - energy) * 0.8
+    - Math.max(0, 25 - happiness) * 0.4;
+
+  return { health, happiness, energy };
 }
 
-/** Clé de texte d'une action (la recherche d'emploi change de libellé si on a déjà un poste). */
-export function actionTextId(state: GameState, a: ActionDef): string {
-  return a.id === 'search' && state.job ? 'searchBetter' : a.id;
+/** Jauges attendues le mois prochain avec le planning actuel (hors événements). */
+export function projectNextStats(state: GameState): Record<StatKey, number> {
+  const target = statTargets(state);
+  const toward = (key: 'health' | 'happiness' | 'energy') =>
+    clamp(state.stats[key] + (target[key] - state.stats[key]) * INERTIA);
+  return {
+    health: toward('health'),
+    happiness: toward('happiness'),
+    energy: toward('energy'),
+    knowledge: clamp(state.stats.knowledge + state.schedule.study * KNOWLEDGE_PER_STUDY_HOUR),
+  };
 }
 
 // ---------- Helpers internes (mutent un état déjà cloné) ----------
@@ -95,67 +200,49 @@ function rollEvent(s: GameState) {
   s.lastEvent = event.id;
 }
 
-function endMonth(s: GameState) {
+// ---------- Actions publiques ----------
+
+/** Passe au mois suivant en appliquant le planning actuel. */
+export function endTurn(state: GameState): GameState {
+  const s = structuredClone(state);
+
+  // Les jauges sont calculées avant de toucher à l'argent, comme dans l'aperçu affiché au joueur.
+  const next = projectNextStats(s);
+  const studied = next.knowledge - s.stats.knowledge;
+  s.stats = next;
+
+  const job = jobById(s.job);
+  if (job) {
+    s.money += job.salary;
+    addLog(s, 'log.pay', { jobId: job.id, amount: job.salary }, 'good');
+  }
   const expenses = monthlyExpenses(s);
   s.money -= expenses;
   addLog(s, 'log.expenses', { amount: expenses });
 
-  s.stats.energy = clamp(s.stats.energy + 10);
-  if (s.stats.energy < 20) { s.stats.health = clamp(s.stats.health - 5); addLog(s, 'log.exhausted', {}, 'bad'); }
-  if (s.stats.happiness < 20) { s.stats.health = clamp(s.stats.health - 3); addLog(s, 'log.lowMood', {}, 'bad'); }
-  if (s.money < 0) { s.stats.happiness = clamp(s.stats.happiness - 5); addLog(s, 'log.overdraft', {}, 'bad'); }
+  if (studied > 0) addLog(s, 'log.studied', { gain: Math.round(studied * 10) / 10 });
+
+  if (s.schedule.search > 0 && canSearch(s)) {
+    const chance = Math.min(SEARCH_CHANCE_MAX, s.schedule.search * SEARCH_CHANCE_PER_HOUR);
+    if (Math.random() < chance) {
+      const target = bestJob(s);
+      s.job = target.id;
+      addLog(s, 'log.jobFound', { jobId: target.id, salary: target.salary }, 'good');
+    } else {
+      addLog(s, 'log.jobNone');
+    }
+  }
+
+  if (s.stats.energy < 20) addLog(s, 'log.exhausted', {}, 'bad');
+  if (s.stats.happiness < 20) addLog(s, 'log.lowMood', {}, 'bad');
+  if (s.money < 0) addLog(s, 'log.overdraft', {}, 'bad');
 
   s.month += 1;
   addLog(s, 'log.monthMark', { month: s.month }, 'month');
 
+  fitSchedule(s);
   checkOver(s);
   if (!s.over) rollEvent(s);
-}
-
-// ---------- Actions publiques ----------
-
-export function performAction(state: GameState, id: ActionId): GameState {
-  const s = structuredClone(state);
-  switch (id) {
-    case 'work': {
-      const job = jobById(s.job)!;
-      applyFx(s, { money: job.salary, energy: -20, happiness: -3 });
-      addLog(s, 'log.work', { jobId: job.id, pay: job.salary }, 'good');
-      break;
-    }
-    case 'study': {
-      applyFx(s, { knowledge: 4, energy: -15, happiness: -2 });
-      addLog(s, 'log.study', { gain: 4 });
-      break;
-    }
-    case 'rest': {
-      applyFx(s, { energy: 35, health: 3 });
-      addLog(s, 'log.rest');
-      break;
-    }
-    case 'social': {
-      applyFx(s, { money: -40, happiness: 10, energy: -10 });
-      addLog(s, 'log.social', { gain: 10 });
-      break;
-    }
-    case 'sport': {
-      applyFx(s, { health: 6, happiness: 3, energy: -15 });
-      addLog(s, 'log.sport', { gain: 6 });
-      break;
-    }
-    case 'search': {
-      applyFx(s, { energy: -10 });
-      const target = bestJob(s);
-      if (jobRank(target.id) > jobRank(s.job)) {
-        s.job = target.id;
-        addLog(s, 'log.jobFound', { jobId: target.id, salary: target.salary }, 'good');
-      } else {
-        addLog(s, 'log.jobNone');
-      }
-      break;
-    }
-  }
-  endMonth(s);
   return s;
 }
 

@@ -33,6 +33,13 @@ export interface Profile {
   job: string | null;
 }
 
+/**
+ * Semaine type réglée par le joueur. Sommeil et loisirs sont en heures PAR JOUR,
+ * le reste en heures PAR SEMAINE (voir SCHEDULE dans data/content.ts).
+ */
+export type ScheduleKey = 'sleep' | 'leisure' | 'study' | 'sport' | 'search';
+export type Schedule = Record<ScheduleKey, number>;
+
 export interface GameState {
   firstName: string;
   lastName: string;
@@ -44,6 +51,7 @@ export interface GameState {
   housing: string;
   /** Textes : cars.<id>. */
   car: string | null;
+  schedule: Schedule;
   lastEvent: string | null;
   pendingEvent: string | null;
   /** Raison de la fin de partie, ou null si la partie continue. */
@@ -63,12 +71,10 @@ export interface Job {
   id: string; // texte : jobs.<id>
   salary: number;
   knowledge: number;
-}
-
-export type ActionId = 'work' | 'study' | 'rest' | 'social' | 'sport' | 'search';
-
-export interface ActionDef {
-  id: ActionId; // textes : actions.<id>.label / .hint
+  /** Heures de travail par semaine. */
+  hours: number;
+  /** Heures de trajet par semaine (2 à 12). */
+  commute: number;
 }
 
 export interface Outcome {

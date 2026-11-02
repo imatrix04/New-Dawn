@@ -9,6 +9,21 @@
     "comingSoon": "Bientôt",
     "settings": "Paramètres"
   },
+  "pause": {
+    "title": "Pause",
+    "resume": "Reprendre",
+    "saved": "Partie sauvegardée."
+  },
+  "windows": {
+    "schedule": "Emploi du temps",
+    "status": "Statut",
+    "journal": "Journal"
+  },
+  "board": {
+    "close": "Fermer",
+    "reset": "Réinitialiser la disposition",
+    "pause": "Pause (Échap)"
+  },
   "settings": {
     "title": "Paramètres",
     "language": "Langue",
@@ -29,13 +44,12 @@
     "housing": "Logement",
     "car": "Voiture",
     "job": "Emploi",
-    "salary": "{{salary, number}} €/mois",
+    "jobInfo": "{{salary, number}} €/mois • {{hours}} h/sem. • {{commute}} h de trajet",
     "none": "Aucun"
   },
   "game": {
     "noJob": "Sans emploi",
-    "jobLine": "{{job}} • {{salary, number}} €/mois",
-    "actionsTitle": "Que fais-tu ce mois-ci ?",
+    "jobLine": "{{job}} • {{salary, number}} €/mois • {{hours}} h/sem. + {{commute}} h de trajet",
     "save": "Sauvegarder",
     "menu": "Menu principal"
   },
@@ -103,14 +117,29 @@
     "accountant": "Comptable",
     "engineer": "Ingénieur"
   },
-  "actions": {
-    "work": { "label": "Travailler", "hint": "Salaire • -20 énergie, -3 bonheur" },
-    "study": { "label": "Étudier", "hint": "+Savoir • -15 énergie, -2 bonheur" },
-    "rest": { "label": "Se reposer", "hint": "+Énergie, +3 santé" },
-    "social": { "label": "Sortir", "hint": "+Bonheur • -40 €, -10 énergie" },
-    "sport": { "label": "Faire du sport", "hint": "+Santé, +3 bonheur • -15 énergie" },
-    "search": { "label": "Chercher un emploi", "hint": "-10 énergie" },
-    "searchBetter": { "label": "Postuler à mieux", "hint": "-10 énergie" }
+  "gauge": {
+    "next": "Mois prochain : {{value}}"
+  },
+  "schedule": {
+    "title": "Emploi du temps",
+    "subtitle": "Ta semaine type ({{total}} h). Elle s'applique à chaque semaine du mois.",
+    "perDay": "{{hours}} h/jour",
+    "perWeek": "{{hours}} h/sem.",
+    "income": "Revenu",
+    "expenses": "Dépenses",
+    "balance": "Solde",
+    "nextMonth": "Passer au mois suivant",
+    "cats": {
+      "sleep": { "label": "Sommeil", "hint": "Énergie et santé" },
+      "work": { "label": "Travail", "hint": "Fixé par ton emploi" },
+      "commute": { "label": "Trajets", "hint": "Fixé par ton emploi" },
+      "essentials": { "label": "Vie quotidienne", "hint": "Repas, hygiène, courses (fixe)" },
+      "leisure": { "label": "Loisirs", "hint": "Bonheur • coûte de l'argent" },
+      "study": { "label": "Études", "hint": "Savoir • fatigue" },
+      "sport": { "label": "Sport", "hint": "Santé • fatigue" },
+      "search": { "label": "Recherche d'emploi", "hint": "Chance de décrocher un meilleur poste" },
+      "free": { "label": "Temps libre", "hint": "" }
+    }
   },
   "log": {
     "startComfort": "Tu as 18 ans. Un petit capital, un logement, une voiture et un boulot : tu démarres sereinement.",
@@ -120,11 +149,8 @@
     "exhausted": "Épuisé, ta santé en pâtit.",
     "lowMood": "Le moral au plus bas affecte ta santé.",
     "overdraft": "Tu es à découvert : stress.",
-    "work": "Tu travailles comme {{job}} : +{{pay, number}} €.",
-    "study": "Tu étudies : +{{gain}} savoir.",
-    "rest": "Tu te reposes tout le mois.",
-    "social": "Tu sors avec des amis : +{{gain}} bonheur.",
-    "sport": "Tu fais du sport : +{{gain}} santé.",
+    "pay": "Salaire de {{job}} : +{{amount, number}} €.",
+    "studied": "Tu as étudié : +{{gain, number}} savoir.",
     "jobFound": "Tu décroches un poste : {{job}} ({{salary, number}} €/mois).",
     "jobNone": "Aucune offre intéressante pour le moment.",
     "eventLine": "{{title}} : {{text}}",

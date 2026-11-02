@@ -1,44 +1,53 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { jobById } from '../game/engine';
 import type { GameState } from '../game/types';
-import { formatAge, formatNumber } from '../i18n/format';
-import { useStore } from '../store';
-import { ActionPanel } from './ActionPanel';
+import { Board } from './board/Board';
+import { BoardWindow } from './board/BoardWindow';
+import { WINDOW_WIDTH } from './board/layout';
 import { EventPanel } from './EventPanel';
-import { Gauges } from './Gauges';
 import { LogPanel } from './LogPanel';
+import { PauseMenu } from './PauseMenu';
+import { SchedulePanel } from './SchedulePanel';
+import { StatusCard } from './StatusCard';
+import { TopBar } from './TopBar';
 
 export function GameScreen({ game }: { game: GameState }) {
-  const { t, i18n } = useTranslation();
-  const { save, quit } = useStore();
-  const job = jobById(game.job);
+  const { t } = useTranslation();
+  const [paused, setPaused] = useState(false);
+
+  // Échap ouvre / ferme le menu pause.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPaused((p) => !p);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
-    <section className="screen">
-      <header>
-        <div>
-          <strong>{game.firstName} {game.lastName}</strong> — <span>{formatAge(t, game.month)}</span>
-          <div className="muted">
-            {job ? t('game.jobLine', { job: t(`jobs.${job.id}`), salary: job.salary }) : t('game.noJob')}
-          </div>
-          <div className="muted">
-            🏠 {t(`housing.${game.housing}`)}
-            {game.car && <> • 🚗 {t(`cars.${game.car}`)}</>}
+    <section className="screen wide game-screen">
+      <TopBar game={game} onPause={() => setPaused(true)} />
+
+      <Board>
+        <BoardWindow id="schedule" title={t('windows.schedule')} width={WINDOW_WIDTH.schedule}>
+          <SchedulePanel game={game} />
+        </BoardWindow>
+        <BoardWindow id="status" title={t('windows.status')} width={WINDOW_WIDTH.status}>
+          <StatusCard game={game} />
+        </BoardWindow>
+        <BoardWindow id="journal" title={t('windows.journal')} width={WINDOW_WIDTH.journal}>
+          <LogPanel log={game.log} />
+        </BoardWindow>
+      </Board>
+
+      {game.pendingEvent && (
+        <div className="overlay">
+          <div className="modal-pop">
+            <EventPanel game={game} />
           </div>
         </div>
-        <div className="money" style={game.money < 0 ? { color: 'var(--bad)' } : undefined}>
-          💰 {formatNumber(game.money, i18n.language)} €
-        </div>
-      </header>
-
-      <Gauges stats={game.stats} />
-      {game.pendingEvent ? <EventPanel game={game} /> : <ActionPanel game={game} />}
-      <LogPanel log={game.log} />
-
-      <div className="row">
-        <button className="secondary" onClick={save}>{t('game.save')}</button>
-        <button className="secondary" onClick={quit}>{t('game.menu')}</button>
-      </div>
+      )}
+      {paused && <PauseMenu onResume={() => setPaused(false)} />}
     </section>
   );
 }

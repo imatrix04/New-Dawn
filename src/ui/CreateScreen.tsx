@@ -118,7 +118,7 @@ export function CreateScreen() {
                   onClick={() => { setJob(id); setStep('recap'); }}
                 >
                   {t(`jobs.${id}`)}
-                  <small>{t('create.salary', { salary: j.salary })}</small>
+                  <small>{t('create.jobInfo', { salary: j.salary, hours: j.hours, commute: j.commute })}</small>
                 </div>
               );
             })}
