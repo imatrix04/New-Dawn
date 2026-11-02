@@ -1,4 +1,4 @@
-import type { Job, Schedule, ScheduleKey, StartPath, StatDef } from '../game/types';
+import type { Job, Schedule, ScheduleKey, SkillId, StartPath, StatDef } from '../game/types';
 
 export const EVENT_CHANCE = 0.55;
 export const DEBT_LIMIT = -2000;
@@ -37,20 +37,47 @@ export type TimeCat = (typeof TIME_CATS)[number]['id'];
 
 // ---------- Effets du planning sur les jauges (par mois) ----------
 
-/** Part de l'écart à la cible comblée chaque mois (inertie de l'énergie). */
-export const INERTIA = 0.5;
-
 /** Santé : ±1 point par mois pour chaque heure de sommeil par jour au-dessus / en dessous de ce seuil. */
 export const SLEEP_NEUTRAL = 7;
 /** Bonheur : ±1 point par mois pour chaque heure de loisirs par jour au-dessus / en dessous de ce seuil. */
 export const LEISURE_NEUTRAL = 5;
 /** Santé gagnée par heure de sport hebdomadaire et par mois. */
 export const SPORT_HEALTH_PER_HOUR = 0.5;
-/** Sous ce seuil d'énergie, la santé baisse en plus chaque mois. */
-export const EXHAUSTION_ENERGY = 20;
-export const EXHAUSTION_HEALTH_LOSS = 2;
 /** Bonheur perdu chaque mois passé à découvert. */
 export const DEBT_HAPPINESS_LOSS = 3;
+
+// ---------- Compétences ----------
+
+export const SKILLS: { id: SkillId; icon: string; color: string }[] = [
+  { id: 'digital', icon: '💻', color: '#5bb4f5' },
+  { id: 'charisma', icon: '✨', color: '#ff9f6b' },
+  { id: 'strength', icon: '💪', color: '#ff7a95' },
+  { id: 'intelligence', icon: '🧠', color: '#a77bf5' },
+  { id: 'logistics', icon: '📦', color: '#5bd48a' },
+];
+
+export const START_SKILLS: Record<SkillId, number> = {
+  digital: 10, charisma: 10, strength: 10, intelligence: 10, logistics: 5,
+};
+
+/** Gains de compétences par mois (une valeur par heure de planning, ou par mois travaillé dans le domaine). */
+export const SKILL_RULES = {
+  /** Par heure d'études hebdomadaire. */
+  perStudyHour: { intelligence: 0.2, digital: 0.1 } as Partial<Record<SkillId, number>>,
+  /** Par heure de sport hebdomadaire. */
+  perSportHour: { strength: 0.25 } as Partial<Record<SkillId, number>>,
+  /** Par heure de loisirs quotidienne. */
+  perLeisureHour: { charisma: 0.1 } as Partial<Record<SkillId, number>>,
+  /** Chaque mois travaillé dans un domaine (job.field). */
+  perJobMonth: {
+    restaurant: { charisma: 0.5, logistics: 0.3 },
+    retail: { charisma: 0.4, logistics: 0.6 },
+    transport: { logistics: 0.8, strength: 0.3 },
+    office: { digital: 0.6 },
+    finance: { digital: 0.5, intelligence: 0.3 },
+    engineering: { digital: 0.5, intelligence: 0.5 },
+  } as Record<string, Partial<Record<SkillId, number>>>,
+};
 
 // ---------- Épargne (règles françaises, taux en vigueur en novembre 2026) ----------
 
@@ -109,24 +136,58 @@ export const START: Record<StartPath, { money: number; housing: string; car: str
   tight: { money: 300, housing: 'shared', car: null },
 };
 
-/** Petits boulots proposés au départ confortable (aucune exigence de savoir). */
-export const STARTER_JOBS = ['waiter', 'cashier', 'driver'];
+/** Petits boulots proposés au départ confortable (aucune qualification requise). */
+export const STARTER_JOBS = ['fastFood', 'diner', 'cashier', 'driver'];
 
-export const START_STATS = { health: 80, happiness: 60, energy: 80, knowledge: 10 };
+/** Poste visé par défaut quand on démarre sans emploi : le curseur de recherche est utilisable tout de suite. */
+export const DEFAULT_JOB_TARGET = 'fastFood';
+
+/**
+ * Formations. Elles coûtent de l'argent chaque mois et ne progressent que si le joueur étudie
+ * au moins `minStudyHours` heures par semaine (curseur « Études » du planning).
+ *
+ * École hôtelière : école privée, 9 100 € par an (Ferrandi Paris, année de mise à niveau, tarif 2026 selon l'Onisep),
+ * soit 758 € par mois sur 24 mois (≈ 18 200 € au total). Les lycées hôteliers publics sont gratuits, mais ils ne
+ * sont pas modélisés pour l'instant.
+ */
+export const TRAININGS: Record<string, { months: number; tuition: number; minStudyHours: number }> = {
+  hotelSchool: { months: 24, tuition: 758, minStudyHours: 10 },
+};
+
+export const START_STATS = { health: 80, happiness: 60 };
 
 export const STATS: StatDef[] = [
   { key: 'health',    icon: '❤️', color: '#ff7a95' },
   { key: 'happiness', icon: '😊', color: '#f5c85b' },
-  { key: 'energy',    icon: '⚡', color: '#5bb4f5' },
-  { key: 'knowledge', icon: '📚', color: '#a77bf5' },
 ];
 
-/** Triés par exigence croissante : le dernier éligible est le meilleur. */
+/**
+ * Postes disponibles. Les trois niveaux de serveur forment la filière « restauration » : le haut de gamme
+ * demande 2 ans d'expérience dans le domaine OU une formation en école hôtelière (règle du jeu : en France
+ * le métier est accessible sans diplôme, mais les maisons exigeantes recrutent des profils formés ou expérimentés).
+ *
+ * Salaires : NETS mensuels à temps plein, hors pourboires, niveau débutant (novembre 2026). Sources
+ * secondaires (sites de calcul de salaires, INSEE relayé par Skello), à recouper avec la grille officielle :
+ * - Restauration rapide : SMIC net depuis le 1er juin 2026, 1 478 €.
+ * - Restauration basique : repère INSEE, 1 500 € (non qualifié) à 1 700 € (qualifié).
+ * - Haut de gamme : 2 200 à 3 000 € brut annoncés, soit environ 1 700 à 2 350 € net ; on prend 1 900 € (estimation).
+ * - Caissier 1 450-1 650 ; livreur 1 500-1 800 ; comptable 1 640-1 840 ; ingénieur 2 130-2 550 (net, débutant).
+ * - Employé de bureau : aucune donnée trouvée, 1 700 € est une estimation.
+ * Le jeu n'a pas d'augmentations avec l'ancienneté : ces montants sont fixes.
+ */
 export const JOBS: Job[] = [
-  { id: 'waiter',     salary: 1100, knowledge: 0,  hours: 35, commute: 3 },
-  { id: 'cashier',    salary: 1250, knowledge: 10, hours: 35, commute: 4 },
-  { id: 'driver',     salary: 1400, knowledge: 18, hours: 40, commute: 2 },
-  { id: 'office',     salary: 1800, knowledge: 30, hours: 35, commute: 7 },
-  { id: 'accountant', salary: 2400, knowledge: 50, hours: 39, commute: 9 },
-  { id: 'engineer',   salary: 3200, knowledge: 70, hours: 42, commute: 12 },
+  { id: 'fastFood', field: 'restaurant', salary: 1478, hours: 35, commute: 3 },
+  { id: 'diner', field: 'restaurant', salary: 1600, hours: 35, commute: 4 },
+  {
+    id: 'fineDining', field: 'restaurant', salary: 1900, hours: 39, commute: 6,
+    anyOf: [
+      { type: 'experience', field: 'restaurant', months: 24 },
+      { type: 'diploma', id: 'hotelSchool' },
+    ],
+  },
+  { id: 'cashier', field: 'retail', salary: 1500, minSkills: { charisma: 10 }, hours: 35, commute: 4 },
+  { id: 'driver', field: 'transport', salary: 1650, minSkills: { logistics: 12 }, hours: 40, commute: 2 },
+  { id: 'office', field: 'office', salary: 1700, minSkills: { digital: 20 }, hours: 35, commute: 7 },
+  { id: 'accountant', field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
+  { id: 'engineer', field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
 ];

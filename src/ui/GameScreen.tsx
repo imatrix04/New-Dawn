@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import type { GameState } from '../game/types';
 import { Board } from './board/Board';
 import { BoardWindow } from './board/BoardWindow';
+import { CareerCard } from './CareerCard';
 import { EventPanel } from './EventPanel';
 import { LogPanel } from './LogPanel';
 import { PauseMenu } from './PauseMenu';
+import { ProfileCard } from './ProfileCard';
 import { SchedulePanel } from './SchedulePanel';
 import { StatusCard } from './StatusCard';
 import { TopBar } from './TopBar';
@@ -35,8 +37,14 @@ export function GameScreen({ game }: { game: GameState }) {
         <BoardWindow id="status" title={t('windows.status')}>
           <StatusCard game={game} />
         </BoardWindow>
+        <BoardWindow id="profile" title={t('windows.profile')}>
+          <ProfileCard game={game} />
+        </BoardWindow>
         <BoardWindow id="wallet" title={t('windows.wallet')}>
           <WalletCard game={game} />
+        </BoardWindow>
+        <BoardWindow id="career" title={t('windows.career')}>
+          <CareerCard game={game} />
         </BoardWindow>
         <BoardWindow id="journal" title={t('windows.journal')}>
           <LogPanel log={game.log} />

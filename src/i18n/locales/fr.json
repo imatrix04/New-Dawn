@@ -18,7 +18,68 @@
     "schedule": "Emploi du temps",
     "status": "Statut",
     "wallet": "Portefeuille",
+    "profile": "Profil",
+    "career": "Carrière",
     "journal": "Journal"
+  },
+  "skills": {
+    "digital": { "name": "Connaissances numériques", "how": "Études, métiers de bureau et d'ingénierie" },
+    "charisma": { "name": "Charisme", "how": "Loisirs, restauration et vente" },
+    "strength": { "name": "Force", "how": "Sport et livraison" },
+    "intelligence": { "name": "Intelligence", "how": "Études, comptabilité et ingénierie" },
+    "logistics": { "name": "Logistique", "how": "Livraison, vente et restauration" }
+  },
+  "profile": {
+    "money": "Argent",
+    "perMonth": "mois",
+    "tabs": { "skills": "Compétences", "experience": "Expérience" },
+    "diplomas": "Diplômes",
+    "noDiplomas": "Aucun diplôme pour l'instant",
+    "training": "Formation en cours",
+    "noTraining": "Aucune formation en cours",
+    "work": "Expérience professionnelle",
+    "noWork": "Aucune expérience pour l'instant",
+    "months_one": "{{count}} mois",
+    "months_other": "{{count}} mois"
+  },
+  "genders": {
+    "male": "Homme",
+    "female": "Femme"
+  },
+  "fields": {
+    "restaurant": "restauration",
+    "retail": "vente",
+    "transport": "transport",
+    "office": "bureau",
+    "finance": "finance",
+    "engineering": "ingénierie"
+  },
+  "trainings": {
+    "hotelSchool": {
+      "name": "École hôtelière",
+      "desc": "Service en salle et savoir-être : ouvre les portes des restaurants haut de gamme."
+    }
+  },
+  "career": {
+    "hint": "Choisis le poste que tu vises, puis règle tes heures de recherche dans l'emploi du temps.",
+    "current": "Poste actuel",
+    "jobs": "Postes",
+    "training": "Formation",
+    "aim": "Viser",
+    "cancel": "Annuler",
+    "targetNote": "Règle tes heures de recherche dans l'emploi du temps.",
+    "status": { "current": "En poste", "locked": "Verrouillé" },
+    "req": {
+      "experience": "{{months}} mois d'expérience en {{field}}",
+      "or": " ou "
+    },
+    "monthsOf": "{{done}} / {{total}} mois",
+    "trainingInfo": "{{months}} mois • {{tuition}}/mois • {{hours}} h d'études par semaine minimum",
+    "progress": "Progression",
+    "lowStudy": "Étudie au moins {{hours}} h/sem. pour progresser (actuellement {{current}} h).",
+    "enroll": "S'inscrire",
+    "drop": "Abandonner",
+    "diploma": "Diplômé"
   },
   "wallet": {
     "checking": "Compte courant",
@@ -88,6 +149,7 @@
     "start": "Commencer",
     "random": "🎲 Création aléatoire",
     "identityTitle": "Qui es-tu ?",
+    "gender": "Tu es…",
     "lastName": "Nom",
     "firstName": "Prénom",
     "pathTitle": "Que fais-tu après tes 18 ans ?",
@@ -122,16 +184,17 @@
   },
   "stats": {
     "health": "Santé",
-    "happiness": "Bonheur",
-    "energy": "Énergie",
-    "knowledge": "Savoir"
+    "happiness": "Bonheur"
   },
   "fx": {
     "money": "€",
     "health": "santé",
     "happiness": "bonheur",
-    "energy": "énergie",
-    "knowledge": "savoir"
+    "digital": "numérique",
+    "charisma": "charisme",
+    "strength": "force",
+    "intelligence": "intelligence",
+    "logistics": "logistique"
   },
   "paths": {
     "comfort": {
@@ -163,12 +226,21 @@
     "small": "Petite voiture"
   },
   "jobs": {
-    "waiter": "Serveur",
+    "fastFood": "Serveur en restauration rapide",
+    "fastFood_female": "Serveuse en restauration rapide",
+    "diner": "Serveur en restauration basique",
+    "diner_female": "Serveuse en restauration basique",
+    "fineDining": "Serveur en restauration haut de gamme",
+    "fineDining_female": "Serveuse en restauration haut de gamme",
     "cashier": "Caissier",
+    "cashier_female": "Caissière",
     "driver": "Livreur",
+    "driver_female": "Livreuse",
     "office": "Employé de bureau",
+    "office_female": "Employée de bureau",
     "accountant": "Comptable",
-    "engineer": "Ingénieur"
+    "engineer": "Ingénieur",
+    "engineer_female": "Ingénieure"
   },
   "gauge": {
     "next": "Mois prochain : {{value}}"
@@ -186,21 +258,22 @@
     "effect": {
       "health": "❤️ {{delta}}/mois",
       "happiness": "😊 {{delta}}/mois",
-      "knowledge": "📚 {{delta}}/mois",
+      "skill": "🧠 {{delta}}/mois",
       "search": "🔎 {{pct}} % de chance"
     },
     "overHint": "Réduis ton planning pour pouvoir passer le mois.",
+    "target": "→ {{job}}",
     "hold": "Maintiens {{seconds}} s pour passer au mois suivant",
     "holding": "Continue de maintenir…",
     "blocked": "Trop d'heures planifiées",
     "cats": {
-      "sleep": { "label": "Sommeil", "hint": "Santé : ±1 par heure autour de 7 h/jour • Énergie" },
+      "sleep": { "label": "Sommeil", "hint": "Santé : ±1 par heure autour de 7 h/jour" },
       "work": { "label": "Travail", "hint": "Fixé par ton emploi" },
       "commute": { "label": "Trajets", "hint": "Fixé par ton emploi" },
       "essentials": { "label": "Vie quotidienne", "hint": "Repas, hygiène, courses (fixe)" },
       "leisure": { "label": "Loisirs", "hint": "Bonheur : ±1 par heure autour de 5 h/jour • coûte de l'argent" },
-      "study": { "label": "Études", "hint": "Savoir • fatigue" },
-      "sport": { "label": "Sport", "hint": "Santé • fatigue" },
+      "study": { "label": "Études", "hint": "Intelligence et numérique" },
+      "sport": { "label": "Sport", "hint": "Santé et force" },
       "search": { "label": "Recherche d'emploi", "hint": "Chance de décrocher un meilleur poste" },
       "free": { "label": "Temps libre", "hint": "" }
     }
@@ -210,14 +283,17 @@
     "startTight": "Tu as 18 ans et presque rien en poche. Chaque choix compte.",
     "monthMark": "— {{age}} —",
     "expenses": "Dépenses du mois : -{{amount, number}} €.",
-    "exhausted": "Épuisé, ta santé en pâtit.",
     "lowMood": "Le moral au plus bas affecte ta santé.",
     "overdraft": "Tu es à découvert : stress.",
     "pay": "Salaire de {{job}} : +{{amount, number}} €.",
-    "studied": "Tu as étudié : +{{gain, number}} savoir.",
     "deposit": "{{product}} : versement de {{amount, number}} €.",
     "withdraw": "{{product}} : retrait de {{amount, number}} €.",
     "opened": "{{product}} ouvert.",
+    "enrolled": "Tu t'inscris : {{training}}.",
+    "trainingDropped": "Tu abandonnes ta formation : {{training}}.",
+    "trainingSkipped": "Formation : il te faut au moins {{hours}} h d'études par semaine, tu ne progresses pas ce mois-ci.",
+    "diploma": "Diplôme obtenu : {{training}} !",
+    "experienceReached": "Tu as {{months}} mois d'expérience en {{field}} : de nouveaux postes s'ouvrent.",
     "interest": "Intérêts du mois : +{{amount, number}} €.",
     "pelClosed": "PEL clôturé : {{amount, number}} € récupérés.",
     "pelClosedEarly": "PEL clôturé avant 4 ans : {{amount, number}} € récupérés ({{penalty, number}} € d'intérêts perdus).",
@@ -298,12 +374,6 @@
       "text": "Ton propriétaire t'envoie un courrier : régularisation de charges.",
       "choices": ["Payer (-100 €)"],
       "outcomes": { "paid": "Pas le choix." }
-    },
-    "exhaustion": {
-      "title": "Épuisement",
-      "text": "Ton corps te lâche : tu as trop tiré sur la corde.",
-      "choices": ["Prendre un arrêt", "Continuer quand même"],
-      "outcomes": { "rest": "Tu te forces à ralentir.", "push": "Mauvaise idée..." }
     }
   }
 }

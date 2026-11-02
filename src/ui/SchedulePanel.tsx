@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS } from '../data/content';
 import {
-  canSearch, isOverbooked, monthlyExpenses, monthlyIncome, scheduleEffects, weekBreakdown,
+  canSearch, isOverbooked, jobById, monthlyExpenses, monthlyIncome, scheduleEffects, weekBreakdown,
 } from '../game/engine';
 import type { GameState, ScheduleKey } from '../game/types';
 import { formatNumber, formatSigned } from '../i18n/format';
@@ -23,6 +23,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
   const week = weekBreakdown(game);
   const over = isOverbooked(game);
   const fx = scheduleEffects(game.schedule);
+  const target = jobById(game.jobTarget);
   const lng = i18n.language;
 
   const income = monthlyIncome(game);
@@ -38,7 +39,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'sleep': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sleepHealth, lng) }), tone: tone(fx.sleepHealth) };
       case 'leisure': return { text: t('schedule.effect.happiness', { delta: formatSigned(fx.leisureHappiness, lng) }), tone: tone(fx.leisureHappiness) };
       case 'sport': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sportHealth, lng) }), tone: tone(fx.sportHealth) };
-      case 'study': return { text: t('schedule.effect.knowledge', { delta: formatSigned(fx.studyKnowledge, lng) }), tone: tone(fx.studyKnowledge) };
+      case 'study': return { text: t('schedule.effect.skill', { delta: formatSigned(fx.studyIntelligence, lng) }), tone: tone(fx.studyIntelligence) };
       case 'search': return { text: t('schedule.effect.search', { pct: Math.round(fx.searchChance * 100) }), tone: tone(fx.searchChance) };
     }
   };
@@ -94,7 +95,13 @@ export function SchedulePanel({ game }: { game: GameState }) {
                 aria-label={t(`schedule.cats.${key}.label`)}
               />
               <div className="tile-foot">
-                <span className="muted">{def.perDay ? t('schedule.perWeek', { hours: week[key] }) : ''}</span>
+                <span className="muted">
+                  {def.perDay
+                    ? t('schedule.perWeek', { hours: week[key] })
+                    : key === 'search' && target
+                      ? t('schedule.target', { job: t(`jobs.${target.id}`, { context: game.gender }) })
+                      : ''}
+                </span>
                 <span className={`badge ${eff.tone}`}>{eff.text}</span>
               </div>
             </div>

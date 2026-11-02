@@ -7,21 +7,21 @@ export const EVENTS: GameEvent[] = [
     id: 'washer',
     choices: [
       { run: () => ({ outcome: 'repaired', fx: { money: -150 } }) },
-      { run: () => ({ outcome: 'byHand', fx: { energy: -10, happiness: -4 } }) },
+      { run: () => ({ outcome: 'byHand', fx: { happiness: -4 } }) },
     ],
   },
   {
     id: 'party',
     choices: [
-      { run: () => ({ outcome: 'went', fx: { money: -50, happiness: 12, energy: -15 }, good: true }) },
-      { run: () => ({ outcome: 'stayed', fx: { energy: 5, happiness: -3 } }) },
+      { run: () => ({ outcome: 'went', fx: { money: -50, happiness: 12 }, good: true }) },
+      { run: () => ({ outcome: 'stayed', fx: { happiness: -3 } }) },
     ],
   },
   {
     id: 'flu',
     choices: [
-      { run: () => ({ outcome: 'doctor', fx: { money: -30, health: -3, energy: -10 } }) },
-      { run: () => ({ outcome: 'tough', fx: { health: -12, energy: -20, happiness: -4 } }) },
+      { run: () => ({ outcome: 'doctor', fx: { money: -30, health: -3 } }) },
+      { run: () => ({ outcome: 'tough', fx: { health: -12, happiness: -4 } }) },
     ],
   },
   {
@@ -34,7 +34,7 @@ export const EVENTS: GameEvent[] = [
     id: 'overtime',
     when: (s) => s.job !== null,
     choices: [
-      { run: () => ({ outcome: 'accepted', fx: { money: 200, energy: -20, happiness: -4 } }) },
+      { run: () => ({ outcome: 'accepted', fx: { money: 200, happiness: -4 } }) },
       { run: () => ({ outcome: 'refused', fx: { happiness: 2 } }) },
     ],
   },
@@ -59,7 +59,7 @@ export const EVENTS: GameEvent[] = [
   {
     id: 'course',
     choices: [
-      { run: () => ({ outcome: 'followed', fx: { knowledge: 5, energy: -10 }, good: true }) },
+      { run: () => ({ outcome: 'followed', fx: { digital: 4 }, good: true }) },
       { run: () => ({ outcome: 'ignored', fx: {} }) },
     ],
   },
@@ -85,14 +85,6 @@ export const EVENTS: GameEvent[] = [
     id: 'charges',
     choices: [
       { run: () => ({ outcome: 'paid', fx: { money: -100 } }) },
-    ],
-  },
-  {
-    id: 'exhaustion',
-    when: (s) => s.stats.energy < 25,
-    choices: [
-      { run: () => ({ outcome: 'rest', fx: { energy: 25, health: -5, happiness: -3 } }) },
-      { run: () => ({ outcome: 'push', fx: { health: -15, happiness: -8 } }) },
     ],
   },
 ];

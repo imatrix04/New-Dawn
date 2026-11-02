@@ -18,7 +18,68 @@
     "schedule": "Schedule",
     "status": "Status",
     "wallet": "Wallet",
+    "profile": "Profile",
+    "career": "Career",
     "journal": "Journal"
+  },
+  "skills": {
+    "digital": { "name": "Digital skills", "how": "Study, office and engineering jobs" },
+    "charisma": { "name": "Charisma", "how": "Leisure, restaurants and retail" },
+    "strength": { "name": "Strength", "how": "Exercise and delivery" },
+    "intelligence": { "name": "Intelligence", "how": "Study, accounting and engineering" },
+    "logistics": { "name": "Logistics", "how": "Delivery, retail and restaurants" }
+  },
+  "profile": {
+    "money": "Money",
+    "perMonth": "mo",
+    "tabs": { "skills": "Skills", "experience": "Experience" },
+    "diplomas": "Diplomas",
+    "noDiplomas": "No diploma yet",
+    "training": "Current training",
+    "noTraining": "No training in progress",
+    "work": "Work experience",
+    "noWork": "No experience yet",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months"
+  },
+  "genders": {
+    "male": "Man",
+    "female": "Woman"
+  },
+  "fields": {
+    "restaurant": "restaurants",
+    "retail": "retail",
+    "transport": "transport",
+    "office": "office work",
+    "finance": "finance",
+    "engineering": "engineering"
+  },
+  "trainings": {
+    "hotelSchool": {
+      "name": "Hotel school",
+      "desc": "Table service and etiquette: opens the doors of fine-dining restaurants."
+    }
+  },
+  "career": {
+    "hint": "Pick the job you're aiming for, then set your job-search hours in the schedule.",
+    "current": "Current job",
+    "jobs": "Jobs",
+    "training": "Training",
+    "aim": "Aim for it",
+    "cancel": "Cancel",
+    "targetNote": "Set your job-search hours in the schedule.",
+    "status": { "current": "Employed", "locked": "Locked" },
+    "req": {
+      "experience": "{{months}} months of experience in {{field}}",
+      "or": " or "
+    },
+    "monthsOf": "{{done}} / {{total}} months",
+    "trainingInfo": "{{months}} months • {{tuition}}/month • at least {{hours}} study hours per week",
+    "progress": "Progress",
+    "lowStudy": "Study at least {{hours}} h/wk to progress (currently {{current}} h).",
+    "enroll": "Enroll",
+    "drop": "Drop out",
+    "diploma": "Graduated"
   },
   "wallet": {
     "checking": "Checking account",
@@ -88,6 +149,7 @@
     "start": "Start",
     "random": "🎲 Random character",
     "identityTitle": "Who are you?",
+    "gender": "You are…",
     "lastName": "Last name",
     "firstName": "First name",
     "pathTitle": "What do you do after turning 18?",
@@ -122,16 +184,17 @@
   },
   "stats": {
     "health": "Health",
-    "happiness": "Happiness",
-    "energy": "Energy",
-    "knowledge": "Knowledge"
+    "happiness": "Happiness"
   },
   "fx": {
     "money": "€",
     "health": "health",
     "happiness": "happiness",
-    "energy": "energy",
-    "knowledge": "knowledge"
+    "digital": "digital",
+    "charisma": "charisma",
+    "strength": "strength",
+    "intelligence": "intelligence",
+    "logistics": "logistics"
   },
   "paths": {
     "comfort": {
@@ -163,7 +226,9 @@
     "small": "Small car"
   },
   "jobs": {
-    "waiter": "Waiter",
+    "fastFood": "Fast-food server",
+    "diner": "Casual restaurant server",
+    "fineDining": "Fine-dining server",
     "cashier": "Cashier",
     "driver": "Delivery driver",
     "office": "Office clerk",
@@ -186,21 +251,22 @@
     "effect": {
       "health": "❤️ {{delta}}/mo",
       "happiness": "😊 {{delta}}/mo",
-      "knowledge": "📚 {{delta}}/mo",
+      "skill": "🧠 {{delta}}/mo",
       "search": "🔎 {{pct}}% chance"
     },
     "overHint": "Trim your schedule to be able to pass the month.",
+    "target": "→ {{job}}",
     "hold": "Hold {{seconds}} s to go to the next month",
     "holding": "Keep holding…",
     "blocked": "Too many hours scheduled",
     "cats": {
-      "sleep": { "label": "Sleep", "hint": "Health: ±1 per hour around 7 h/day • Energy" },
+      "sleep": { "label": "Sleep", "hint": "Health: ±1 per hour around 7 h/day" },
       "work": { "label": "Work", "hint": "Set by your job" },
       "commute": { "label": "Commute", "hint": "Set by your job" },
       "essentials": { "label": "Daily life", "hint": "Meals, hygiene, errands (fixed)" },
       "leisure": { "label": "Leisure", "hint": "Happiness: ±1 per hour around 5 h/day • costs money" },
-      "study": { "label": "Study", "hint": "Knowledge • tiring" },
-      "sport": { "label": "Exercise", "hint": "Health • tiring" },
+      "study": { "label": "Study", "hint": "Intelligence and digital" },
+      "sport": { "label": "Exercise", "hint": "Health and strength" },
       "search": { "label": "Job search", "hint": "Chance to land a better job" },
       "free": { "label": "Free time", "hint": "" }
     }
@@ -210,14 +276,17 @@
     "startTight": "You're 18 with barely anything in your pocket. Every choice counts.",
     "monthMark": "— {{age}} —",
     "expenses": "Monthly expenses: -€{{amount, number}}.",
-    "exhausted": "Exhausted, your health suffers.",
     "lowMood": "Your low mood is affecting your health.",
     "overdraft": "You're overdrawn: stress.",
     "pay": "{{job}} pay: +€{{amount, number}}.",
-    "studied": "You studied: +{{gain, number}} knowledge.",
     "deposit": "{{product}}: deposit of €{{amount, number}}.",
     "withdraw": "{{product}}: withdrawal of €{{amount, number}}.",
     "opened": "{{product}} opened.",
+    "enrolled": "You enroll: {{training}}.",
+    "trainingDropped": "You drop out of your training: {{training}}.",
+    "trainingSkipped": "Training: you need at least {{hours}} study hours per week, so you make no progress this month.",
+    "diploma": "Diploma earned: {{training}}!",
+    "experienceReached": "You have {{months}} months of experience in {{field}}: new jobs open up.",
     "interest": "Interest this month: +€{{amount, number}}.",
     "pelClosed": "PEL closed: €{{amount, number}} recovered.",
     "pelClosedEarly": "PEL closed before 4 years: €{{amount, number}} recovered (€{{penalty, number}} of interest lost).",
@@ -298,12 +367,6 @@
       "text": "Your landlord sends a letter: a utilities adjustment.",
       "choices": ["Pay (-€100)"],
       "outcomes": { "paid": "No choice." }
-    },
-    "exhaustion": {
-      "title": "Burnout",
-      "text": "Your body gives out: you pushed too hard.",
-      "choices": ["Take sick leave", "Keep going anyway"],
-      "outcomes": { "rest": "You force yourself to slow down.", "push": "Bad idea..." }
     }
   }
 }

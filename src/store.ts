@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import {
-  closePel, createGame, depositSavings, endTurn, migrateSavings, openSavings, resolveChoice, setSchedule,
-  withdrawSavings,
+  closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, migrateGame, openSavings,
+  resolveChoice, setJobTarget, setSchedule, withdrawSavings,
 } from './game/engine';
 import type { GameState, Profile, SavingsProduct, ScheduleKey } from './game/types';
 
@@ -13,9 +13,7 @@ function readSave(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    const game = JSON.parse(raw) as GameState;
-    game.savings = migrateSavings(game.savings); // sauvegardes d'avant le portefeuille ou l'ouverture à la demande
-    return game;
+    return migrateGame(JSON.parse(raw) as GameState); // sauvegardes d'une version antérieure
   } catch {
     return null;
   }
@@ -40,6 +38,9 @@ interface Store {
   setSchedule: (key: ScheduleKey, value: number) => void;
   endTurn: () => void;
   choose: (index: number) => void;
+  setJobTarget: (id: string | null) => void;
+  enrollTraining: (id: string) => void;
+  dropTraining: () => void;
   openSavings: (product: SavingsProduct) => void;
   deposit: (product: SavingsProduct, amount: number) => void;
   withdraw: (product: SavingsProduct, amount: number) => void;
@@ -71,6 +72,9 @@ export const useStore = create<Store>((set, get) => {
     setSchedule: (key, value) => { const g = get().game; if (g) update(setSchedule(g, key, value)); },
     endTurn: () => { const g = get().game; if (g) update(endTurn(g)); },
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
+    setJobTarget: (id) => { const g = get().game; if (g) update(setJobTarget(g, id)); },
+    enrollTraining: (id) => { const g = get().game; if (g) update(enrollTraining(g, id)); },
+    dropTraining: () => { const g = get().game; if (g) update(dropTraining(g)); },
     openSavings: (product) => { const g = get().game; if (g) update(openSavings(g, product)); },
     deposit: (product, amount) => { const g = get().game; if (g) update(depositSavings(g, product, amount)); },
     withdraw: (product, amount) => { const g = get().game; if (g) update(withdrawSavings(g, product, amount)); },

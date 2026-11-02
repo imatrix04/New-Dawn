@@ -6,16 +6,25 @@ const devUrl = process.env.VITE_DEV_SERVER_URL;
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1000,
-    height: 720,
+    width: 1200,
+    height: 850,
     minWidth: 800,
     minHeight: 600,
     title: 'NewDawn',
     autoHideMenuBar: true,
+    fullscreen: true, // plein écran par défaut ; width/height servent quand on en sort avec F11
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
     },
+  });
+
+  // F11 : basculer entre plein écran et fenêtre (Échap est réservé au menu pause du jeu).
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown' && input.key === 'F11') {
+      win.setFullScreen(!win.isFullScreen());
+      event.preventDefault();
+    }
   });
 
   if (devUrl) win.loadURL(devUrl);

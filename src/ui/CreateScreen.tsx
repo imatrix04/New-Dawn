@@ -2,13 +2,17 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOUSING, JOBS, START, STARTER_JOBS } from '../data/content';
 import { randomProfile } from '../game/profile';
-import type { Profile, StartPath } from '../game/types';
+import type { Gender, Profile, StartPath } from '../game/types';
 import { formatNumber } from '../i18n/format';
 import { useStore } from '../store';
 
 type Step = 'identity' | 'path' | 'job' | 'recap';
 
 const PATHS: StartPath[] = ['comfort', 'tight'];
+const GENDERS: { id: Gender; symbol: string }[] = [
+  { id: 'male', symbol: '♂' },
+  { id: 'female', symbol: '♀' },
+];
 const PERK_COUNT = 4;
 
 export function CreateScreen() {
@@ -18,16 +22,20 @@ export function CreateScreen() {
   const [step, setStep] = useState<Step>('identity');
   const [lastName, setLastName] = useState('');
   const [firstName, setFirstName] = useState('');
+  const [gender, setGender] = useState<Gender | null>(null);
   const [path, setPath] = useState<StartPath | null>(null);
   const [job, setJob] = useState<string | null>(null);
 
-  const fullNameOk = lastName.trim() !== '' && firstName.trim() !== '';
+  const identityOk = lastName.trim() !== '' && firstName.trim() !== '' && gender !== null;
+  /** Nom d'un poste accordé au genre choisi (Serveur / Serveuse). */
+  const jobName = (id: string) => t(`jobs.${id}`, { context: gender ?? undefined });
 
   /** Remplit tout le personnage au hasard puis affiche le récapitulatif. */
   const randomize = () => {
     const p = randomProfile();
     setFirstName(p.firstName);
     setLastName(p.lastName);
+    setGender(p.gender);
     setPath(p.path);
     setJob(p.job);
     setStep('recap');
@@ -47,10 +55,11 @@ export function CreateScreen() {
   };
 
   const begin = () => {
-    if (!path) return;
+    if (!path || !gender) return;
     const profile: Profile = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      gender,
       path,
       job: path === 'comfort' ? job : null,
     };
@@ -85,6 +94,20 @@ export function CreateScreen() {
               <input type="text" maxLength={20} value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </label>
           </div>
+          <div className="gender-pick" role="radiogroup" aria-label={t('create.gender')}>
+            {GENDERS.map((g) => (
+              <button
+                key={g.id}
+                role="radio"
+                aria-checked={gender === g.id}
+                className={`gender-btn ${g.id}${gender === g.id ? ' selected' : ''}`}
+                onClick={() => setGender(g.id)}
+              >
+                <span className="gender-symbol">{g.symbol}</span>
+                {t(`genders.${g.id}`)}
+              </button>
+            ))}
+          </div>
         </>
       )}
 
@@ -117,7 +140,7 @@ export function CreateScreen() {
                   className={`card${job === id ? ' selected' : ''}`}
                   onClick={() => { setJob(id); setStep('recap'); }}
                 >
-                  {t(`jobs.${id}`)}
+                  {jobName(id)}
                   <small>{t('create.jobInfo', { salary: j.salary, hours: j.hours, commute: j.commute })}</small>
                 </div>
               );
@@ -130,12 +153,12 @@ export function CreateScreen() {
         <>
           <h2>{t('create.recapTitle')}</h2>
           <div className="panel recap">
-            <p><strong>{firstName} {lastName}</strong></p>
+            <p><strong>{firstName} {lastName}</strong>{gender && <> • {t(`genders.${gender}`)}</>}</p>
             <p>{t(`paths.${path}.name`)}</p>
             <p>{t('create.money')} : {formatNumber(START[path].money, i18n.language)} €</p>
             <p>{t('create.housing')} : {t(`housing.${START[path].housing}`)}</p>
             <p>{t('create.car')} : {START[path].car ? t(`cars.${START[path].car}`) : t('create.none')}</p>
-            <p>{t('create.job')} : {job ? t(`jobs.${job}`) : t('create.none')}</p>
+            <p>{t('create.job')} : {job ? jobName(job) : t('create.none')}</p>
           </div>
         </>
       )}
@@ -143,7 +166,7 @@ export function CreateScreen() {
       <div className="row">
         <button className="secondary" onClick={back}>{t('create.back')}</button>
         {step === 'identity' && (
-          <button disabled={!fullNameOk} onClick={() => setStep('path')}>{t('create.next')}</button>
+          <button disabled={!identityOk} onClick={() => setStep('path')}>{t('create.next')}</button>
         )}
         {step === 'recap' && <button onClick={begin}>{t('create.start')}</button>}
         <button className="secondary" onClick={randomize}>{t('create.random')}</button>

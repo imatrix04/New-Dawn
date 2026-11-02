@@ -2,10 +2,12 @@
 // C'est une préférence d'affichage du joueur, stockée à part de la partie.
 import { create } from 'zustand';
 
-export type WindowId = 'schedule' | 'status' | 'wallet' | 'journal';
-export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'wallet', 'journal'];
+export type WindowId = 'schedule' | 'status' | 'profile' | 'wallet' | 'career' | 'journal';
+export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'profile', 'wallet', 'career', 'journal'];
 /** Largeur par défaut de chaque carte. */
-export const WINDOW_WIDTH: Record<WindowId, number> = { schedule: 620, status: 330, wallet: 400, journal: 330 };
+export const WINDOW_WIDTH: Record<WindowId, number> = {
+  schedule: 620, status: 330, profile: 380, wallet: 400, career: 440, journal: 330,
+};
 /** Taille minimale d'une carte redimensionnée. */
 export const MIN_SIZE = { w: 260, h: 140 };
 
@@ -24,7 +26,7 @@ const LAYOUT_KEY = 'newdawn-layout-v1';
 /** Part minimale d'une carte qui doit rester visible pour pouvoir la rattraper. */
 const MIN_VISIBLE = 100;
 /** Hauteur approximative de la carte Statut, pour empiler le Journal juste en dessous. */
-const STATUS_HEIGHT = 380;
+const STATUS_HEIGHT = 320;
 const GAP = 16;
 
 /**
@@ -47,6 +49,9 @@ export function defaultLayout(boardWidth: number, boardHeight = 600): Layout {
     schedule: { open: true, x: GAP, y: GAP, z: 1, ...size('schedule') },
     status: { open: true, x: stackX, y: GAP, z: 2, ...size('status') },
     journal: { open: true, x: stackX, y: journalY, z: 3, ...size('journal'), h: journalH },
+    // La carte Carrière se range par défaut : on l'ouvre depuis la barre du haut quand on cherche un poste.
+    career: { open: false, x: middleX, y: GAP, z: 5, ...size('career') },
+    profile: { open: false, x: middleX + 30, y: GAP + 30, z: 6, ...size('profile') },
     wallet: {
       open: wide,
       x: wide ? walletX : Math.max(GAP, stackX - WINDOW_WIDTH.wallet - GAP),

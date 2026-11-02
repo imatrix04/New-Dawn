@@ -58,21 +58,3 @@ export function RingGauge({ stat, value, next }: GaugeProps) {
     </div>
   );
 }
-
-/** Barre horizontale (énergie, savoir), avec repère du mois prochain. */
-export function BarGauge({ stat, value, next }: GaugeProps) {
-  const { t } = useTranslation();
-  const shown = useAnimatedNumber(value);
-  return (
-    <div className="gauge" title={t('gauge.next', { value: Math.round(next) })}>
-      <div className="label">
-        <span>{stat.icon} {t(`stats.${stat.key}`)}</span>
-        <span>{Math.round(shown)} <Trend diff={next - value} compact /></span>
-      </div>
-      <div className="bar">
-        <div style={{ width: `${shown}%`, background: stat.color }} />
-        <i className="next-tick" style={{ left: `${next}%` }} />
-      </div>
-    </div>
-  );
-}

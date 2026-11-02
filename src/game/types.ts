@@ -1,7 +1,11 @@
-export type StatKey = 'health' | 'happiness' | 'energy' | 'knowledge';
+/** Jauges de condition : l'énergie n'existe plus, le sommeil agit directement sur la santé. */
+export type StatKey = 'health' | 'happiness';
+
+/** Compétences (0 à 100) : chaque type de connaissance a sa propre valeur. Ajouter une compétence = une entrée ici + dans SKILLS. */
+export type SkillId = 'digital' | 'charisma' | 'strength' | 'intelligence' | 'logistics';
 
 /** Variation appliquée à l'état : argent et/ou jauges. */
-export type Fx = Partial<Record<StatKey | 'money', number>>;
+export type Fx = Partial<Record<StatKey | SkillId | 'money', number>>;
 
 export type LogClass = 'good' | 'bad' | 'month' | '';
 
@@ -24,10 +28,13 @@ export type OverReason = 'health' | 'debt';
 /** Départ confortable (petit capital) ou difficile (presque rien). */
 export type StartPath = 'comfort' | 'tight';
 
+export type Gender = 'male' | 'female';
+
 /** Choix faits à la création du personnage. */
 export interface Profile {
   firstName: string;
   lastName: string;
+  gender: Gender;
   path: StartPath;
   /** Emploi de départ (parcours confortable uniquement). */
   job: string | null;
@@ -63,9 +70,27 @@ export interface Savings {
   pel: PelAccount | null;
 }
 
+/** Formation en cours : `monthsDone` ne progresse que les mois où le joueur étudie assez. */
+export interface Training {
+  id: string; // textes : trainings.<id>
+  monthsDone: number;
+}
+
 export interface GameState {
   firstName: string;
   lastName: string;
+  gender: Gender;
+  /** Mois travaillés par domaine (job.field) : sert aux conditions d'expérience. */
+  experience: Record<string, number>;
+  /** Diplômes obtenus (voir TRAININGS). */
+  diplomas: string[];
+  training: Training | null;
+  /** Poste visé par la recherche d'emploi (curseur « Recherche » du planning). */
+  jobTarget: string | null;
+  /** Compétences du personnage. */
+  skills: Record<SkillId, number>;
+  /** Mois travaillés par poste (job.id) : détail de l'expérience, affiché dans le profil. */
+  history: Record<string, number>;
   /** Mois écoulés depuis les 18 ans. */
   month: number;
   money: number;
@@ -92,10 +117,20 @@ export interface StatDef {
   color: string;
 }
 
+/** Une façon d'être qualifié pour un poste : de l'expérience dans le domaine, ou un diplôme. */
+export type Qualification =
+  | { type: 'experience'; field: string; months: number }
+  | { type: 'diploma'; id: string };
+
 export interface Job {
-  id: string; // texte : jobs.<id>
+  id: string; // texte : jobs.<id> (version féminine : jobs.<id>_female)
+  /** Domaine, pour l'expérience (textes : fields.<field>). */
+  field: string;
   salary: number;
-  knowledge: number;
+  /** Compétences minimum requises (toutes). */
+  minSkills?: Partial<Record<SkillId, number>>;
+  /** Si présent, il faut remplir AU MOINS UNE de ces qualifications. */
+  anyOf?: Qualification[];
   /** Heures de travail par semaine. */
   hours: number;
   /** Heures de trajet par semaine (2 à 12). */

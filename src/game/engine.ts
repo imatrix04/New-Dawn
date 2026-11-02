@@ -1,15 +1,15 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  CARS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE,
-  EXHAUSTION_ENERGY, EXHAUSTION_HEALTH_LOSS, FOOD_COST, HOURS_PER_WEEK, HOUSING, INERTIA, JOBS,
-  KNOWLEDGE_PER_STUDY_HOUR, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, SCHEDULE,
-  SAVINGS, SEARCH_CHANCE_MAX, SEARCH_CHANCE_PER_HOUR, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_STATS,
+  CARS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_JOB_TARGET, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE,
+  FOOD_COST, HOURS_PER_WEEK, HOUSING, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, SAVINGS, SCHEDULE,
+  SEARCH_CHANCE_MAX, SEARCH_CHANCE_PER_HOUR, SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START,
+  START_SKILLS, START_STATS, TRAININGS,
 } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
   Account, Fx, GameState, Job, LogClass, LogEntry, Profile, Savings, SavingsProduct, Schedule, ScheduleKey,
-  StatKey,
+  SkillId, StatKey,
 } from './types';
 
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
@@ -21,6 +21,14 @@ export function createGame(profile: Profile): GameState {
   const state: GameState = {
     firstName: profile.firstName,
     lastName: profile.lastName,
+    gender: profile.gender,
+    experience: {},
+    diplomas: [],
+    training: null,
+    // Sans emploi au départ : on vise le poste d'entrée de gamme pour que la recherche soit utilisable tout de suite.
+    jobTarget: profile.job ? null : DEFAULT_JOB_TARGET,
+    skills: { ...START_SKILLS },
+    history: {},
     month: 0,
     money: start.money,
     job: profile.job,
@@ -41,16 +49,112 @@ export function createGame(profile: Profile): GameState {
 
 export const jobById = (id: string | null): Job | null => JOBS.find((j) => j.id === id) ?? null;
 
-function bestJob(state: GameState): Job {
-  const eligible = JOBS.filter((j) => j.knowledge <= state.stats.knowledge);
-  return eligible[eligible.length - 1];
+/** Complète une sauvegarde d'une version antérieure avec les champs ajoutés depuis. */
+export function migrateGame(raw: GameState): GameState {
+  const g = raw;
+  g.gender ??= 'male';
+  g.experience ??= {};
+  g.diplomas ??= [];
+  g.training ??= null;
+  g.jobTarget ??= null;
+  g.history ??= {};
+  // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
+  const legacy = g.stats as unknown as Record<string, number | undefined>;
+  g.skills ??= { ...START_SKILLS, intelligence: legacy.knowledge ?? START_SKILLS.intelligence };
+  delete legacy.knowledge;
+  delete legacy.energy;
+  if (g.job === 'waiter') g.job = 'fastFood'; // l'ancien « serveur » devient serveur en restauration rapide
+  if (g.jobTarget === 'waiter') g.jobTarget = 'fastFood';
+  g.savings = migrateSavings(g.savings);
+  return g;
 }
 
-const jobRank = (id: string | null) => JOBS.findIndex((j) => j.id === id);
+// ---------- Carrière ----------
 
-/** Peut-on encore progresser professionnellement ? (sinon la recherche d'emploi est inutile) */
+export const experienceMonths = (state: GameState, field: string): number => state.experience[field] ?? 0;
+
+export interface Eligibility {
+  skills: boolean;
+  qualified: boolean;
+  ok: boolean;
+}
+
+/** Remplit-on les conditions du poste ? Compétences suffisantes ET, si le poste l'exige, au moins une qualification. */
+export function jobEligibility(state: GameState, job: Job): Eligibility {
+  const skills = Object.entries(job.minSkills ?? {}).every(([id, min]) => state.skills[id as SkillId] >= min);
+  const qualified = !job.anyOf || job.anyOf.some((q) => (
+    q.type === 'experience' ? experienceMonths(state, q.field) >= q.months : state.diplomas.includes(q.id)
+  ));
+  return { skills, qualified, ok: skills && qualified };
+}
+
+/** La recherche d'emploi n'a de sens que si on vise un poste accessible, différent du poste actuel. */
 export function canSearch(state: GameState): boolean {
-  return jobRank(bestJob(state).id) > jobRank(state.job);
+  const target = jobById(state.jobTarget);
+  return target !== null && target.id !== state.job && jobEligibility(state, target).ok;
+}
+
+/** Choisit (ou annule avec null) le poste visé. Seuls les postes accessibles peuvent l'être. */
+export function setJobTarget(state: GameState, id: string | null): GameState {
+  if (id === state.jobTarget) return state;
+  if (id !== null) {
+    const job = jobById(id);
+    if (!job || job.id === state.job || !jobEligibility(state, job).ok) return state;
+  }
+  const s = structuredClone(state);
+  s.jobTarget = id;
+  normalizeSchedule(s);
+  return s;
+}
+
+export const trainingTuition = (state: GameState): number =>
+  state.training ? TRAININGS[state.training.id].tuition : 0;
+
+export function enrollTraining(state: GameState, id: string): GameState {
+  if (!TRAININGS[id] || state.training || state.diplomas.includes(id)) return state;
+  const s = structuredClone(state);
+  s.training = { id, monthsDone: 0 };
+  addLog(s, 'log.enrolled', { trainingId: id }, 'good');
+  return s;
+}
+
+export function dropTraining(state: GameState): GameState {
+  if (!state.training) return state;
+  const s = structuredClone(state);
+  addLog(s, 'log.trainingDropped', { trainingId: state.training.id });
+  s.training = null;
+  return s;
+}
+
+/** Un mois de travail = un mois d'expérience dans le domaine ; on prévient quand un palier utile est franchi. */
+function gainExperience(s: GameState, job: Job) {
+  const before = experienceMonths(s, job.field);
+  s.experience[job.field] = before + 1;
+  s.history[job.id] = (s.history[job.id] ?? 0) + 1;
+  for (const j of JOBS) {
+    for (const q of j.anyOf ?? []) {
+      if (q.type === 'experience' && q.field === job.field && before < q.months && before + 1 >= q.months) {
+        addLog(s, 'log.experienceReached', { field: job.field, months: q.months }, 'good');
+      }
+    }
+  }
+}
+
+/** La formation ne progresse que si le joueur étudie assez chaque semaine. */
+function progressTraining(s: GameState) {
+  const training = s.training;
+  if (!training) return;
+  const cfg = TRAININGS[training.id];
+  if (s.schedule.study < cfg.minStudyHours) {
+    addLog(s, 'log.trainingSkipped', { trainingId: training.id, hours: cfg.minStudyHours }, 'bad');
+    return;
+  }
+  training.monthsDone += 1;
+  if (training.monthsDone >= cfg.months) {
+    s.diplomas.push(training.id);
+    s.training = null;
+    addLog(s, 'log.diploma', { trainingId: training.id }, 'good');
+  }
 }
 
 // ---------- Planning de la semaine ----------
@@ -116,7 +220,7 @@ export const monthlyIncome = (state: GameState): number => jobById(state.job)?.s
 /** Nourriture + loyer + entretien de la voiture + coût des loisirs. */
 export function monthlyExpenses(state: GameState): number {
   const leisureCost = Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR);
-  return FOOD_COST + (HOUSING[state.housing]?.rent ?? 0) + (state.car ? CARS[state.car]?.upkeep ?? 0 : 0) + leisureCost;
+  return FOOD_COST + (HOUSING[state.housing]?.rent ?? 0) + (state.car ? CARS[state.car]?.upkeep ?? 0 : 0) + leisureCost + trainingTuition(state);
 }
 
 /**
@@ -129,32 +233,46 @@ export function scheduleEffects(schedule: Schedule) {
     sleepHealth: schedule.sleep - SLEEP_NEUTRAL,
     sportHealth: schedule.sport * SPORT_HEALTH_PER_HOUR,
     leisureHappiness: schedule.leisure - LEISURE_NEUTRAL,
-    studyKnowledge: schedule.study * KNOWLEDGE_PER_STUDY_HOUR,
+    studyIntelligence: schedule.study * (SKILL_RULES.perStudyHour.intelligence ?? 0),
+    sportStrength: schedule.sport * (SKILL_RULES.perSportHour.strength ?? 0),
     searchChance: Math.min(SEARCH_CHANCE_MAX, schedule.search * SEARCH_CHANCE_PER_HOUR),
   };
-}
-
-/** Énergie visée par le planning : le sommeil la remonte, la charge (travail, trajets, études, sport) l'use. */
-function energyTarget(state: GameState): number {
-  const { sleep, study, sport, search } = state.schedule;
-  const job = jobById(state.job);
-  const load = (job?.hours ?? 0) + (job?.commute ?? 0) * 0.5 + study * 0.6 + sport * 0.4 + search * 0.5;
-  return clamp(70 + 15 * (sleep - 7) - 0.7 * (load - 30));
 }
 
 /** Jauges attendues le mois prochain avec le planning actuel (hors événements). */
 export function projectNextStats(state: GameState): Record<StatKey, number> {
   const fx = scheduleEffects(state.schedule);
-  const energy = clamp(state.stats.energy + (energyTarget(state) - state.stats.energy) * INERTIA);
-  const exhaustion = energy < EXHAUSTION_ENERGY ? EXHAUSTION_HEALTH_LOSS : 0;
   const debt = state.money < 0 ? DEBT_HAPPINESS_LOSS : 0;
   return {
-    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth - exhaustion),
+    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth),
     happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt),
-    energy,
-    knowledge: clamp(state.stats.knowledge + fx.studyKnowledge),
   };
 }
+
+const NO_GAIN = (): Record<SkillId, number> => ({ digital: 0, charisma: 0, strength: 0, intelligence: 0, logistics: 0 });
+
+/**
+ * Compétences gagnées chaque mois : études (intelligence, numérique), sport (force), loisirs (charisme)
+ * et le métier exercé (voir SKILL_RULES). Sert à l'aperçu du profil et au passage du mois.
+ */
+export function skillGains(state: GameState): Record<SkillId, number> {
+  const gains = NO_GAIN();
+  const add = (rule: Partial<Record<SkillId, number>> | undefined, factor = 1) => {
+    for (const [id, v] of Object.entries(rule ?? {}) as [SkillId, number][]) gains[id] += v * factor;
+  };
+  add(SKILL_RULES.perStudyHour, state.schedule.study);
+  add(SKILL_RULES.perSportHour, state.schedule.sport);
+  add(SKILL_RULES.perLeisureHour, state.schedule.leisure);
+  const job = jobById(state.job);
+  if (job) add(SKILL_RULES.perJobMonth[job.field]);
+  return gains;
+}
+
+/** Mois d'expérience dans un domaine à partir desquels un poste s'ouvre (0 si aucun poste n'en exige). */
+export const experienceGoal = (field: string): number =>
+  Math.max(0, ...JOBS.flatMap((j) => (j.anyOf ?? []).flatMap((q) => (
+    q.type === 'experience' && q.field === field ? [q.months] : []
+  ))));
 
 // ---------- Épargne ----------
 
@@ -352,9 +470,13 @@ function addLog(
 
 function applyFx(s: GameState, fx: Fx) {
   if (fx.money) s.money += fx.money;
-  for (const k of ['health', 'happiness', 'energy', 'knowledge'] as const) {
+  for (const k of ['health', 'happiness'] as const) {
     const v = fx[k];
     if (v) s.stats[k] = clamp(s.stats[k] + v);
+  }
+  for (const { id } of SKILLS) {
+    const v = fx[id];
+    if (v) s.skills[id] = clamp(s.skills[id] + v);
   }
 }
 
@@ -382,32 +504,34 @@ export function endTurn(state: GameState): GameState {
 
   // Les jauges sont calculées avant de toucher à l'argent, comme dans l'aperçu affiché au joueur.
   const next = projectNextStats(s);
-  const studied = next.knowledge - s.stats.knowledge;
+  const gains = skillGains(s);
   s.stats = next;
+  for (const { id } of SKILLS) s.skills[id] = clamp(s.skills[id] + gains[id]);
 
   const job = jobById(s.job);
   if (job) {
     s.money += job.salary;
-    addLog(s, 'log.pay', { jobId: job.id, amount: job.salary }, 'good');
+    addLog(s, 'log.pay', { jobId: job.id, gender: s.gender, amount: job.salary }, 'good');
+    gainExperience(s, job);
   }
   const expenses = monthlyExpenses(s);
   s.money -= expenses;
   addLog(s, 'log.expenses', { amount: expenses });
   accrueSavings(s);
 
-  if (studied > 0) addLog(s, 'log.studied', { gain: Math.round(studied * 10) / 10 });
+  progressTraining(s);
 
   if (s.schedule.search > 0 && canSearch(s)) {
     if (Math.random() < scheduleEffects(s.schedule).searchChance) {
-      const target = bestJob(s);
+      const target = jobById(s.jobTarget)!;
       s.job = target.id;
-      addLog(s, 'log.jobFound', { jobId: target.id, salary: target.salary }, 'good');
+      s.jobTarget = null;
+      addLog(s, 'log.jobFound', { jobId: target.id, gender: s.gender, salary: target.salary }, 'good');
     } else {
       addLog(s, 'log.jobNone');
     }
   }
 
-  if (s.stats.energy < 20) addLog(s, 'log.exhausted', {}, 'bad');
   if (s.stats.happiness < 20) addLog(s, 'log.lowMood', {}, 'bad');
   if (s.money < 0) addLog(s, 'log.overdraft', {}, 'bad');
 

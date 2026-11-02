@@ -20,7 +20,13 @@ function formatFx(t: TFunction, fx: Fx): string {
 /** Traduit une ligne de journal (clé + paramètres) dans la langue courante. */
 export function formatLogEntry(t: TFunction, entry: LogEntry): string {
   const params: Record<string, string | number> = { ...entry.params };
-  if (typeof params.jobId === 'string') params.job = t(`jobs.${params.jobId}`).toLowerCase();
+  if (typeof params.jobId === 'string') {
+    // Le genre du joueur accorde le nom du poste (serveur / serveuse).
+    const context = typeof params.gender === 'string' ? params.gender : undefined;
+    params.job = t(`jobs.${params.jobId}`, { context }).toLowerCase();
+  }
+  if (typeof params.trainingId === 'string') params.training = t(`trainings.${params.trainingId}.name`);
+  if (typeof params.field === 'string') params.field = t(`fields.${params.field}`);
   if (typeof params.productId === 'string') params.product = t(`wallet.products.${params.productId}.name`);
   if (typeof params.month === 'number') params.age = formatAge(t, params.month);
 
