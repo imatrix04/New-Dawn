@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import type { GameState } from '../game/types';
 import { Board } from './board/Board';
 import { BoardWindow } from './board/BoardWindow';
-import { WINDOW_WIDTH } from './board/layout';
 import { EventPanel } from './EventPanel';
 import { LogPanel } from './LogPanel';
 import { PauseMenu } from './PauseMenu';
@@ -29,13 +28,13 @@ export function GameScreen({ game }: { game: GameState }) {
       <TopBar game={game} onPause={() => setPaused(true)} />
 
       <Board>
-        <BoardWindow id="schedule" title={t('windows.schedule')} width={WINDOW_WIDTH.schedule}>
+        <BoardWindow id="schedule" title={t('windows.schedule')}>
           <SchedulePanel game={game} />
         </BoardWindow>
-        <BoardWindow id="status" title={t('windows.status')} width={WINDOW_WIDTH.status}>
+        <BoardWindow id="status" title={t('windows.status')}>
           <StatusCard game={game} />
         </BoardWindow>
-        <BoardWindow id="journal" title={t('windows.journal')} width={WINDOW_WIDTH.journal}>
+        <BoardWindow id="journal" title={t('windows.journal')}>
           <LogPanel log={game.log} />
         </BoardWindow>
       </Board>

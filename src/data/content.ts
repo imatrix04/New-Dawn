@@ -19,26 +19,38 @@ export const SCHEDULE: Record<ScheduleKey, { min: number; max: number; perDay: b
   search:  { min: 0, max: 10, perDay: false },
 };
 
-export const DEFAULT_SCHEDULE: Schedule = { sleep: 7, leisure: 3, study: 0, sport: 2, search: 0 };
+export const DEFAULT_SCHEDULE: Schedule = { sleep: 7, leisure: 5, study: 0, sport: 2, search: 0 };
 
-/** Catégories affichées dans la barre de temps (ordre = ordre d'affichage). */
+/** Catégories affichées dans l'anneau de la semaine (ordre = ordre d'affichage). */
 export const TIME_CATS = [
-  { id: 'sleep',      color: '#5b6cf5' },
-  { id: 'work',       color: '#f5a65b' },
-  { id: 'commute',    color: '#c98b4a' },
-  { id: 'essentials', color: '#7b8299' },
-  { id: 'leisure',    color: '#f5c85b' },
-  { id: 'study',      color: '#a77bf5' },
-  { id: 'sport',      color: '#5bd48a' },
-  { id: 'search',     color: '#5bb4f5' },
-  { id: 'free',       color: '#2e3450' },
+  { id: 'sleep',      color: '#5b6cf5', icon: '😴' },
+  { id: 'work',       color: '#f5a65b', icon: '💼' },
+  { id: 'commute',    color: '#c98b4a', icon: '🚌' },
+  { id: 'essentials', color: '#7b8299', icon: '🍽️' },
+  { id: 'leisure',    color: '#f5c85b', icon: '🎉' },
+  { id: 'study',      color: '#a77bf5', icon: '📚' },
+  { id: 'sport',      color: '#5bd48a', icon: '🏃' },
+  { id: 'search',     color: '#5bb4f5', icon: '🔎' },
+  { id: 'free',       color: '#2e3450', icon: '⏳' },
 ] as const;
 export type TimeCat = (typeof TIME_CATS)[number]['id'];
 
 // ---------- Effets du planning sur les jauges (par mois) ----------
 
-/** Part de l'écart à la cible comblée chaque mois (inertie des jauges). */
+/** Part de l'écart à la cible comblée chaque mois (inertie de l'énergie). */
 export const INERTIA = 0.5;
+
+/** Santé : ±1 point par mois pour chaque heure de sommeil par jour au-dessus / en dessous de ce seuil. */
+export const SLEEP_NEUTRAL = 7;
+/** Bonheur : ±1 point par mois pour chaque heure de loisirs par jour au-dessus / en dessous de ce seuil. */
+export const LEISURE_NEUTRAL = 5;
+/** Santé gagnée par heure de sport hebdomadaire et par mois. */
+export const SPORT_HEALTH_PER_HOUR = 0.5;
+/** Sous ce seuil d'énergie, la santé baisse en plus chaque mois. */
+export const EXHAUSTION_ENERGY = 20;
+export const EXHAUSTION_HEALTH_LOSS = 2;
+/** Bonheur perdu chaque mois passé à découvert. */
+export const DEBT_HAPPINESS_LOSS = 3;
 /** Savoir gagné par heure d'étude hebdomadaire et par mois. */
 export const KNOWLEDGE_PER_STUDY_HOUR = 0.3;
 /** Chance de trouver un meilleur emploi par heure de recherche hebdomadaire (plafonnée). */
@@ -73,7 +85,7 @@ export const STARTER_JOBS = ['waiter', 'cashier', 'driver'];
 export const START_STATS = { health: 80, happiness: 60, energy: 80, knowledge: 10 };
 
 export const STATS: StatDef[] = [
-  { key: 'health',    icon: '❤️', color: '#e5645f' },
+  { key: 'health',    icon: '❤️', color: '#ff7a95' },
   { key: 'happiness', icon: '😊', color: '#f5c85b' },
   { key: 'energy',    icon: '⚡', color: '#5bb4f5' },
   { key: 'knowledge', icon: '📚', color: '#a77bf5' },

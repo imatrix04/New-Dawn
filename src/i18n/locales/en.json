@@ -21,6 +21,7 @@
   },
   "board": {
     "close": "Close",
+    "autoHeight": "Double-click: automatic height",
     "reset": "Reset layout",
     "pause": "Pause (Esc)"
   },
@@ -122,19 +123,30 @@
   },
   "schedule": {
     "title": "Schedule",
-    "subtitle": "Your typical week ({{total}} h). It applies to every week of the month.",
+    "subtitle": "Typical {{total}} h week, repeated all month.",
     "perDay": "{{hours}} h/day",
     "perWeek": "{{hours}} h/wk",
     "income": "Income",
     "expenses": "Expenses",
     "balance": "Balance",
-    "nextMonth": "Go to next month",
+    "remainingLabel": "left",
+    "overLabel": "too many",
+    "effect": {
+      "health": "❤️ {{delta}}/mo",
+      "happiness": "😊 {{delta}}/mo",
+      "knowledge": "📚 {{delta}}/mo",
+      "search": "🔎 {{pct}}% chance"
+    },
+    "overHint": "Trim your schedule to be able to pass the month.",
+    "hold": "Hold {{seconds}} s to go to the next month",
+    "holding": "Keep holding…",
+    "blocked": "Too many hours scheduled",
     "cats": {
-      "sleep": { "label": "Sleep", "hint": "Energy and health" },
+      "sleep": { "label": "Sleep", "hint": "Health: ±1 per hour around 7 h/day • Energy" },
       "work": { "label": "Work", "hint": "Set by your job" },
       "commute": { "label": "Commute", "hint": "Set by your job" },
       "essentials": { "label": "Daily life", "hint": "Meals, hygiene, errands (fixed)" },
-      "leisure": { "label": "Leisure", "hint": "Happiness • costs money" },
+      "leisure": { "label": "Leisure", "hint": "Happiness: ±1 per hour around 5 h/day • costs money" },
       "study": { "label": "Study", "hint": "Knowledge • tiring" },
       "sport": { "label": "Exercise", "hint": "Health • tiring" },
       "search": { "label": "Job search", "hint": "Chance to land a better job" },

@@ -30,3 +30,10 @@ export function formatLogEntry(t: TFunction, entry: LogEntry): string {
   const fx = entry.fx ? formatFx(t, entry.fx) : '';
   return fx ? t('log.eventLineFx', { title, text, fx }) : t('log.eventLine', { title, text });
 }
+
+/** Variation signée à une décimale : « +1,5 », « −2 », « 0 ». */
+export function formatSigned(n: number, lng: string): string {
+  const r = Math.round(n * 10) / 10;
+  if (r === 0) return '0';
+  return `${r > 0 ? '+' : '−'}${new Intl.NumberFormat(lng, { maximumFractionDigits: 1 }).format(Math.abs(r))}`;
+}

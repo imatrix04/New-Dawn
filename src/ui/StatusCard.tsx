@@ -1,12 +1,19 @@
 import { useTranslation } from 'react-i18next';
+import { STATS } from '../data/content';
 import { jobById, projectNextStats } from '../game/engine';
-import type { GameState } from '../game/types';
-import { Gauges } from './Gauges';
+import type { GameState, StatKey } from '../game/types';
+import { BarGauge, RingGauge } from './Gauges';
 
-/** Contenu de la carte « Statut » : emploi, logement et jauges. */
+const RINGS: StatKey[] = ['health', 'happiness'];
+const BARS: StatKey[] = ['energy', 'knowledge'];
+const statDef = (key: StatKey) => STATS.find((s) => s.key === key)!;
+
+/** Contenu de la carte « Statut » : emploi, logement, anneaux santé/bonheur et barres. */
 export function StatusCard({ game }: { game: GameState }) {
   const { t } = useTranslation();
   const job = jobById(game.job);
+  const next = projectNextStats(game);
+
   return (
     <>
       <div className="muted status-info">
@@ -20,7 +27,17 @@ export function StatusCard({ game }: { game: GameState }) {
           {game.car && <> • 🚗 {t(`cars.${game.car}`)}</>}
         </div>
       </div>
-      <Gauges stats={game.stats} next={projectNextStats(game)} />
+
+      <div className="rings">
+        {RINGS.map((key) => (
+          <RingGauge key={key} stat={statDef(key)} value={game.stats[key]} next={next[key]} />
+        ))}
+      </div>
+      <div className="bars">
+        {BARS.map((key) => (
+          <BarGauge key={key} stat={statDef(key)} value={game.stats[key]} next={next[key]} />
+        ))}
+      </div>
     </>
   );
 }

@@ -21,6 +21,7 @@
   },
   "board": {
     "close": "Fermer",
+    "autoHeight": "Double-clic : hauteur automatique",
     "reset": "Réinitialiser la disposition",
     "pause": "Pause (Échap)"
   },
@@ -122,19 +123,30 @@
   },
   "schedule": {
     "title": "Emploi du temps",
-    "subtitle": "Ta semaine type ({{total}} h). Elle s'applique à chaque semaine du mois.",
-    "perDay": "{{hours}} h/jour",
+    "subtitle": "Semaine type de {{total}} h, répétée tout le mois.",
+    "perDay": "{{hours}} h/j",
     "perWeek": "{{hours}} h/sem.",
     "income": "Revenu",
     "expenses": "Dépenses",
     "balance": "Solde",
-    "nextMonth": "Passer au mois suivant",
+    "remainingLabel": "restantes",
+    "overLabel": "en trop",
+    "effect": {
+      "health": "❤️ {{delta}}/mois",
+      "happiness": "😊 {{delta}}/mois",
+      "knowledge": "📚 {{delta}}/mois",
+      "search": "🔎 {{pct}} % de chance"
+    },
+    "overHint": "Réduis ton planning pour pouvoir passer le mois.",
+    "hold": "Maintiens {{seconds}} s pour passer au mois suivant",
+    "holding": "Continue de maintenir…",
+    "blocked": "Trop d'heures planifiées",
     "cats": {
-      "sleep": { "label": "Sommeil", "hint": "Énergie et santé" },
+      "sleep": { "label": "Sommeil", "hint": "Santé : ±1 par heure autour de 7 h/jour • Énergie" },
       "work": { "label": "Travail", "hint": "Fixé par ton emploi" },
       "commute": { "label": "Trajets", "hint": "Fixé par ton emploi" },
       "essentials": { "label": "Vie quotidienne", "hint": "Repas, hygiène, courses (fixe)" },
-      "leisure": { "label": "Loisirs", "hint": "Bonheur • coûte de l'argent" },
+      "leisure": { "label": "Loisirs", "hint": "Bonheur : ±1 par heure autour de 5 h/jour • coûte de l'argent" },
       "study": { "label": "Études", "hint": "Savoir • fatigue" },
       "sport": { "label": "Sport", "hint": "Santé • fatigue" },
       "search": { "label": "Recherche d'emploi", "hint": "Chance de décrocher un meilleur poste" },

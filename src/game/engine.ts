@@ -1,9 +1,10 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  CARS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE, FOOD_COST, HOURS_PER_WEEK,
-  HOUSING, INERTIA, JOBS, KNOWLEDGE_PER_STUDY_HOUR, LEISURE_COST_PER_WEEKLY_HOUR, SCHEDULE,
-  SEARCH_CHANCE_MAX, SEARCH_CHANCE_PER_HOUR, START, START_STATS,
+  CARS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE,
+  EXHAUSTION_ENERGY, EXHAUSTION_HEALTH_LOSS, FOOD_COST, HOURS_PER_WEEK, HOUSING, INERTIA, JOBS,
+  KNOWLEDGE_PER_STUDY_HOUR, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, SCHEDULE,
+  SEARCH_CHANCE_MAX, SEARCH_CHANCE_PER_HOUR, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_STATS,
 } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
@@ -31,7 +32,7 @@ export function createGame(profile: Profile): GameState {
     stats: { ...START_STATS },
     log: [],
   };
-  fitSchedule(state);
+  normalizeSchedule(state);
   addLog(state, profile.path === 'comfort' ? 'log.startComfort' : 'log.startTight', {}, 'month');
   return state;
 }
@@ -84,32 +85,26 @@ export function weekBreakdown(state: GameState): WeekBreakdown {
   return { ...planned, free: HOURS_PER_WEEK - used };
 }
 
-/** Règle un curseur du planning, borné par son min/max et par le temps libre restant. */
+/** Trop d'heures planifiées : plus de 168 h dans la semaine. Le mois ne peut pas être passé. */
+export const isOverbooked = (state: GameState): boolean => weekBreakdown(state).free < 0;
+
+/**
+ * Règle un curseur du planning, borné par son min/max. Rien n'empêche de dépasser les 168 h :
+ * c'est au joueur de corriger (le dépassement est signalé et bloque le passage du mois).
+ */
 export function setSchedule(state: GameState, key: ScheduleKey, value: number): GameState {
   if (key === 'search' && !canSearch(state)) return state;
   const def = SCHEDULE[key];
-  const unit = def.perDay ? 7 : 1;
-  const cap = Math.min(def.max, state.schedule[key] + Math.max(0, Math.floor(weekBreakdown(state).free / unit)));
-  const next = clamp(Math.round(value), def.min, Math.max(def.min, cap));
+  const next = clamp(Math.round(value), def.min, def.max);
   if (next === state.schedule[key]) return state;
   const s = structuredClone(state);
   s.schedule[key] = next;
   return s;
 }
 
-/**
- * Remet le planning dans les 168 h (après un changement d'emploi par exemple) en rognant
- * d'abord la recherche, les études, le sport, les loisirs, puis le sommeil en dernier recours.
- */
-function fitSchedule(s: GameState) {
+/** La recherche d'emploi n'a plus de sens (curseur masqué) : ses heures ne doivent plus compter. */
+function normalizeSchedule(s: GameState) {
   if (!canSearch(s)) s.schedule.search = 0;
-  for (const key of ['search', 'study', 'sport', 'leisure', 'sleep'] as const) {
-    const free = weekBreakdown(s).free;
-    if (free >= 0) return;
-    const def = SCHEDULE[key];
-    const unit = def.perDay ? 7 : 1;
-    s.schedule[key] -= Math.min(s.schedule[key] - def.min, Math.ceil(-free / unit));
-  }
 }
 
 // ---------- Effets du planning ----------
@@ -123,44 +118,39 @@ export function monthlyExpenses(state: GameState): number {
 }
 
 /**
- * Valeurs vers lesquelles tendent santé, bonheur et énergie avec le planning actuel.
- * La santé n'est pas bornée à 0 : une cible négative signifie que la partie finira mal.
+ * Effets mensuels du planning, tels qu'affichés au joueur et appliqués au passage du mois.
+ * - Santé : ±1 par heure de sommeil/jour au-dessus ou en dessous de 7 h, plus un bonus de sport.
+ * - Bonheur : ±1 par heure de loisirs/jour au-dessus ou en dessous de 5 h.
  */
-function statTargets(state: GameState): Record<'health' | 'happiness' | 'energy', number> {
-  const { sleep, leisure, study, sport, search } = state.schedule;
+export function scheduleEffects(schedule: Schedule) {
+  return {
+    sleepHealth: schedule.sleep - SLEEP_NEUTRAL,
+    sportHealth: schedule.sport * SPORT_HEALTH_PER_HOUR,
+    leisureHappiness: schedule.leisure - LEISURE_NEUTRAL,
+    studyKnowledge: schedule.study * KNOWLEDGE_PER_STUDY_HOUR,
+    searchChance: Math.min(SEARCH_CHANCE_MAX, schedule.search * SEARCH_CHANCE_PER_HOUR),
+  };
+}
+
+/** Énergie visée par le planning : le sommeil la remonte, la charge (travail, trajets, études, sport) l'use. */
+function energyTarget(state: GameState): number {
+  const { sleep, study, sport, search } = state.schedule;
   const job = jobById(state.job);
   const load = (job?.hours ?? 0) + (job?.commute ?? 0) * 0.5 + study * 0.6 + sport * 0.4 + search * 0.5;
-
-  const energy = clamp(70 + 15 * (sleep - 7) - 0.7 * (load - 30));
-
-  const happiness = clamp(
-    35 + leisure * 7
-    - Math.max(0, load - 40) * 0.4
-    - (state.money < 0 ? 15 : 0)
-    - Math.max(0, 6 - sleep) * 4
-    - Math.max(0, 40 - energy) * 0.3,
-  );
-
-  const sleepHealth = sleep >= 7 ? 10 : sleep >= 5 ? 10 - (7 - sleep) * 9 : -8 - (5 - sleep) * 22;
-  const health = 60
-    + Math.min(sport, 6) * 3
-    + sleepHealth
-    - Math.max(0, 30 - energy) * 0.8
-    - Math.max(0, 25 - happiness) * 0.4;
-
-  return { health, happiness, energy };
+  return clamp(70 + 15 * (sleep - 7) - 0.7 * (load - 30));
 }
 
 /** Jauges attendues le mois prochain avec le planning actuel (hors événements). */
 export function projectNextStats(state: GameState): Record<StatKey, number> {
-  const target = statTargets(state);
-  const toward = (key: 'health' | 'happiness' | 'energy') =>
-    clamp(state.stats[key] + (target[key] - state.stats[key]) * INERTIA);
+  const fx = scheduleEffects(state.schedule);
+  const energy = clamp(state.stats.energy + (energyTarget(state) - state.stats.energy) * INERTIA);
+  const exhaustion = energy < EXHAUSTION_ENERGY ? EXHAUSTION_HEALTH_LOSS : 0;
+  const debt = state.money < 0 ? DEBT_HAPPINESS_LOSS : 0;
   return {
-    health: toward('health'),
-    happiness: toward('happiness'),
-    energy: toward('energy'),
-    knowledge: clamp(state.stats.knowledge + state.schedule.study * KNOWLEDGE_PER_STUDY_HOUR),
+    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth - exhaustion),
+    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt),
+    energy,
+    knowledge: clamp(state.stats.knowledge + fx.studyKnowledge),
   };
 }
 
@@ -204,6 +194,7 @@ function rollEvent(s: GameState) {
 
 /** Passe au mois suivant en appliquant le planning actuel. */
 export function endTurn(state: GameState): GameState {
+  if (isOverbooked(state)) return state; // garde-fou : l'interface bloque déjà le bouton
   const s = structuredClone(state);
 
   // Les jauges sont calculées avant de toucher à l'argent, comme dans l'aperçu affiché au joueur.
@@ -223,8 +214,7 @@ export function endTurn(state: GameState): GameState {
   if (studied > 0) addLog(s, 'log.studied', { gain: Math.round(studied * 10) / 10 });
 
   if (s.schedule.search > 0 && canSearch(s)) {
-    const chance = Math.min(SEARCH_CHANCE_MAX, s.schedule.search * SEARCH_CHANCE_PER_HOUR);
-    if (Math.random() < chance) {
+    if (Math.random() < scheduleEffects(s.schedule).searchChance) {
       const target = bestJob(s);
       s.job = target.id;
       addLog(s, 'log.jobFound', { jobId: target.id, salary: target.salary }, 'good');
@@ -240,7 +230,7 @@ export function endTurn(state: GameState): GameState {
   s.month += 1;
   addLog(s, 'log.monthMark', { month: s.month }, 'month');
 
-  fitSchedule(s);
+  normalizeSchedule(s);
   checkOver(s);
   if (!s.over) rollEvent(s);
   return s;

@@ -11,7 +11,7 @@ export function Board({ children }: { children: ReactNode }) {
     const el = ref.current;
     if (!el) return;
     const apply = () => {
-      const { width, height } = el.getBoundingClientRect();
+      const { clientWidth: width, clientHeight: height } = el; // zone utile, bordure exclue
       if (!useLayout.getState().saved) reset(width); // première ouverture : disposition adaptée à la fenêtre
       fit(width, height);
     };
