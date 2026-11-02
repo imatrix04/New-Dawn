@@ -1,0 +1,211 @@
+{
+  "app": {
+    "tagline": "Tu as 18 ans. Le reste dépend de toi."
+  },
+  "menu": {
+    "newGame": "Nouvelle partie",
+    "continue": "Continuer",
+    "coop": "Jouer en co-op",
+    "comingSoon": "Bientôt",
+    "settings": "Paramètres"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "back": "Retour"
+  },
+  "create": {
+    "back": "Retour",
+    "next": "Suivant",
+    "start": "Commencer",
+    "random": "🎲 Création aléatoire",
+    "identityTitle": "Qui es-tu ?",
+    "lastName": "Nom",
+    "firstName": "Prénom",
+    "pathTitle": "Que fais-tu après tes 18 ans ?",
+    "jobTitle": "Choisis ton petit boulot",
+    "recapTitle": "Ton départ dans la vie",
+    "money": "Argent",
+    "housing": "Logement",
+    "car": "Voiture",
+    "job": "Emploi",
+    "salary": "{{salary, number}} €/mois",
+    "none": "Aucun"
+  },
+  "game": {
+    "noJob": "Sans emploi",
+    "jobLine": "{{job}} • {{salary, number}} €/mois",
+    "actionsTitle": "Que fais-tu ce mois-ci ?",
+    "save": "Sauvegarder",
+    "menu": "Menu principal"
+  },
+  "over": {
+    "title": "Fin de partie",
+    "summary": "{{name}}, {{age}}. {{reason}}",
+    "health": "Ta santé a lâché. Ta vie s'arrête ici.",
+    "debt": "Écrasé par les dettes, tu perds tout.",
+    "restart": "Menu principal"
+  },
+  "age": {
+    "years_one": "{{count}} an",
+    "years_other": "{{count}} ans",
+    "months_one": "{{count}} mois",
+    "months_other": "{{count}} mois",
+    "joined": "{{years}} et {{months}}"
+  },
+  "stats": {
+    "health": "Santé",
+    "happiness": "Bonheur",
+    "energy": "Énergie",
+    "knowledge": "Savoir"
+  },
+  "fx": {
+    "money": "€",
+    "health": "santé",
+    "happiness": "bonheur",
+    "energy": "énergie",
+    "knowledge": "savoir"
+  },
+  "paths": {
+    "comfort": {
+      "name": "Un départ confortable",
+      "desc": "Tu pars avec un petit capital : de quoi te réorienter sans trop de risques.",
+      "perks": [
+        "{{money, number}} € en poche",
+        "Un logement : {{housing}} ({{rent}} €/mois)",
+        "Une petite voiture",
+        "Un petit boulot au choix"
+      ]
+    },
+    "tight": {
+      "name": "Un départ difficile",
+      "desc": "Presque rien en poche. Chaque choix devra être réfléchi.",
+      "perks": [
+        "{{money, number}} € seulement",
+        "Un logement : {{housing}} ({{rent}} €/mois)",
+        "Pas de voiture",
+        "Pas de travail"
+      ]
+    }
+  },
+  "housing": {
+    "studio": "Petit studio",
+    "shared": "Colocation"
+  },
+  "cars": {
+    "small": "Petite voiture"
+  },
+  "jobs": {
+    "waiter": "Serveur",
+    "cashier": "Caissier",
+    "driver": "Livreur",
+    "office": "Employé de bureau",
+    "accountant": "Comptable",
+    "engineer": "Ingénieur"
+  },
+  "actions": {
+    "work": { "label": "Travailler", "hint": "Salaire • -20 énergie, -3 bonheur" },
+    "study": { "label": "Étudier", "hint": "+Savoir • -15 énergie, -2 bonheur" },
+    "rest": { "label": "Se reposer", "hint": "+Énergie, +3 santé" },
+    "social": { "label": "Sortir", "hint": "+Bonheur • -40 €, -10 énergie" },
+    "sport": { "label": "Faire du sport", "hint": "+Santé, +3 bonheur • -15 énergie" },
+    "search": { "label": "Chercher un emploi", "hint": "-10 énergie" },
+    "searchBetter": { "label": "Postuler à mieux", "hint": "-10 énergie" }
+  },
+  "log": {
+    "startComfort": "Tu as 18 ans. Un petit capital, un logement, une voiture et un boulot : tu démarres sereinement.",
+    "startTight": "Tu as 18 ans et presque rien en poche. Chaque choix compte.",
+    "monthMark": "— {{age}} —",
+    "expenses": "Dépenses du mois : -{{amount, number}} €.",
+    "exhausted": "Épuisé, ta santé en pâtit.",
+    "lowMood": "Le moral au plus bas affecte ta santé.",
+    "overdraft": "Tu es à découvert : stress.",
+    "work": "Tu travailles comme {{job}} : +{{pay, number}} €.",
+    "study": "Tu étudies : +{{gain}} savoir.",
+    "rest": "Tu te reposes tout le mois.",
+    "social": "Tu sors avec des amis : +{{gain}} bonheur.",
+    "sport": "Tu fais du sport : +{{gain}} santé.",
+    "jobFound": "Tu décroches un poste : {{job}} ({{salary, number}} €/mois).",
+    "jobNone": "Aucune offre intéressante pour le moment.",
+    "eventLine": "{{title}} : {{text}}",
+    "eventLineFx": "{{title}} : {{text}} ({{fx}})"
+  },
+  "events": {
+    "washer": {
+      "title": "Machine à laver en panne",
+      "text": "Ta machine à laver rend l'âme en plein milieu d'un cycle.",
+      "choices": ["La faire réparer (-150 €)", "Laver à la main"],
+      "outcomes": { "repaired": "Réparée, mais ça pique.", "byHand": "Quelle corvée..." }
+    },
+    "party": {
+      "title": "Fête chez un ami",
+      "text": "Un ami organise une grosse soirée ce week-end.",
+      "choices": ["Y aller (-50 €)", "Rester chez toi"],
+      "outcomes": { "went": "Super soirée !", "stayed": "Tu te reposes, mais tu regrettes un peu." }
+    },
+    "flu": {
+      "title": "Grippe",
+      "text": "Tu te réveilles avec de la fièvre et des courbatures.",
+      "choices": ["Voir un médecin (-30 €)", "Tenir bon"],
+      "outcomes": { "doctor": "Quelques jours de repos et ça passe.", "tough": "Ça traîne..." }
+    },
+    "bill": {
+      "title": "Billet par terre",
+      "text": "Tu trouves un billet de 20 € sur le trottoir.",
+      "choices": ["Le garder"],
+      "outcomes": { "kept": "Une bonne surprise." }
+    },
+    "overtime": {
+      "title": "Heures supplémentaires",
+      "text": "Ton patron te propose des heures en plus.",
+      "choices": ["Accepter (+200 €)", "Refuser"],
+      "outcomes": { "accepted": "Le compte en banque dit merci.", "refused": "Tu gardes ton temps libre." }
+    },
+    "stranger": {
+      "title": "Une rencontre",
+      "text": "Quelqu'un te sourit dans un café et semble vouloir discuter.",
+      "choices": ["Engager la conversation", "Passer ton chemin"],
+      "outcomes": {
+        "great": "Vous passez un super moment !",
+        "awkward": "Gênant... la conversation tourne court.",
+        "passed": "Tu te demanderas toujours..."
+      }
+    },
+    "theft": {
+      "title": "Vélo volé",
+      "text": "Tu sors de chez toi : ton vélo a disparu.",
+      "choices": ["En racheter un (-120 €)", "Faire sans"],
+      "outcomes": { "rebought": "Tu repars sur deux roues.", "without": "Les trajets sont plus longs." }
+    },
+    "course": {
+      "title": "Cours en ligne gratuit",
+      "text": "Tu tombes sur un cours en ligne gratuit très bien noté.",
+      "choices": ["Le suivre", "Ignorer"],
+      "outcomes": { "followed": "Tu apprends beaucoup.", "ignored": "Peut-être une autre fois." }
+    },
+    "bet": {
+      "title": "Pari entre amis",
+      "text": "Un ami te propose de parier 100 € sur un match.",
+      "choices": ["Parier (-100 € ou +250 €)", "Refuser"],
+      "outcomes": { "won": "Tu gagnes !", "lost": "Perdu...", "declined": "Prudent." }
+    },
+    "parents": {
+      "title": "Coup de pouce familial",
+      "text": "Tes parents t'envoient un petit chèque avec un mot gentil.",
+      "choices": ["Remercier"],
+      "outcomes": { "thanked": "Ça fait chaud au cœur." }
+    },
+    "charges": {
+      "title": "Régularisation de charges",
+      "text": "Ton propriétaire t'envoie un courrier : régularisation de charges.",
+      "choices": ["Payer (-100 €)"],
+      "outcomes": { "paid": "Pas le choix." }
+    },
+    "exhaustion": {
+      "title": "Épuisement",
+      "text": "Ton corps te lâche : tu as trop tiré sur la corde.",
+      "choices": ["Prendre un arrêt", "Continuer quand même"],
+      "outcomes": { "rest": "Tu te forces à ralentir.", "push": "Mauvaise idée..." }
+    }
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "app": {
+    "tagline": "You're 18. The rest is up to you."
+  },
+  "menu": {
+    "newGame": "New game",
+    "continue": "Continue",
+    "coop": "Play co-op",
+    "comingSoon": "Coming soon",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "back": "Back"
+  },
+  "create": {
+    "back": "Back",
+    "next": "Next",
+    "start": "Start",
+    "random": "🎲 Random character",
+    "identityTitle": "Who are you?",
+    "lastName": "Last name",
+    "firstName": "First name",
+    "pathTitle": "What do you do after turning 18?",
+    "jobTitle": "Pick your small job",
+    "recapTitle": "Your start in life",
+    "money": "Money",
+    "housing": "Housing",
+    "car": "Car",
+    "job": "Job",
+    "salary": "€{{salary, number}}/month",
+    "none": "None"
+  },
+  "game": {
+    "noJob": "Unemployed",
+    "jobLine": "{{job}} • €{{salary, number}}/month",
+    "actionsTitle": "What will you do this month?",
+    "save": "Save",
+    "menu": "Main menu"
+  },
+  "over": {
+    "title": "Game over",
+    "summary": "{{name}}, {{age}}. {{reason}}",
+    "health": "Your health gave out. Your life ends here.",
+    "debt": "Crushed by debt, you lose everything.",
+    "restart": "Main menu"
+  },
+  "age": {
+    "years_one": "{{count}} year old",
+    "years_other": "{{count}} years old",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "joined": "{{years}} and {{months}}"
+  },
+  "stats": {
+    "health": "Health",
+    "happiness": "Happiness",
+    "energy": "Energy",
+    "knowledge": "Knowledge"
+  },
+  "fx": {
+    "money": "€",
+    "health": "health",
+    "happiness": "happiness",
+    "energy": "energy",
+    "knowledge": "knowledge"
+  },
+  "paths": {
+    "comfort": {
+      "name": "A comfortable start",
+      "desc": "You start with a small nest egg: enough to change direction without much risk.",
+      "perks": [
+        "€{{money, number}} in your pocket",
+        "Housing: {{housing}} (€{{rent}}/month)",
+        "A small car",
+        "A small job of your choice"
+      ]
+    },
+    "tight": {
+      "name": "A tough start",
+      "desc": "Barely anything in your pocket. Every choice will have to count.",
+      "perks": [
+        "Only €{{money, number}}",
+        "Housing: {{housing}} (€{{rent}}/month)",
+        "No car",
+        "No job"
+      ]
+    }
+  },
+  "housing": {
+    "studio": "Small studio",
+    "shared": "Shared flat"
+  },
+  "cars": {
+    "small": "Small car"
+  },
+  "jobs": {
+    "waiter": "Waiter",
+    "cashier": "Cashier",
+    "driver": "Delivery driver",
+    "office": "Office clerk",
+    "accountant": "Accountant",
+    "engineer": "Engineer"
+  },
+  "actions": {
+    "work": { "label": "Work", "hint": "Salary • -20 energy, -3 happiness" },
+    "study": { "label": "Study", "hint": "+Knowledge • -15 energy, -2 happiness" },
+    "rest": { "label": "Rest", "hint": "+Energy, +3 health" },
+    "social": { "label": "Go out", "hint": "+Happiness • -€40, -10 energy" },
+    "sport": { "label": "Exercise", "hint": "+Health, +3 happiness • -15 energy" },
+    "search": { "label": "Look for a job", "hint": "-10 energy" },
+    "searchBetter": { "label": "Apply for better", "hint": "-10 energy" }
+  },
+  "log": {
+    "startComfort": "You're 18. A small nest egg, a place, a car and a job: you start out steady.",
+    "startTight": "You're 18 with barely anything in your pocket. Every choice counts.",
+    "monthMark": "— {{age}} —",
+    "expenses": "Monthly expenses: -€{{amount, number}}.",
+    "exhausted": "Exhausted, your health suffers.",
+    "lowMood": "Your low mood is affecting your health.",
+    "overdraft": "You're overdrawn: stress.",
+    "work": "You work as a {{job}}: +€{{pay, number}}.",
+    "study": "You study: +{{gain}} knowledge.",
+    "rest": "You rest all month.",
+    "social": "You go out with friends: +{{gain}} happiness.",
+    "sport": "You exercise: +{{gain}} health.",
+    "jobFound": "You land a job: {{job}} (€{{salary, number}}/month).",
+    "jobNone": "No interesting offers right now.",
+    "eventLine": "{{title}}: {{text}}",
+    "eventLineFx": "{{title}}: {{text}} ({{fx}})"
+  },
+  "events": {
+    "washer": {
+      "title": "Broken washing machine",
+      "text": "Your washing machine gives up in the middle of a cycle.",
+      "choices": ["Have it repaired (-€150)", "Wash by hand"],
+      "outcomes": { "repaired": "Fixed, but it stings.", "byHand": "What a chore..." }
+    },
+    "party": {
+      "title": "Party at a friend's",
+      "text": "A friend is throwing a big party this weekend.",
+      "choices": ["Go (-€50)", "Stay home"],
+      "outcomes": { "went": "Great party!", "stayed": "You rest, but feel a bit of regret." }
+    },
+    "flu": {
+      "title": "Flu",
+      "text": "You wake up with a fever and aching muscles.",
+      "choices": ["See a doctor (-€30)", "Tough it out"],
+      "outcomes": { "doctor": "A few days of rest and it passes.", "tough": "It drags on..." }
+    },
+    "bill": {
+      "title": "Bill on the ground",
+      "text": "You find a €20 bill on the sidewalk.",
+      "choices": ["Keep it"],
+      "outcomes": { "kept": "A nice surprise." }
+    },
+    "overtime": {
+      "title": "Overtime",
+      "text": "Your boss offers you extra hours.",
+      "choices": ["Accept (+€200)", "Decline"],
+      "outcomes": { "accepted": "Your bank account says thanks.", "refused": "You keep your free time." }
+    },
+    "stranger": {
+      "title": "A chance meeting",
+      "text": "Someone smiles at you in a café and seems to want to chat.",
+      "choices": ["Strike up a conversation", "Walk on by"],
+      "outcomes": {
+        "great": "You have a wonderful time!",
+        "awkward": "Awkward... the conversation fizzles out.",
+        "passed": "You'll always wonder..."
+      }
+    },
+    "theft": {
+      "title": "Stolen bike",
+      "text": "You step outside: your bike is gone.",
+      "choices": ["Buy a new one (-€120)", "Go without"],
+      "outcomes": { "rebought": "You're back on two wheels.", "without": "Commutes are longer now." }
+    },
+    "course": {
+      "title": "Free online course",
+      "text": "You stumble upon a highly rated free online course.",
+      "choices": ["Take it", "Ignore it"],
+      "outcomes": { "followed": "You learn a lot.", "ignored": "Maybe another time." }
+    },
+    "bet": {
+      "title": "Bet with friends",
+      "text": "A friend offers to bet €100 on a game.",
+      "choices": ["Bet (-€100 or +€250)", "Decline"],
+      "outcomes": { "won": "You win!", "lost": "Lost...", "declined": "Wise." }
+    },
+    "parents": {
+      "title": "Helping hand from family",
+      "text": "Your parents send you a small check with a kind note.",
+      "choices": ["Say thanks"],
+      "outcomes": { "thanked": "It warms your heart." }
+    },
+    "charges": {
+      "title": "Utilities adjustment",
+      "text": "Your landlord sends a letter: a utilities adjustment.",
+      "choices": ["Pay (-€100)"],
+      "outcomes": { "paid": "No choice." }
+    },
+    "exhaustion": {
+      "title": "Burnout",
+      "text": "Your body gives out: you pushed too hard.",
+      "choices": ["Take sick leave", "Keep going anyway"],
+      "outcomes": { "rest": "You force yourself to slow down.", "push": "Bad idea..." }
+    }
+  }
+}
