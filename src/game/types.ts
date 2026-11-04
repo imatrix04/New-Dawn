@@ -74,6 +74,8 @@ export interface Savings {
 export interface Training {
   id: string; // textes : trainings.<id>
   monthsDone: number;
+  /** Coût mensuel fixé à l'inscription (le prix de base varie de ±10 % selon le catalogue). */
+  tuition: number;
 }
 
 export interface GameState {
@@ -101,6 +103,9 @@ export interface GameState {
   month: number;
   money: number;
   job: string | null;
+  /** Salaire et entreprise de l'offre acceptée (null pour une ancienne sauvegarde sans entreprise). */
+  jobSalary: number | null;
+  jobCompany: string | null;
   /** Textes : housing.<id>. */
   housing: string;
   /** Textes : cars.<id>. */
@@ -136,12 +141,18 @@ export interface Catalog {
   gigs: string[];
   quick: string[];
   training: string[];
+  /** Écart de prix (de -0.1 à +0.1) tiré pour chaque boulot rapide et chaque formation visible. */
+  factors: Record<string, number>;
 }
 
 export interface JobOffer {
   jobId: string;
   /** Mois restants avant que l'offre disparaisse. */
   monthsLeft: number;
+  /** Entreprise qui recrute (voir COMPANIES). */
+  companyId: string;
+  /** Salaire proposé : prix de base ajusté par l'entreprise, jamais sous le SMIC. */
+  salary: number;
 }
 
 export interface Job {

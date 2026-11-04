@@ -1,13 +1,13 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  CARS, CATALOG_MAX, CATALOG_REFRESH_MONTHS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK,
+  CARS, CATALOG_MAX, COMPANIES, CATALOG_REFRESH_MONTHS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK,
   EVENT_CHANCE, EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING, JOBS,
-  LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, SAVINGS, SCHEDULE,
+  LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, PRICE_VARIATION, SAVINGS, SCHEDULE, SMIC_NET,
   SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS,
   TRAININGS,
 } from '../data/content';
-import type { Gig } from '../data/content';
+import type { Company, Gig } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
   Account, Catalog, Drawback, Fx, GameState, Job, JobOffer, LogClass, LogEntry, Profile, Savings, SavingsProduct,
@@ -20,6 +20,7 @@ const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v))
 
 export function createGame(profile: Profile): GameState {
   const start = START[profile.path];
+  const hired = profile.job ? makeOffer(jobById(profile.job)!) : null;
   const state: GameState = {
     firstName: profile.firstName,
     lastName: profile.lastName,
@@ -28,14 +29,16 @@ export function createGame(profile: Profile): GameState {
     diplomas: [],
     training: null,
     jobTarget: null,
-    offers: starterOffers(),
+    offers: starterOffers().filter((o) => o.jobId !== profile.job),
     gig: null,
-    catalog: { gigs: [], quick: [], training: [] },
+    catalog: { gigs: [], quick: [], training: [], factors: {} },
     skills: { ...START_SKILLS },
     history: {},
     month: 0,
     money: start.money,
     job: profile.job,
+    jobSalary: hired?.salary ?? null,
+    jobCompany: hired?.companyId ?? null,
     housing: start.housing,
     car: start.car,
     schedule: { ...DEFAULT_SCHEDULE },
@@ -54,10 +57,48 @@ export function createGame(profile: Profile): GameState {
 export const jobById = (id: string | null): Job | null => JOBS.find((j) => j.id === id) ?? null;
 export const gigById = (id: string | null): Gig | null => GIGS.find((g) => g.id === id) ?? null;
 
-const offerFor = (job: Job): JobOffer => ({ jobId: job.id, monthsLeft: OFFER_MONTHS[job.grade] });
+export const companyById = (id: string | null): Company | null => COMPANIES.find((c) => c.id === id) ?? null;
+
+/** Salaire proposé : le prix de base ajusté par l'entreprise (±10 % au plus), jamais sous le SMIC. */
+export const salaryAt = (job: Job, company: Company | null): number =>
+  Math.max(SMIC_NET, Math.round(job.salary * (1 + (company?.pay ?? 0))));
+
+/** Pénibilité d'un poste chez une entreprise : celle du poste plus l'ajustement de l'entreprise, sans jamais devenir un bonus. */
+export function jobDrawback(job: Job, company: Company | null): Drawback {
+  const out: Drawback = {};
+  for (const k of ['health', 'happiness'] as const) {
+    const v = Math.min(0, (job.drawback[k] ?? 0) + (company?.drawback[k] ?? 0));
+    if (v) out[k] = v;
+  }
+  return out;
+}
+
+/** Écart de prix aléatoire, de -10 % à +10 %. */
+const rollFactor = (): number => Math.round((Math.random() * 2 - 1) * PRICE_VARIATION * 100) / 100;
+const withFactor = (base: number, factor: number): number => Math.round(base * (1 + factor));
+
+/** Nouvelle offre pour un poste : une entreprise qui recrute est tirée au hasard, et fixe le salaire. */
+function makeOffer(job: Job): JobOffer {
+  const pool = COMPANIES.filter((c) => c.jobs.includes(job.id));
+  const company = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  return { jobId: job.id, monthsLeft: OFFER_MONTHS[job.grade], companyId: company?.id ?? '', salary: salaryAt(job, company) };
+}
 
 /** Premières offres visibles : les postes de départ, qui durent longtemps. */
-const starterOffers = (): JobOffer[] => STARTER_JOBS.map((id) => offerFor(jobById(id)!));
+const starterOffers = (): JobOffer[] => STARTER_JOBS.map((id) => makeOffer(jobById(id)!));
+
+/** Salaire mensuel actuel : celui de l'offre acceptée (le prix de base pour une ancienne sauvegarde). */
+export const currentSalary = (state: GameState): number => {
+  const job = jobById(state.job);
+  return job ? state.jobSalary ?? job.salary : 0;
+};
+
+/** Prix d'un boulot rapide ce semestre : paie de base ajustée par l'écart tiré au catalogue. */
+export const gigPay = (state: GameState, gig: Gig): number => withFactor(gig.pay, state.catalog.factors[gig.id] ?? 0);
+
+/** Coût mensuel d'une formation ou d'une étude : celui fixé à l'inscription si elle est en cours. */
+export const trainingPrice = (state: GameState, id: string): number =>
+  state.training?.id === id ? state.training.tuition : withFactor(TRAININGS[id].tuition, state.catalog.factors[id] ?? 0);
 
 /** Complète une sauvegarde d'une version antérieure avec les champs ajoutés depuis. */
 export function migrateGame(raw: GameState): GameState {
@@ -69,8 +110,13 @@ export function migrateGame(raw: GameState): GameState {
   g.jobTarget ??= null;
   g.gig ??= null;
   g.offers ??= starterOffers();
+  g.offers = g.offers.map((o) => (o.companyId ? o : { ...makeOffer(jobById(o.jobId) ?? JOBS[0]), jobId: o.jobId, monthsLeft: o.monthsLeft }));
   g.history ??= {};
   g.catalog ??= drawCatalog(g);
+  g.catalog.factors ??= {};
+  if (g.training) g.training.tuition ??= TRAININGS[g.training.id].tuition;
+  g.jobCompany ??= null;
+  g.jobSalary ??= null;
   // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
   const legacy = g.stats as unknown as Record<string, number | undefined>;
   g.skills ??= { ...START_SKILLS, intelligence: legacy.knowledge ?? START_SKILLS.intelligence };
@@ -155,15 +201,14 @@ export function setGig(state: GameState, id: string | null): GameState {
   return s;
 }
 
-export const trainingTuition = (state: GameState): number =>
-  state.training ? TRAININGS[state.training.id].tuition : 0;
+export const trainingTuition = (state: GameState): number => state.training?.tuition ?? 0;
 
 export function enrollTraining(state: GameState, id: string): GameState {
   if (!TRAININGS[id] || state.training || state.diplomas.includes(id)) return state;
   if (TRAININGS[id].requires?.some((r) => !state.diplomas.includes(r))) return state;
   if (!state.catalog[TRAININGS[id].quick ? 'quick' : 'training'].includes(id)) return state;
   const s = structuredClone(state);
-  s.training = { id, monthsDone: 0 };
+  s.training = { id, monthsDone: 0, tuition: trainingPrice(state, id) };
   addLog(s, 'log.enrolled', { trainingId: id }, 'good');
   return s;
 }
@@ -261,14 +306,37 @@ export function setSchedule(state: GameState, key: ScheduleKey, value: number): 
 
 // ---------- Effets du planning ----------
 
-export const monthlyIncome = (state: GameState): number =>
-  (jobById(state.job)?.salary ?? 0) + (gigById(state.gig)?.pay ?? 0);
-
-/** Nourriture + loyer + entretien de la voiture + coût des loisirs. */
-export function monthlyExpenses(state: GameState): number {
-  const leisureCost = Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR);
-  return FOOD_COST + (HOUSING[state.housing]?.rent ?? 0) + (state.car ? CARS[state.car]?.upkeep ?? 0 : 0) + leisureCost + trainingTuition(state);
+/** Une ligne du détail mensuel : `id` sert à retrouver le libellé traduit selon `kind`. */
+export interface MoneyLine {
+  kind: 'job' | 'gig' | 'food' | 'housing' | 'car' | 'leisure' | 'training';
+  id?: string;
+  amount: number;
 }
+
+export function monthlyIncomeLines(state: GameState): MoneyLine[] {
+  const job = jobById(state.job);
+  const gig = gigById(state.gig);
+  const lines: MoneyLine[] = [];
+  if (job) lines.push({ kind: 'job', id: job.id, amount: currentSalary(state) });
+  if (gig) lines.push({ kind: 'gig', id: gig.id, amount: gigPay(state, gig) });
+  return lines;
+}
+
+/** Nourriture + loyer + entretien de la voiture + coût des loisirs + frais de formation. */
+export function monthlyExpenseLines(state: GameState): MoneyLine[] {
+  const lines: MoneyLine[] = [
+    { kind: 'food', amount: FOOD_COST },
+    { kind: 'housing', id: state.housing, amount: HOUSING[state.housing]?.rent ?? 0 },
+  ];
+  if (state.car) lines.push({ kind: 'car', id: state.car, amount: CARS[state.car]?.upkeep ?? 0 });
+  lines.push({ kind: 'leisure', amount: Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR) });
+  if (state.training) lines.push({ kind: 'training', id: state.training.id, amount: trainingTuition(state) });
+  return lines;
+}
+
+const sumLines = (lines: MoneyLine[]): number => lines.reduce((a, l) => a + l.amount, 0);
+export const monthlyIncome = (state: GameState): number => sumLines(monthlyIncomeLines(state));
+export const monthlyExpenses = (state: GameState): number => sumLines(monthlyExpenseLines(state));
 
 /**
  * Effets mensuels du planning, tels qu'affichés au joueur et appliqués au passage du mois.
@@ -556,10 +624,14 @@ function resolveApplication(s: GameState) {
     return;
   }
   if (Math.random() < hireChance(s, target)) {
+    const offer = s.offers.find((o) => o.jobId === target.id)!;
     s.job = target.id;
+    s.jobSalary = offer.salary;
+    s.jobCompany = offer.companyId || null;
     s.jobTarget = null;
     s.offers = s.offers.filter((o) => o.jobId !== target.id);
-    addLog(s, 'log.jobFound', { jobId: target.id, gender: s.gender, salary: target.salary }, 'good');
+    const company = companyById(offer.companyId);
+    addLog(s, company ? 'log.jobFoundAt' : 'log.jobFound', { jobId: target.id, gender: s.gender, salary: offer.salary, company: company?.name ?? '' }, 'good');
   } else {
     addLog(s, 'log.jobNone', { jobId: target.id, gender: s.gender });
   }
@@ -594,11 +666,18 @@ export function drawCatalog(state: GameState): Catalog {
     .filter(([id]) => !state.diplomas.includes(id))
     .map(([id, cfg]) => ({ id, ...cfg }));
   const inProgress = state.training?.id ?? null;
-  return {
+  const catalog = {
     gigs: pick(GIGS, (g) => g.weight, state.gig),
     quick: pick(trainings.filter((t) => t.quick), (t) => t.weight, inProgress),
     training: pick(trainings.filter((t) => !t.quick), (t) => t.weight, inProgress),
   };
+  // Chaque élément visible reçoit un nouvel écart de prix, sauf ce qui est en cours : la paie du boulot exercé ne bouge pas.
+  const factors: Record<string, number> = {};
+  for (const id of [...catalog.gigs, ...catalog.quick, ...catalog.training]) {
+    const kept = id === state.gig || id === inProgress;
+    factors[id] = kept ? state.catalog?.factors?.[id] ?? 0 : rollFactor();
+  }
+  return { ...catalog, factors };
 }
 
 /** Désavantages mensuels cumulés sur la santé et le bonheur : gros emploi, boulot rapide et formation en cours. */
@@ -606,7 +685,7 @@ export function monthlyDrawbacks(state: GameState): Record<StatKey, number> {
   const total: Record<StatKey, number> = { health: 0, happiness: 0 };
   const job = jobById(state.job);
   const sources: Drawback[] = [
-    job?.drawback ?? {},
+    job ? jobDrawback(job, companyById(state.jobCompany)) : {},
     gigById(state.gig)?.drawback ?? {},
     state.training ? TRAININGS[state.training.id].drawback : {},
   ];
@@ -646,7 +725,7 @@ function refreshOffers(s: GameState) {
       .slice(0, overflow);
     s.offers = s.offers.filter((o) => !drop.includes(o));
   }
-  s.offers.push(...fresh.map(offerFor));
+  s.offers.push(...fresh.map(makeOffer));
   addLog(s, 'log.newOffers', { count: fresh.length }, 'good');
 }
 
@@ -665,14 +744,16 @@ export function endTurn(state: GameState): GameState {
 
   const job = jobById(s.job);
   if (job) {
-    s.money += job.salary;
-    addLog(s, 'log.pay', { jobId: job.id, gender: s.gender, amount: job.salary }, 'good');
+    const salary = currentSalary(s);
+    s.money += salary;
+    addLog(s, 'log.pay', { jobId: job.id, gender: s.gender, amount: salary }, 'good');
     gainExperience(s, job);
   }
   const gig = gigById(s.gig);
   if (gig) {
-    s.money += gig.pay;
-    addLog(s, 'log.gigPay', { gigId: gig.id, amount: gig.pay }, 'good');
+    const pay = gigPay(s, gig);
+    s.money += pay;
+    addLog(s, 'log.gigPay', { gigId: gig.id, amount: pay }, 'good');
   }
   const expenses = monthlyExpenses(s);
   s.money -= expenses;

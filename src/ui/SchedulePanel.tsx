@@ -2,7 +2,8 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS } from '../data/content';
 import {
-  isOverbooked, monthlyExpenses, monthlyIncome, scheduleEffects, weekBreakdown,
+  isOverbooked, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, scheduleEffects, weekBreakdown,
+  type MoneyLine,
 } from '../game/engine';
 import type { GameState, ScheduleKey } from '../game/types';
 import { formatNumber, formatSigned } from '../i18n/format';
@@ -16,6 +17,22 @@ const HOLD_MS = 1000;
 const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'sport', 'search'];
 const FIXED = ['work', 'commute', 'essentials'] as const;
 const cat = (id: string) => TIME_CATS.find((c) => c.id === id)!;
+
+/** Infobulle au survol d'une pastille : une ligne par poste. */
+function MoneyTip({ lines, label, money, sign, empty }: {
+  lines: MoneyLine[]; label: (l: MoneyLine) => string; money: (n: number) => string; sign: 1 | -1; empty: string;
+}) {
+  return (
+    <div className={`money-tip ${sign > 0 ? 'good' : 'bad'}`} role="tooltip">
+      {lines.length === 0 && <span className="muted">{empty}</span>}
+      {lines.map((l, i) => (
+        <div className="money-tip-row" key={`${l.kind}-${l.id ?? ''}`} style={{ animationDelay: `${60 + i * 55}ms` }}>
+          <span>{label(l)}</span><b>{money(sign * l.amount)}</b>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function SchedulePanel({ game }: { game: GameState }) {
   const { t, i18n } = useTranslation();
@@ -40,6 +57,18 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'sport': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sportHealth, lng) }), tone: tone(fx.sportHealth) };
       case 'study': return { text: t('schedule.effect.skill', { delta: formatSigned(fx.studyIntelligence, lng) }), tone: tone(fx.studyIntelligence) };
       case 'search': return { text: t('schedule.effect.search', { count: fx.searchOffers }), tone: tone(fx.searchOffers) };
+    }
+  };
+
+  const lineLabel = (l: MoneyLine): string => {
+    switch (l.kind) {
+      case 'job': return t(`jobs.${l.id}`, { context: game.gender });
+      case 'gig': return t(`gigs.${l.id}.name`);
+      case 'housing': return t(`housing.${l.id}`);
+      case 'car': return t(`cars.${l.id}`);
+      case 'training': return t(`trainings.${l.id}.name`);
+      case 'food': return t('schedule.lines.food');
+      case 'leisure': return t('schedule.lines.leisure');
     }
   };
 
@@ -103,8 +132,14 @@ export function SchedulePanel({ game }: { game: GameState }) {
       </div>
 
       <div className="pills">
-        <div className="pill"><small>{t('schedule.income')}</small><strong className="good">{money(income)}</strong></div>
-        <div className="pill"><small>{t('schedule.expenses')}</small><strong className="bad">{money(-expenses)}</strong></div>
+        <div className="pill has-tip" tabIndex={0}>
+          <small>{t('schedule.income')}</small><strong className="good">{money(income)}</strong>
+          <MoneyTip lines={monthlyIncomeLines(game)} label={lineLabel} money={money} sign={1} empty={t('schedule.noIncome')} />
+        </div>
+        <div className="pill has-tip" tabIndex={0}>
+          <small>{t('schedule.expenses')}</small><strong className="bad">{money(-expenses)}</strong>
+          <MoneyTip lines={monthlyExpenseLines(game)} label={lineLabel} money={money} sign={-1} empty="" />
+        </div>
         <div className="pill"><small>{t('schedule.balance')}</small><strong className={balance < 0 ? 'bad' : 'good'}>{money(balance)}</strong></div>
       </div>
 
@@ -112,7 +147,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
         className="next-turn"
         disabled={over}
         duration={HOLD_MS}
-        label={over ? t('schedule.blocked') : t('schedule.hold', { seconds: HOLD_MS / 1000 })}
+        label={over ? t('schedule.blocked') : t('schedule.hold')}
         holdLabel={t('schedule.holding')}
         onComplete={endTurn}
       />

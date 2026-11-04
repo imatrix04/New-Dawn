@@ -151,8 +151,18 @@ export const OFFER_MONTHS: Record<number, number> = { 1: 6, 2: 3, 3: 2, 4: 1 };
 export const OFFER_WEIGHT: Record<number, number> = { 1: 6, 2: 4, 3: 2, 4: 1 };
 
 /** Chance d'être embauché chaque mois où l'on postule à une offre encore valable, selon le grade. */
-export const HIRE_CHANCE: Record<number, number> = { 1: 0.6, 2: 0.45, 3: 0.35, 4: 0.25 };
+export const HIRE_CHANCE: Record<number, number> = { 1: 0.5, 2: 0.4, 3: 0.3, 4: 0.15 };
 export const HIRE_CHANCE_MAX = 0.95;
+
+// ---------- Prix variables ----------
+
+/** Salaire net minimum (SMIC net depuis le 1er juin 2026) : aucune offre d'emploi ne paie moins. */
+export const SMIC_NET = 1478;
+/**
+ * Les prix du jeu sont des prix de base. Chaque salaire (écart fixé par l'entreprise), paie de boulot rapide et
+ * coût de formation (tirés au hasard à chaque renouvellement du catalogue) s'en écarte d'au plus 10 %, dans les deux sens.
+ */
+export const PRICE_VARIATION = 0.1;
 /** Bonus d'embauche pour l'expérience déjà acquise dans le domaine du poste : +5 points par année, jusqu'à +15. */
 export const EXPERIENCE_BONUS_PER_YEAR = 0.05;
 export const EXPERIENCE_BONUS_MAX = 0.15;
@@ -217,7 +227,7 @@ export interface TrainingConfig {
 }
 
 export const TRAININGS: Record<string, TrainingConfig> = {
-  hotelSchool: { months: 24, tuition: 758, minStudyHours: 10, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
+  hotelSchool: { months: 24, tuition: 758, minStudyHours: 20, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
   caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 6 }, hireBonus: { field: 'transport', bonus: 0.15 }, weight: 2, drawback: { health: -1 } },
   permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 3 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
   permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 2, strength: 1 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
@@ -274,3 +284,65 @@ export const JOBS: Job[] = [
   { id: 'accountant', grade: 3, drawback: { health: -0.5, happiness: -2 }, field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
   { id: 'engineer', grade: 4, drawback: { health: -1, happiness: -2.5 }, field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
 ];
+// ---------- Entreprises (fictives) ----------
+
+/**
+ * Entreprises imaginaires qui recrutent. Chacune a son niveau de paie (`pay` : écart fixe avec le salaire de base,
+ * de -10 % à +10 %) et sa propre pénibilité (`drawback` : s'ajoute à celle du poste, négatif = pire ambiance ou
+ * conditions plus dures, positif = plus agréable). Un nom propre n'est pas traduit.
+ */
+export interface Company {
+  id: string;
+  name: string;
+  /** Postes pour lesquels elle recrute. */
+  jobs: string[];
+  pay: number;
+  drawback: Drawback;
+}
+
+export const COMPANIES: Company[] = [
+  // Restauration rapide
+  { id: 'burgerBrigade', name: 'Burger Brigade', jobs: ['fastFood'], pay: 0.04, drawback: { happiness: -0.5 } },
+  { id: 'croustyExpress', name: 'Crousty Express', jobs: ['fastFood'], pay: -0.03, drawback: { health: -0.5, happiness: -0.5 } },
+  { id: 'pizzaPronto', name: 'Pizza Pronto', jobs: ['fastFood'], pay: 0.07, drawback: { health: -0.5 } },
+  // Restauration basique
+  { id: 'brasserieCoin', name: 'Brasserie du Coin', jobs: ['diner'], pay: 0, drawback: {} },
+  { id: 'relaisFleuri', name: 'Le Relais Fleuri', jobs: ['diner'], pay: 0.06, drawback: { happiness: 0.5 } },
+  { id: 'chezMarcel', name: 'Chez Marcel & Fils', jobs: ['diner'], pay: -0.05, drawback: { health: -0.5 } },
+  // Restauration haut de gamme
+  { id: 'maisonAubrac', name: 'Maison Aubrac', jobs: ['fineDining'], pay: 0.09, drawback: { happiness: -1 } },
+  { id: 'grandVerger', name: 'Le Grand Verger', jobs: ['fineDining'], pay: 0.02, drawback: { happiness: 0.5 } },
+  { id: 'atelierVelours', name: "L'Atelier Velours", jobs: ['fineDining'], pay: -0.04, drawback: { health: -0.5 } },
+  // Vente
+  { id: 'primeurMarket', name: 'Primeur Market', jobs: ['cashier'], pay: 0, drawback: {} },
+  { id: 'epicerieP', name: 'Épicerie Prisma', jobs: ['cashier'], pay: -0.06, drawback: { happiness: 0.5 } },
+  { id: 'hyperCobalt', name: 'Hyper Cobalt', jobs: ['cashier'], pay: 0.08, drawback: { health: -0.5, happiness: -0.5 } },
+  // Transport et logistique
+  { id: 'colisRapide', name: 'Colis Rapide', jobs: ['driver'], pay: 0.03, drawback: { health: -0.5 } },
+  { id: 'livrExpress', name: 'LivrExpress', jobs: ['driver'], pay: -0.05, drawback: {} },
+  { id: 'velocite', name: 'Vélocité Services', jobs: ['driver', 'motoCourier'], pay: 0.08, drawback: { health: -1 } },
+  { id: 'logiStock', name: 'LogiStock', jobs: ['forklift'], pay: 0.02, drawback: {} },
+  { id: 'entrepotsNordik', name: 'Entrepôts Nordik', jobs: ['forklift'], pay: 0.07, drawback: { health: -0.5 } },
+  { id: 'palettesCo', name: 'Palettes & Co', jobs: ['forklift'], pay: -0.06, drawback: { happiness: 0.5 } },
+  { id: 'trajetDirect', name: 'Trajet Direct', jobs: ['vtc'], pay: 0.05, drawback: { happiness: -0.5 } },
+  { id: 'citeCab', name: 'Cité Cab', jobs: ['vtc'], pay: -0.04, drawback: {} },
+  { id: 'motoFlash', name: 'Moto Flash', jobs: ['motoCourier'], pay: 0.06, drawback: { health: -1 } },
+  { id: 'urbainExpress', name: 'Urbain Express', jobs: ['motoCourier'], pay: -0.02, drawback: {} },
+  { id: 'bastide', name: 'Transports Bastide', jobs: ['truckDriver'], pay: 0.05, drawback: {} },
+  { id: 'eurofretSud', name: 'EuroFret Sud', jobs: ['truckDriver'], pay: 0.09, drawback: { happiness: -1 } },
+  { id: 'routierAtlas', name: 'Routier Atlas', jobs: ['truckDriver'], pay: -0.05, drawback: { happiness: 0.5 } },
+  // Bureau
+  { id: 'cabinetDelmas', name: 'Cabinet Delmas', jobs: ['office', 'adminAssistant'], pay: 0.03, drawback: {} },
+  { id: 'bureautix', name: 'Bureautix', jobs: ['office'], pay: -0.07, drawback: { happiness: 0.5 } },
+  { id: 'groupeHexagone', name: 'Groupe Hexagone', jobs: ['office', 'adminAssistant'], pay: 0.08, drawback: { happiness: -0.5 } },
+  { id: 'agenceEquinoxe', name: 'Agence Équinoxe', jobs: ['adminAssistant'], pay: -0.03, drawback: { happiness: 0.5 } },
+  // Finance
+  { id: 'fiducia', name: 'Fiducia Conseil', jobs: ['accountant'], pay: 0.04, drawback: {} },
+  { id: 'lemaitre', name: 'Lemaître & Associés', jobs: ['accountant'], pay: 0.09, drawback: { happiness: -1 } },
+  { id: 'auditHorizon', name: 'Audit Horizon', jobs: ['accountant'], pay: -0.03, drawback: { health: 0.5 } },
+  // Ingénierie
+  { id: 'technovia', name: 'Technovia', jobs: ['engineer'], pay: 0.06, drawback: { happiness: -0.5 } },
+  { id: 'ingenierieLumen', name: 'Ingénierie Lumen', jobs: ['engineer'], pay: -0.02, drawback: { happiness: 0.5 } },
+  { id: 'kappaSystemes', name: 'Kappa Systèmes', jobs: ['engineer'], pay: 0.09, drawback: { health: -0.5, happiness: -1 } },
+];
+
