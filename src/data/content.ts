@@ -1,4 +1,4 @@
-import type { Job, Schedule, ScheduleKey, SkillId, StartPath, StatDef } from '../game/types';
+import type { Drawback, Job, Schedule, ScheduleKey, SkillId, StartPath, StatDef } from '../game/types';
 
 export const EVENT_CHANCE = 0.55;
 export const DEBT_LIMIT = -2000;
@@ -153,12 +153,22 @@ export const OFFER_WEIGHT: Record<number, number> = { 1: 6, 2: 4, 3: 2, 4: 1 };
 /** Chance d'être embauché chaque mois où l'on postule à une offre encore valable, selon le grade. */
 export const HIRE_CHANCE: Record<number, number> = { 1: 0.6, 2: 0.45, 3: 0.35, 4: 0.25 };
 export const HIRE_CHANCE_MAX = 0.95;
+/** Bonus d'embauche pour l'expérience déjà acquise dans le domaine du poste : +5 points par année, jusqu'à +15. */
+export const EXPERIENCE_BONUS_PER_YEAR = 0.05;
+export const EXPERIENCE_BONUS_MAX = 0.15;
+
+// ---------- Catalogue : boulots rapides et formations ----------
+
+/** Les boulots rapides et les formations proposés changent tous les 6 mois, 6 au maximum par catégorie. */
+export const CATALOG_REFRESH_MONTHS = 6;
+export const CATALOG_MAX = 6;
 
 // ---------- Boulots rapides ----------
 
 /**
- * Petits boulots toujours disponibles, sans candidature : un seul à la fois, payés chaque mois.
+ * Petits boulots sans candidature : un seul à la fois, payés chaque mois, à condition d'être au catalogue.
  * Leurs heures et leurs trajets s'ajoutent à la semaine. Paye ≈ SMIC horaire net × heures × 4,3 semaines.
+ * `weight` : plus il est grand, plus le boulot revient souvent au catalogue. `drawback` : effet mensuel sur les jauges.
  */
 export interface Gig {
   id: string; // textes : gigs.<id>
@@ -167,12 +177,14 @@ export interface Gig {
   commute: number;
   pay: number;
   skills: Partial<Record<SkillId, number>>;
+  weight: number;
+  drawback: Drawback;
 }
 
 export const GIGS: Gig[] = [
-  { id: 'delivery', icon: '🛵', hours: 8, commute: 1, pay: 380, skills: { logistics: 0.3, strength: 0.1 } },
-  { id: 'babysitting', icon: '🧸', hours: 6, commute: 1, pay: 260, skills: { charisma: 0.3 } },
-  { id: 'moving', icon: '📦', hours: 8, commute: 2, pay: 400, skills: { strength: 0.3 } },
+  { id: 'delivery', icon: '🛵', hours: 8, commute: 1, pay: 380, skills: { logistics: 0.3, strength: 0.1 }, weight: 3, drawback: { health: -1.5, happiness: -0.5 } },
+  { id: 'babysitting', icon: '🧸', hours: 6, commute: 1, pay: 260, skills: { charisma: 0.3 }, weight: 2, drawback: { health: -0.5, happiness: -1.5 } },
+  { id: 'moving', icon: '📦', hours: 8, commute: 2, pay: 400, skills: { strength: 0.3 }, weight: 2, drawback: { health: -2, happiness: -0.5 } },
 ];
 
 /**
@@ -196,13 +208,22 @@ export interface TrainingConfig {
   skills?: Partial<Record<SkillId, number>>;
   /** Bonus de chance d'embauche pour les postes de ce domaine. */
   hireBonus?: { field: string; bonus: number };
+  /** Formations à avoir déjà obtenues pour s'inscrire (ex : le permis poids lourd suppose le permis B). */
+  requires?: string[];
+  /** Plus il est grand, plus la formation revient souvent au catalogue. */
+  weight: number;
+  /** Effet mensuel sur les jauges tant qu'on est inscrit (fatigue, stress). */
+  drawback: Drawback;
 }
 
 export const TRAININGS: Record<string, TrainingConfig> = {
-  hotelSchool: { months: 24, tuition: 758, minStudyHours: 10 },
-  caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 6 }, hireBonus: { field: 'transport', bonus: 0.15 } },
-  barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 4 }, hireBonus: { field: 'restaurant', bonus: 0.15 } },
-  officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 8 }, hireBonus: { field: 'office', bonus: 0.15 } },
+  hotelSchool: { months: 24, tuition: 758, minStudyHours: 10, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
+  caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 6 }, hireBonus: { field: 'transport', bonus: 0.15 }, weight: 2, drawback: { health: -1 } },
+  permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 3 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
+  permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 2, strength: 1 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
+  permisC: { months: 3, tuition: 1000, minStudyHours: 6, quick: true, skills: { logistics: 5 }, hireBonus: { field: 'transport', bonus: 0.15 }, requires: ['permisB'], weight: 1, drawback: { health: -1, happiness: -2 } },
+  barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 4 }, hireBonus: { field: 'restaurant', bonus: 0.15 }, weight: 4, drawback: { happiness: -1 } },
+  officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 8 }, hireBonus: { field: 'office', bonus: 0.15 }, weight: 3, drawback: { happiness: -1.5 } },
 };
 
 export const START_STATS = { health: 80, happiness: 60 };
@@ -227,26 +248,29 @@ export const STATS: StatDef[] = [
  * Le jeu n'a pas d'augmentations avec l'ancienneté : ces montants sont fixes.
  */
 export const JOBS: Job[] = [
-  { id: 'fastFood', grade: 1, field: 'restaurant', salary: 1478, hours: 35, commute: 3 },
-  { id: 'diner', grade: 1, field: 'restaurant', salary: 1600, hours: 35, commute: 4 },
+  { id: 'fastFood', grade: 1, drawback: { health: -1.5, happiness: -1.5 }, field: 'restaurant', salary: 1478, hours: 35, commute: 3 },
+  { id: 'diner', grade: 1, drawback: { health: -1.5, happiness: -1 }, field: 'restaurant', salary: 1600, hours: 35, commute: 4 },
   {
-    id: 'fineDining', grade: 3, field: 'restaurant', salary: 1900, hours: 39, commute: 6,
+    id: 'fineDining', grade: 3, drawback: { health: -2, happiness: -2.5 }, field: 'restaurant', salary: 1900, hours: 39, commute: 6,
     anyOf: [
       { type: 'experience', field: 'restaurant', months: 24 },
       { type: 'diploma', id: 'hotelSchool' },
     ],
   },
-  { id: 'cashier', grade: 1, field: 'retail', salary: 1500, minSkills: { charisma: 10 }, hours: 35, commute: 4 },
-  { id: 'driver', grade: 1, field: 'transport', salary: 1650, minSkills: { logistics: 12 }, hours: 40, commute: 2 },
+  { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, minSkills: { charisma: 10 }, hours: 35, commute: 4 },
+  { id: 'driver', grade: 1, drawback: { health: -1.5, happiness: -0.5 }, field: 'transport', salary: 1650, minSkills: { logistics: 12 }, hours: 40, commute: 2 },
   {
-    id: 'forklift', grade: 2, field: 'transport', salary: 1700, hours: 35, commute: 5,
+    id: 'forklift', grade: 2, drawback: { health: -2, happiness: -0.5 }, field: 'transport', salary: 1700, hours: 35, commute: 5,
     anyOf: [{ type: 'diploma', id: 'caces' }],
   },
-  { id: 'office', grade: 2, field: 'office', salary: 1700, minSkills: { digital: 20 }, hours: 35, commute: 7 },
+  { id: 'vtc', grade: 2, drawback: { health: -1, happiness: -1.5 }, field: 'transport', salary: 1800, hours: 40, commute: 2, anyOf: [{ type: 'diploma', id: 'permisB' }] },
+  { id: 'motoCourier', grade: 2, drawback: { health: -2, happiness: -1 }, field: 'transport', salary: 1750, hours: 39, commute: 2, anyOf: [{ type: 'diploma', id: 'permisA' }] },
+  { id: 'truckDriver', grade: 3, drawback: { health: -2, happiness: -1.5 }, field: 'transport', salary: 2000, hours: 39, commute: 3, anyOf: [{ type: 'diploma', id: 'permisC' }] },
+  { id: 'office', grade: 2, drawback: { health: -0.5, happiness: -1.5 }, field: 'office', salary: 1700, minSkills: { digital: 20 }, hours: 35, commute: 7 },
   {
-    id: 'adminAssistant', grade: 2, field: 'office', salary: 1800, minSkills: { digital: 25 }, hours: 35, commute: 7,
+    id: 'adminAssistant', grade: 2, drawback: { health: -0.5, happiness: -1 }, field: 'office', salary: 1800, minSkills: { digital: 25 }, hours: 35, commute: 7,
     anyOf: [{ type: 'diploma', id: 'officeSuite' }],
   },
-  { id: 'accountant', grade: 3, field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
-  { id: 'engineer', grade: 4, field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
+  { id: 'accountant', grade: 3, drawback: { health: -0.5, happiness: -2 }, field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
+  { id: 'engineer', grade: 4, drawback: { health: -1, happiness: -2.5 }, field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
 ];

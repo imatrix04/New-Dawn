@@ -91,6 +91,8 @@ export interface GameState {
   offers: JobOffer[];
   /** Boulot rapide en cours (voir GIGS), ou null. */
   gig: string | null;
+  /** Boulots rapides et formations visibles : tirés au sort, renouvelés tous les 6 mois. */
+  catalog: Catalog;
   /** Compétences du personnage. */
   skills: Record<SkillId, number>;
   /** Mois travaillés par poste (job.id) : détail de l'expérience, affiché dans le profil. */
@@ -126,6 +128,16 @@ export type Qualification =
   | { type: 'experience'; field: string; months: number }
   | { type: 'diploma'; id: string };
 
+/** Désavantage mensuel sur les jauges (valeurs négatives), tant que l'activité est en cours. */
+export type Drawback = Partial<Record<StatKey, number>>;
+
+/** Identifiants visibles par catégorie : boulots rapides, formations rapides, formations longues. */
+export interface Catalog {
+  gigs: string[];
+  quick: string[];
+  training: string[];
+}
+
 export interface JobOffer {
   jobId: string;
   /** Mois restants avant que l'offre disparaisse. */
@@ -136,6 +148,8 @@ export interface Job {
   id: string; // texte : jobs.<id> (version féminine : jobs.<id>_female)
   /** Prestige, de 1 (poste de base, offre durable) à 4 (offre très éphémère). */
   grade: number;
+  /** Ce que le métier coûte chaque mois en santé et en bonheur (pénibilité physique, pression mentale). */
+  drawback: Drawback;
   /** Domaine, pour l'expérience (textes : fields.<field>). */
   field: string;
   salary: number;

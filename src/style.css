@@ -487,6 +487,30 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 .offers-meta .good { color: var(--good); }
 
 .job-list { display: flex; flex-direction: column; gap: 6px; }
+.card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-items: start; }
+.card-grid > * { min-width: 0; }
+.job-card { cursor: pointer; }
+.job-card .job-name { font-size: .84rem; overflow-wrap: anywhere; }
+.job-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.job-card.selected { border-color: var(--accent); }
+.meter.chance { height: 6px; }
+.meter.chance.big { height: 8px; }
+
+.job-detail {
+  display: flex; flex-direction: column; gap: 7px; margin-bottom: 8px; padding: 11px 12px; border-radius: 12px;
+  background: #1b1f31; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  animation: hint-in .25s ease;
+}
+.icon-close { all: unset; cursor: pointer; padding: 0 6px; font-size: 1.2rem; line-height: 1; color: var(--muted); border-radius: 6px; }
+.icon-close:hover { color: var(--text); }
+.icon-close:focus-visible { outline: 2px solid var(--accent); }
+.chance-box { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 10px; background: #151826; }
+.chance-box h4 { margin: 0; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.chance-list { display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0; list-style: none; font-size: .78rem; }
+.chance-list li { display: flex; justify-content: space-between; gap: 10px; }
+.chance-list b { font-variant-numeric: tabular-nums; }
+.chance-list .plus b { color: var(--good); }
+.chance-list .total { margin-top: 2px; padding-top: 4px; border-top: 1px solid #232943; font-weight: 700; }
 .job-row {
   display: flex; flex-direction: column; gap: 5px; padding: 9px 11px; border-radius: 10px;
   background: #151826; border: 1px solid transparent;
@@ -524,6 +548,7 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 
 @container win (max-width: 360px) {
   .job-top { flex-wrap: wrap; }
+  .card-grid { grid-template-columns: 1fr; }
 }
 
 /* ---------- Profil ---------- */

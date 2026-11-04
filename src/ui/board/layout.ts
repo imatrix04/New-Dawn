@@ -6,7 +6,7 @@ export type WindowId = 'schedule' | 'status' | 'profile' | 'wallet' | 'career' |
 export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'profile', 'wallet', 'career', 'journal'];
 /** Largeur par défaut de chaque carte. */
 export const WINDOW_WIDTH: Record<WindowId, number> = {
-  schedule: 620, status: 330, profile: 380, wallet: 400, career: 440, journal: 330,
+  schedule: 620, status: 330, profile: 380, wallet: 400, career: 560, journal: 330,
 };
 /** Taille minimale d'une carte redimensionnée. */
 export const MIN_SIZE = { w: 260, h: 140 };

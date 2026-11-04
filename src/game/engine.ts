@@ -1,16 +1,17 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  CARS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE,
-  FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING, JOBS, LEISURE_COST_PER_WEEKLY_HOUR,
-  LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, SAVINGS, SCHEDULE, SKILL_RULES, SKILLS, SLEEP_NEUTRAL,
-  SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS, TRAININGS,
+  CARS, CATALOG_MAX, CATALOG_REFRESH_MONTHS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK,
+  EVENT_CHANCE, EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING, JOBS,
+  LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, SAVINGS, SCHEDULE,
+  SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS,
+  TRAININGS,
 } from '../data/content';
 import type { Gig } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
-  Account, Fx, GameState, Job, JobOffer, LogClass, LogEntry, Profile, Savings, SavingsProduct, Schedule,
-  ScheduleKey, SkillId, StatKey,
+  Account, Catalog, Drawback, Fx, GameState, Job, JobOffer, LogClass, LogEntry, Profile, Savings, SavingsProduct,
+  Schedule, ScheduleKey, SkillId, StatKey,
 } from './types';
 
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
@@ -29,6 +30,7 @@ export function createGame(profile: Profile): GameState {
     jobTarget: null,
     offers: starterOffers(),
     gig: null,
+    catalog: { gigs: [], quick: [], training: [] },
     skills: { ...START_SKILLS },
     history: {},
     month: 0,
@@ -44,6 +46,7 @@ export function createGame(profile: Profile): GameState {
     stats: { ...START_STATS },
     log: [],
   };
+  state.catalog = drawCatalog(state);
   addLog(state, profile.path === 'comfort' ? 'log.startComfort' : 'log.startTight', {}, 'month');
   return state;
 }
@@ -67,6 +70,7 @@ export function migrateGame(raw: GameState): GameState {
   g.gig ??= null;
   g.offers ??= starterOffers();
   g.history ??= {};
+  g.catalog ??= drawCatalog(g);
   // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
   const legacy = g.stats as unknown as Record<string, number | undefined>;
   g.skills ??= { ...START_SKILLS, intelligence: legacy.knowledge ?? START_SKILLS.intelligence };
@@ -98,17 +102,36 @@ export function jobEligibility(state: GameState, job: Job): Eligibility {
   return { skills, qualified, ok: skills && qualified };
 }
 
-/**
- * Chance d'être embauché chaque mois sur ce poste : dépend du grade, plus les bonus des formations rapides
- * suivies dans le même domaine.
- */
-export function hireChance(state: GameState, job: Job): number {
-  const bonus = state.diplomas.reduce((sum, id) => {
-    const b = TRAININGS[id]?.hireBonus;
-    return b && b.field === job.field ? sum + b.bonus : sum;
-  }, 0);
-  return Math.min(HIRE_CHANCE_MAX, HIRE_CHANCE[job.grade] + bonus);
+export type HireBonus =
+  | { type: 'training'; id: string; value: number }
+  | { type: 'experience'; field: string; months: number; value: number };
+
+export interface HireBreakdown {
+  /** Chance de base, selon le grade du poste. */
+  base: number;
+  bonuses: HireBonus[];
+  /** Base + bonus, plafonnée. */
+  total: number;
 }
+
+/**
+ * Chance d'être embauché chaque mois sur ce poste, détaillée : base du grade, bonus des formations suivies
+ * dans le même domaine, et bonus d'expérience dans le domaine.
+ */
+export function hireBreakdown(state: GameState, job: Job): HireBreakdown {
+  const bonuses: HireBonus[] = [];
+  for (const id of state.diplomas) {
+    const b = TRAININGS[id]?.hireBonus;
+    if (b && b.field === job.field) bonuses.push({ type: 'training', id, value: b.bonus });
+  }
+  const months = experienceMonths(state, job.field);
+  const value = Math.min(EXPERIENCE_BONUS_MAX, Math.floor(months / 12) * EXPERIENCE_BONUS_PER_YEAR);
+  if (value > 0) bonuses.push({ type: 'experience', field: job.field, months, value });
+  const base = HIRE_CHANCE[job.grade];
+  return { base, bonuses, total: Math.min(HIRE_CHANCE_MAX, base + bonuses.reduce((sum, b) => sum + b.value, 0)) };
+}
+
+export const hireChance = (state: GameState, job: Job): number => hireBreakdown(state, job).total;
 
 /** Postule (ou annule avec null) à une offre visible. Seules les offres accessibles peuvent être visées. */
 export function setJobTarget(state: GameState, id: string | null): GameState {
@@ -126,7 +149,7 @@ export function setJobTarget(state: GameState, id: string | null): GameState {
 
 /** Démarre un boulot rapide (ou l'arrête avec null) : un seul à la fois. */
 export function setGig(state: GameState, id: string | null): GameState {
-  if (id === state.gig || (id !== null && !gigById(id))) return state;
+  if (id === state.gig || (id !== null && (!gigById(id) || !state.catalog.gigs.includes(id)))) return state;
   const s = structuredClone(state);
   s.gig = id;
   return s;
@@ -137,6 +160,8 @@ export const trainingTuition = (state: GameState): number =>
 
 export function enrollTraining(state: GameState, id: string): GameState {
   if (!TRAININGS[id] || state.training || state.diplomas.includes(id)) return state;
+  if (TRAININGS[id].requires?.some((r) => !state.diplomas.includes(r))) return state;
+  if (!state.catalog[TRAININGS[id].quick ? 'quick' : 'training'].includes(id)) return state;
   const s = structuredClone(state);
   s.training = { id, monthsDone: 0 };
   addLog(s, 'log.enrolled', { trainingId: id }, 'good');
@@ -266,9 +291,10 @@ export function scheduleEffects(schedule: Schedule) {
 export function projectNextStats(state: GameState): Record<StatKey, number> {
   const fx = scheduleEffects(state.schedule);
   const debt = state.money < 0 ? DEBT_HAPPINESS_LOSS : 0;
+  const drawbacks = monthlyDrawbacks(state);
   return {
-    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth),
-    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt),
+    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth + drawbacks.health),
+    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt + drawbacks.happiness),
   };
 }
 
@@ -539,16 +565,56 @@ function resolveApplication(s: GameState) {
   }
 }
 
-/** Tire `count` postes distincts, les plus prestigieux étant les plus rares (poids par grade). */
-function drawJobs(candidates: Job[], count: number): Job[] {
+/** Tire `count` éléments distincts, chacun avec une probabilité proportionnelle à son poids. */
+function drawWeighted<T>(candidates: T[], weight: (item: T) => number, count: number): T[] {
   const pool = [...candidates];
-  const picked: Job[] = [];
+  const picked: T[] = [];
   while (picked.length < count && pool.length) {
-    let roll = Math.random() * pool.reduce((sum, j) => sum + OFFER_WEIGHT[j.grade], 0);
-    const i = pool.findIndex((j) => (roll -= OFFER_WEIGHT[j.grade]) < 0);
+    let roll = Math.random() * pool.reduce((sum, item) => sum + weight(item), 0);
+    const i = pool.findIndex((item) => (roll -= weight(item)) < 0);
     picked.push(...pool.splice(i === -1 ? pool.length - 1 : i, 1));
   }
   return picked;
+}
+
+/** Tire `count` postes distincts, les plus prestigieux étant les plus rares (poids par grade). */
+const drawJobs = (candidates: Job[], count: number): Job[] => drawWeighted(candidates, (j) => OFFER_WEIGHT[j.grade], count);
+
+/**
+ * Tire le catalogue : 6 éléments au plus par catégorie, les plus lourds revenant plus souvent. Ce qui est en cours
+ * (boulot rapide exercé, formation suivie) reste toujours visible, et les diplômes déjà obtenus ne reviennent pas.
+ */
+export function drawCatalog(state: GameState): Catalog {
+  const pick = <T extends { id: string }>(items: T[], weight: (item: T) => number, keep: string | null): string[] => {
+    const kept = items.filter((i) => i.id === keep);
+    const rest = drawWeighted(items.filter((i) => i.id !== keep), weight, CATALOG_MAX - kept.length);
+    return [...kept, ...rest].map((i) => i.id);
+  };
+  const trainings = Object.entries(TRAININGS)
+    .filter(([id]) => !state.diplomas.includes(id))
+    .map(([id, cfg]) => ({ id, ...cfg }));
+  const inProgress = state.training?.id ?? null;
+  return {
+    gigs: pick(GIGS, (g) => g.weight, state.gig),
+    quick: pick(trainings.filter((t) => t.quick), (t) => t.weight, inProgress),
+    training: pick(trainings.filter((t) => !t.quick), (t) => t.weight, inProgress),
+  };
+}
+
+/** Désavantages mensuels cumulés sur la santé et le bonheur : gros emploi, boulot rapide et formation en cours. */
+export function monthlyDrawbacks(state: GameState): Record<StatKey, number> {
+  const total: Record<StatKey, number> = { health: 0, happiness: 0 };
+  const job = jobById(state.job);
+  const sources: Drawback[] = [
+    job?.drawback ?? {},
+    gigById(state.gig)?.drawback ?? {},
+    state.training ? TRAININGS[state.training.id].drawback : {},
+  ];
+  for (const d of sources) {
+    total.health += d.health ?? 0;
+    total.happiness += d.happiness ?? 0;
+  }
+  return total;
 }
 
 /**
@@ -622,6 +688,10 @@ export function endTurn(state: GameState): GameState {
   if (s.money < 0) addLog(s, 'log.overdraft', {}, 'bad');
 
   s.month += 1;
+  if (s.month % CATALOG_REFRESH_MONTHS === 0) {
+    s.catalog = drawCatalog(s);
+    addLog(s, 'log.catalogRefreshed');
+  }
   addLog(s, 'log.monthMark', { month: s.month }, 'month');
   closeExpiredSavings(s);
 

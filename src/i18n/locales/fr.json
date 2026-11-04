@@ -59,6 +59,18 @@
       "name": "École hôtelière",
       "desc": "Service en salle et savoir-être : ouvre les portes des restaurants haut de gamme."
     },
+    "permisB": {
+      "name": "Permis voiture (B)",
+      "desc": "Code et conduite : environ 3 mois et 1 800 € en auto-école. Ouvre les postes de chauffeur VTC."
+    },
+    "permisA": {
+      "name": "Permis moto (A2)",
+      "desc": "Plateau et circulation : environ 2 mois et 1 000 €. Ouvre les postes de coursier moto."
+    },
+    "permisC": {
+      "name": "Permis poids lourd (C)",
+      "desc": "Permis C et formation obligatoire (FIMO) : environ 3 mois et 3 000 €. Suppose d'avoir le permis B."
+    },
     "caces": {
       "name": "CACES cariste",
       "desc": "Certificat de conduite de chariots élévateurs : ouvre les postes de cariste."
@@ -80,7 +92,10 @@
   "career": {
     "current": "Poste actuel",
     "tabs": { "gigs": "Boulot rapide", "offers": "Offres d'emploi", "quick": "Formation rapide", "training": "Formation" },
-    "gigsHint": "Des petits boulots toujours disponibles, sans candidature. Un seul à la fois, payé à la fin de chaque mois.",
+    "gigsHint": "Des petits boulots sans candidature, payés à la fin de chaque mois. Un seul à la fois, et ils fatiguent.",
+    "refreshIn_one": "Le choix change dans {{count}} mois (tous les 6 mois, 6 propositions au maximum).",
+    "refreshIn_other": "Le choix change dans {{count}} mois (tous les 6 mois, 6 propositions au maximum).",
+    "noneLeft": "Rien à proposer pour le moment.",
     "gigInfo": "{{pay}}/mois • {{hours}} h de travail et {{commute}} h de trajet par semaine",
     "gigStart": "Commencer",
     "gigStop": "Arrêter",
@@ -91,15 +106,27 @@
     "noOffers": "Aucune offre pour le moment. Passe des heures à chercher un emploi pour en faire apparaître.",
     "expiresIn_one": "Expire dans {{count}} mois",
     "expiresIn_other": "Expire dans {{count}} mois",
-    "chance": "{{pct}} % de chance d'être pris chaque mois",
+    "salaryShort": "{{salary}}/mois",
+    "chanceLabel": "Chance d'être pris chaque mois",
+    "applied": "Candidature envoyée",
+    "pickOffer": "Touche une offre pour voir ses détails et postuler.",
+    "close": "Fermer",
+    "lockedNote": "Tu ne remplis pas encore les conditions pour postuler.",
+    "detail": {
+      "title": "D'où vient ta chance",
+      "base": "Chance de base (poste de grade {{grade}})",
+      "training": "Formation : {{name}}",
+      "experience": "Expérience en {{field}} ({{months}} mois)"
+    },
     "apply": "Postuler",
     "cancel": "Annuler",
     "applyNote": "Candidature envoyée : réponse à la fin du mois.",
-    "quickHint": "De courtes formations hors diplôme : elles donnent des compétences, ouvrent certains métiers et augmentent tes chances d'être embauché. Une seule formation à la fois.",
-    "trainingHint": "Les formations longues mènent à un diplôme. Une seule formation à la fois.",
+    "quickHint": "De courtes formations hors diplôme : elles donnent des compétences, ouvrent certains métiers et augmentent tes chances d'être embauché, mais elles pèsent sur la santé et le moral. Une seule formation à la fois.",
+    "trainingHint": "Les formations longues mènent à un diplôme et pèsent sur la santé et le moral. Une seule formation à la fois.",
     "hireBonus": "+{{pct}} % de chance d'embauche en {{field}}",
     "unlocks": "Ouvre : {{job}}",
     "certified": "Certifié",
+    "requires": "Nécessite : {{names}}",
     "status": { "current": "En poste", "locked": "Verrouillé" },
     "req": {
       "experience": "{{months}} mois d'expérience en {{field}}",
@@ -269,6 +296,12 @@
     "driver": "Livreur",
     "driver_female": "Livreuse",
     "forklift": "Cariste",
+    "vtc": "Chauffeur VTC",
+    "vtc_female": "Chauffeuse VTC",
+    "motoCourier": "Coursier moto",
+    "motoCourier_female": "Coursière moto",
+    "truckDriver": "Conducteur routier",
+    "truckDriver_female": "Conductrice routière",
     "adminAssistant": "Assistant administratif",
     "adminAssistant_female": "Assistante administrative",
     "office": "Employé de bureau",
@@ -330,6 +363,7 @@
     "trainingSkipped": "Formation : il te faut au moins {{hours}} h d'études par semaine, tu ne progresses pas ce mois-ci.",
     "diploma": "Diplôme obtenu : {{training}} !",
     "certificate": "Formation terminée : {{training}} !",
+    "catalogRefreshed": "Les boulots rapides et les formations proposés ont changé.",
     "gigPay": "Boulot rapide ({{gig}}) : +{{amount, number}} €.",
     "newOffers_one": "{{count}} nouvelle offre d'emploi.",
     "newOffers_other": "{{count}} nouvelles offres d'emploi.",

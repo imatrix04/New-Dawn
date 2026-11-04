@@ -59,6 +59,18 @@
       "name": "Hotel school",
       "desc": "Table service and etiquette: opens the doors of fine-dining restaurants."
     },
+    "permisB": {
+      "name": "Car licence (B)",
+      "desc": "Theory and driving: about 3 months and €1,800 at a driving school. Opens ride-hailing driver jobs."
+    },
+    "permisA": {
+      "name": "Motorbike licence (A2)",
+      "desc": "Track and road training: about 2 months and €1,000. Opens motorbike courier jobs."
+    },
+    "permisC": {
+      "name": "Truck licence (C)",
+      "desc": "Licence C plus mandatory training (FIMO): about 3 months and €3,000. Requires the B licence."
+    },
     "caces": {
       "name": "Forklift licence",
       "desc": "Forklift operator certificate: opens forklift operator jobs."
@@ -80,7 +92,10 @@
   "career": {
     "current": "Current job",
     "tabs": { "gigs": "Quick job", "offers": "Job offers", "quick": "Quick training", "training": "Training" },
-    "gigsHint": "Small jobs that are always available, no application needed. One at a time, paid at the end of each month.",
+    "gigsHint": "Small jobs, no application needed, paid at the end of each month. One at a time, and they take a toll.",
+    "refreshIn_one": "The selection changes in {{count}} month (every 6 months, 6 listings at most).",
+    "refreshIn_other": "The selection changes in {{count}} months (every 6 months, 6 listings at most).",
+    "noneLeft": "Nothing on offer right now.",
     "gigInfo": "{{pay}}/month • {{hours}} h of work and {{commute}} h of commuting per week",
     "gigStart": "Start",
     "gigStop": "Stop",
@@ -91,15 +106,27 @@
     "noOffers": "No offers right now. Spend hours job hunting to bring new ones up.",
     "expiresIn_one": "Expires in {{count}} month",
     "expiresIn_other": "Expires in {{count}} months",
-    "chance": "{{pct}}% chance of being hired each month",
+    "salaryShort": "{{salary}}/month",
+    "chanceLabel": "Chance of being hired each month",
+    "applied": "Applied",
+    "pickOffer": "Tap an offer to see its details and apply.",
+    "close": "Close",
+    "lockedNote": "You don't meet the requirements to apply yet.",
+    "detail": {
+      "title": "Where your chance comes from",
+      "base": "Base chance (grade {{grade}} job)",
+      "training": "Training: {{name}}",
+      "experience": "Experience in {{field}} ({{months}} months)"
+    },
     "apply": "Apply",
     "cancel": "Cancel",
     "applyNote": "Application sent: you'll hear back at the end of the month.",
-    "quickHint": "Short non-diploma courses: they give skills, open certain jobs and raise your odds of being hired. One training at a time.",
-    "trainingHint": "Long courses lead to a diploma. One training at a time.",
+    "quickHint": "Short non-diploma courses: they give skills, open certain jobs and raise your odds of being hired, but they weigh on health and mood. One training at a time.",
+    "trainingHint": "Long courses lead to a diploma and weigh on health and mood. One training at a time.",
     "hireBonus": "+{{pct}}% hiring chance in {{field}}",
     "unlocks": "Unlocks: {{job}}",
     "certified": "Certified",
+    "requires": "Requires: {{names}}",
     "status": { "current": "Employed", "locked": "Locked" },
     "req": {
       "experience": "{{months}} months of experience in {{field}}",
@@ -264,6 +291,9 @@
     "cashier": "Cashier",
     "driver": "Delivery driver",
     "forklift": "Forklift operator",
+    "vtc": "Ride-hailing driver",
+    "motoCourier": "Motorbike courier",
+    "truckDriver": "Truck driver",
     "adminAssistant": "Administrative assistant",
     "office": "Office clerk",
     "accountant": "Accountant",
@@ -322,6 +352,7 @@
     "trainingSkipped": "Training: you need at least {{hours}} study hours per week, so you make no progress this month.",
     "diploma": "Diploma earned: {{training}}!",
     "certificate": "Training completed: {{training}}!",
+    "catalogRefreshed": "The quick jobs and trainings on offer have changed.",
     "gigPay": "Quick job ({{gig}}): +€{{amount, number}}.",
     "newOffers_one": "{{count}} new job offer.",
     "newOffers_other": "{{count}} new job offers.",
