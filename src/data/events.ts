@@ -82,6 +82,33 @@ export const EVENTS: GameEvent[] = [
     ],
   },
   {
+    id: 'rentRaise',
+    when: (s) => s.home.tenure === 'rent' && s.home.rent > 0,
+    choices: [
+      {
+        run: (s) => {
+          s.home.rent = Math.round(s.home.rent * 1.05);
+          return { outcome: 'accepted', fx: {} };
+        },
+      },
+      {
+        run: (s) => {
+          if (Math.random() < 0.5) return { outcome: 'won', fx: { happiness: 2 }, good: true };
+          s.home.rent = Math.round(s.home.rent * 1.05);
+          return { outcome: 'lost', fx: { happiness: -3 } };
+        },
+      },
+    ],
+  },
+  {
+    id: 'homeRepairs',
+    when: (s) => s.home.tenure === 'own',
+    choices: [
+      { run: () => ({ outcome: 'repaired', fx: { money: -800 } }) },
+      { run: () => ({ outcome: 'postponed', fx: { happiness: -5, health: -2 } }) },
+    ],
+  },
+  {
     id: 'charges',
     choices: [
       { run: () => ({ outcome: 'paid', fx: { money: -100 } }) },

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HOUSING, JOBS, START, STARTER_JOBS } from '../data/content';
+import { HOUSING_TYPES, JOBS, START, STARTER_JOBS } from '../data/content';
 import { randomProfile } from '../game/profile';
 import type { Gender, Profile, StartPath } from '../game/types';
 import { formatNumber } from '../i18n/format';
@@ -72,7 +72,7 @@ export function CreateScreen() {
       t(`paths.${p}.perks.${i}`, {
         money: s.money,
         housing: t(`housing.${s.housing}`),
-        rent: HOUSING[s.housing].rent,
+        rent: HOUSING_TYPES[s.housing].rent,
       }),
     );
   };

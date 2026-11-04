@@ -44,8 +44,50 @@ export interface Profile {
  * Semaine type réglée par le joueur. Sommeil et loisirs sont en heures PAR JOUR,
  * le reste en heures PAR SEMAINE (voir SCHEDULE dans data/content.ts).
  */
-export type ScheduleKey = 'sleep' | 'leisure' | 'study' | 'sport' | 'search';
+export type ScheduleKey = 'sleep' | 'leisure' | 'study' | 'sport' | 'search' | 'housing';
 export type Schedule = Record<ScheduleKey, number>;
+
+/** Quartier : fait varier le prix, le trajet et l'ambiance d'un logement (voir AREAS). */
+export type Area = 'center' | 'suburb' | 'country';
+
+export type HousingKind = 'studio' | 'apartment' | 'house';
+
+/** Prêt immobilier en cours : `balance` est le capital restant dû. */
+export interface Loan {
+  balance: number;
+  monthly: number;
+  /** Taux annuel, fixé à la signature. */
+  rate: number;
+  monthsLeft: number;
+}
+
+/** Logement occupé : loué (loyer, caution) ou possédé (valeur, charges, prêt éventuel). */
+export interface Home {
+  /** Textes : housing.<typeId>. */
+  typeId: string;
+  area: Area;
+  tenure: 'rent' | 'own';
+  /** Loyer mensuel (0 pour un propriétaire). */
+  rent: number;
+  /** Caution versée, rendue au départ (location). */
+  deposit: number;
+  /** Valeur estimée du bien, qui évolue lentement (achat). */
+  value: number;
+  /** Charges mensuelles du propriétaire : taxe foncière, copropriété. */
+  charges: number;
+  loan: Loan | null;
+}
+
+/** Annonce visible : à louer (`price` = loyer mensuel) ou à vendre (`price` = prix d'achat). */
+export interface HousingListing {
+  id: string;
+  typeId: string;
+  area: Area;
+  tenure: 'rent' | 'buy';
+  price: number;
+  /** Mois restants avant que l'annonce disparaisse. */
+  monthsLeft: number;
+}
 
 export type SavingsProduct = 'livretA' | 'ldds' | 'livretJeune' | 'pel';
 
@@ -108,8 +150,11 @@ export interface GameState {
   /** Salaire et entreprise de l'offre acceptée (null pour une ancienne sauvegarde sans entreprise). */
   jobSalary: number | null;
   jobCompany: string | null;
-  /** Textes : housing.<id>. */
-  housing: string;
+  home: Home;
+  /** Annonces de logement visibles. Elles expirent, et ne se renouvellent qu'avec les heures de recherche de logement. */
+  listings: HousingListing[];
+  /** Annonce à louer pour laquelle un dossier est déposé : réponse à la fin du mois. */
+  housingTarget: string | null;
   /** Textes : cars.<id>. */
   car: string | null;
   schedule: Schedule;

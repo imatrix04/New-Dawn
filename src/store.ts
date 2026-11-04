@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import {
-  closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, migrateGame, openSavings,
-  resolveChoice, setGig, setJobTarget, setSchedule, withdrawSavings,
+  buyHome, closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, migrateGame, openSavings,
+  resolveChoice, setGig, setHousingTarget, setJobTarget, setSchedule, withdrawSavings,
 } from './game/engine';
 import type { GameState, Profile, SavingsProduct, ScheduleKey } from './game/types';
 
@@ -40,6 +40,8 @@ interface Store {
   choose: (index: number) => void;
   setJobTarget: (id: string | null) => void;
   setGig: (id: string | null) => void;
+  setHousingTarget: (id: string | null) => void;
+  buyHome: (id: string, downPct: number, years: number) => void;
   enrollTraining: (id: string) => void;
   dropTraining: () => void;
   openSavings: (product: SavingsProduct) => void;
@@ -75,6 +77,8 @@ export const useStore = create<Store>((set, get) => {
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
     setJobTarget: (id) => { const g = get().game; if (g) update(setJobTarget(g, id)); },
     setGig: (id) => { const g = get().game; if (g) update(setGig(g, id)); },
+    setHousingTarget: (id) => { const g = get().game; if (g) update(setHousingTarget(g, id)); },
+    buyHome: (id, downPct, years) => { const g = get().game; if (g) update(buyHome(g, id, downPct, years)); },
     enrollTraining: (id) => { const g = get().game; if (g) update(enrollTraining(g, id)); },
     dropTraining: () => { const g = get().game; if (g) update(dropTraining(g)); },
     openSavings: (product) => { const g = get().game; if (g) update(openSavings(g, product)); },

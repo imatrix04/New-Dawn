@@ -14,7 +14,7 @@ import { WeekDonut } from './WeekDonut';
 /** Durée à maintenir le bouton pour passer le mois (limite les clics accidentels). */
 const HOLD_MS = 1000;
 
-const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'sport', 'search'];
+const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'sport', 'search', 'housing'];
 const FIXED = ['work', 'commute', 'essentials'] as const;
 const cat = (id: string) => TIME_CATS.find((c) => c.id === id)!;
 
@@ -57,6 +57,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'sport': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sportHealth, lng) }), tone: tone(fx.sportHealth) };
       case 'study': return { text: t('schedule.effect.skill', { delta: formatSigned(fx.studyIntelligence, lng) }), tone: tone(fx.studyIntelligence) };
       case 'search': return { text: t('schedule.effect.search', { count: fx.searchOffers }), tone: tone(fx.searchOffers) };
+      case 'housing': return { text: t('schedule.effect.housing', { count: fx.searchListings }), tone: tone(fx.searchListings) };
     }
   };
 
@@ -65,6 +66,8 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'job': return t(`jobs.${l.id}`, { context: game.gender });
       case 'gig': return t(`gigs.${l.id}.name`);
       case 'housing': return t(`housing.${l.id}`);
+      case 'loan': return t('estate.lines.loan');
+      case 'charges': return t('estate.lines.charges');
       case 'car': return t(`cars.${l.id}`);
       case 'training': return t(`trainings.${l.id}.name`);
       case 'food': return t('schedule.lines.food');

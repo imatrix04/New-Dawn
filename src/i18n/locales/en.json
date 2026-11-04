@@ -20,6 +20,7 @@
     "wallet": "Wallet",
     "profile": "Profile",
     "career": "Career",
+    "housing": "Housing",
     "journal": "Journal"
   },
   "skills": {
@@ -290,7 +291,70 @@
   },
   "housing": {
     "studio": "Small studio",
-    "shared": "Shared flat"
+    "shared": "Shared flat",
+    "t2": "2-room apartment",
+    "t3": "3-room apartment",
+    "duplex": "Duplex",
+    "cottage": "Small house",
+    "family": "Family house",
+    "penthouse": "Penthouse",
+    "villa": "Villa with pool"
+  },
+  "estate": {
+    "current": "Current home",
+    "tabs": { "rent": "For rent", "buy": "For sale" },
+    "kind": { "all": "All", "studio": "Studios", "apartment": "Apartments", "house": "Houses" },
+    "area": { "center": "City center", "suburb": "Suburbs", "country": "Countryside" },
+    "tenant": "Tenant • {{amount}}/mo",
+    "owner": "Owner • estimated value {{value}}",
+    "ownerCharges": "Charges: {{amount}}/mo",
+    "loanLine": "Loan: {{monthly}}/mo • {{balance}} left ({{months}} mo)",
+    "noLoan": "No loan",
+    "extraCommute": "🚌 +{{hours}} h/wk commute",
+    "rentHint": "Send an application: the answer comes at the end of the month. The landlord looks at your income, your job and your savings. Rare homes attract more applicants. Set your housing search hours in the schedule to see new listings.",
+    "buyHint": "Pick your down payment and loan term: the bank requires a job and a monthly payment of at most 35% of your salary. When you move, your current home is sold automatically. Set your housing search hours in the schedule to see new listings.",
+    "listingsCount": "Visible listings: {{count}} / {{max}}",
+    "searchRate_one": "🏠 {{count}} new listing per month",
+    "searchRate_other": "🏠 {{count}} new listings per month",
+    "noListings": "No listings right now. Spend hours searching for housing to find new ones.",
+    "noMatch": "No listing matches this filter.",
+    "select": { "rent": "Select a rental", "buy": "Select a home to buy" },
+    "fact": {
+      "rent": "Rent", "price": "Price", "surface": "Size", "commute": "Extra commute", "none": "None",
+      "deposit": "Deposit", "fees": "Agency fees", "moving": "Moving", "upfront": "Due on move-in",
+      "credit": "Recovered from your current home", "notary": "Notary fees", "charges": "Charges",
+      "down": "Down payment", "loan": "Loan", "rate": "Rate", "monthly": "Monthly payment", "debt": "Debt ratio",
+      "interest": "Cost of credit", "signing": "Due at signing", "comfort": "Comfort"
+    },
+    "m2": "{{n}} m²",
+    "chance": "Chance of being accepted each month",
+    "chanceDetail": {
+      "title": "Where your chance comes from",
+      "base": "Base chance (rarity {{grade}} home)",
+      "income": "Income: {{ratio}} times the rent",
+      "job": "You have a job",
+      "savings": "Savings: 6 months of rent in reserve"
+    },
+    "apply": "Send an application",
+    "cancel": "Withdraw application",
+    "applied": "Application sent",
+    "applyNote": "Application sent: answer at the end of the month.",
+    "tooPoor": "You can't afford the move-in costs ({{amount}} short).",
+    "saleNote": "Your current home will be sold: {{net}} (value minus 5% fees and the remaining loan).",
+    "buy": {
+      "down": "Down payment",
+      "term": "Loan term",
+      "cash": "Cash",
+      "years": "{{count}} years",
+      "confirm": "Buy this home",
+      "reason": {
+        "invalid": "Invalid financing choice.",
+        "job": "The bank refuses: you need a job to borrow.",
+        "debt": "The bank refuses: the payment exceeds 35% of your salary.",
+        "cash": "You are {{amount}} short for the down payment, notary fees and moving."
+      }
+    },
+    "lines": { "loan": "Mortgage", "charges": "Home charges" }
   },
   "cars": {
     "small": "Small car"
@@ -328,7 +392,9 @@
       "happiness": "😊 {{delta}}/mo",
       "skill": "🧠 {{delta}}/mo",
       "search_one": "🔎 +{{count}} offer/mo",
-      "search_other": "🔎 +{{count}} offers/mo"
+      "search_other": "🔎 +{{count}} offers/mo",
+      "housing_one": "🏠 +{{count}} listing/mo",
+      "housing_other": "🏠 +{{count}} listings/mo"
     },
     "overHint": "Trim your schedule to be able to pass the month.",
     "target": "→ {{job}}",
@@ -346,6 +412,7 @@
       "study": { "label": "Study", "hint": "Intelligence and digital" },
       "sport": { "label": "Exercise", "hint": "Health and strength" },
       "search": { "label": "Job search", "hint": "1 h/wk = 1 new job offer per month (0 h: none)" },
+      "housing": { "label": "Housing search", "hint": "1 h/wk = 1 new housing listing per month (0 h: none)" },
       "free": { "label": "Free time", "hint": "" }
     }
   },
@@ -367,6 +434,15 @@
     "certificate": "Training completed: {{training}}!",
     "catalogRefreshed": "The quick jobs, trainings and studies on offer have changed.",
     "gigPay": "Quick job ({{gig}}): +€{{amount, number}}.",
+    "newListings_one": "{{count}} new housing listing.",
+    "newListings_other": "{{count}} new housing listings.",
+    "listingExpired": "The listing ({{home}}) is gone, your application falls through.",
+    "housingFound": "Application accepted: you move in ({{home}}), rent €{{rent, number}}/mo.",
+    "housingNone": "Your application ({{home}}) was not selected this month.",
+    "housingBroke": "You can no longer afford the move-in costs ({{home}}): the landlord pulls out.",
+    "homeBought": "You are a homeowner! {{home}} bought for €{{price, number}}.",
+    "homeSold": "Your previous home ({{home}}) is sold: €{{amount, number}} net.",
+    "loanRepaid": "Your mortgage is fully repaid!",
     "newOffers_one": "{{count}} new job offer.",
     "newOffers_other": "{{count}} new job offers.",
     "noOffers": "No job offers left: you need to search to find new ones.",
@@ -441,6 +517,18 @@
       "text": "A friend offers to bet €100 on a game.",
       "choices": ["Bet (-€100 or +€250)", "Decline"],
       "outcomes": { "won": "You win!", "lost": "Lost...", "declined": "Wise." }
+    },
+    "rentRaise": {
+      "title": "Rent increase",
+      "text": "Your landlord announces a 5% rent increase.",
+      "choices": ["Accept", "Contest"],
+      "outcomes": { "accepted": "The rent goes up, you'll pay more every month.", "won": "They drop the increase.", "lost": "They keep the increase, and the mood sours." }
+    },
+    "homeRepairs": {
+      "title": "Home repairs",
+      "text": "A leak and a tired boiler: the place needs repairs.",
+      "choices": ["Do the repairs (-€800)", "Postpone"],
+      "outcomes": { "repaired": "Everything is back in shape.", "postponed": "Damp and cold: you feel it in your mood and health." }
     },
     "parents": {
       "title": "Helping hand from family",

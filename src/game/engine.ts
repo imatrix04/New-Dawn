@@ -1,17 +1,18 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  CARS, CATALOG_MAX, COMPANIES, CATALOG_REFRESH_MONTHS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK,
-  EVENT_CHANCE, EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING, JOBS,
-  LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, PRICE_VARIATION, SAVINGS, SCHEDULE, SMIC_NET,
-  SKILL_MAX, SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS,
+  AREA_IDS, AREAS, CARS, CATALOG_MAX, COMPANIES, CATALOG_REFRESH_MONTHS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK,
+  EVENT_CHANCE, EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING_TYPES, JOBS,
+  LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, LISTING_MONTHS, LISTING_WEIGHT, LISTINGS_MAX, MOVING_COST, OFFER_MONTHS, OFFER_WEIGHT,
+  OFFERS_MAX, OWNING, PRICE_VARIATION, RENT, RENT_CHANCE, RENT_CHANCE_MAX, RENT_CHANCE_MIN, SAVINGS, SCHEDULE, SMIC_NET,
+  SKILL_MAX, SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_LISTINGS, START_SKILLS, START_STATS, STARTER_JOBS,
   TRAININGS,
 } from '../data/content';
-import type { Company, Gig } from '../data/content';
+import type { Company, Gig, HousingType } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
-  Account, Catalog, Drawback, Fx, GameState, Job, JobOffer, LogClass, LogEntry, Profile, Savings, SavingsProduct,
-  Schedule, ScheduleKey, SkillId, StatKey,
+  Account, Catalog, Drawback, Fx, GameState, Home, HousingListing, Job, JobOffer, LogClass, LogEntry, Profile, Savings,
+  SavingsProduct, Schedule, ScheduleKey, SkillId, StatKey,
 } from './types';
 
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
@@ -40,7 +41,9 @@ export function createGame(profile: Profile): GameState {
     job: profile.job,
     jobSalary: hired?.salary ?? null,
     jobCompany: hired?.companyId ?? null,
-    housing: start.housing,
+    home: starterHome(start.housing),
+    listings: drawListings(START_LISTINGS),
+    housingTarget: null,
     car: start.car,
     schedule: { ...DEFAULT_SCHEDULE },
     savings: emptySavings(),
@@ -118,6 +121,14 @@ export function migrateGame(raw: GameState): GameState {
   if (g.training) g.training.tuition ??= TRAININGS[g.training.id].tuition;
   g.jobCompany ??= null;
   g.jobSalary ??= null;
+  // Avant la carte Logement, le logement n'était qu'un identifiant (studio ou colocation) à loyer fixe.
+  const legacyHome = g as unknown as { housing?: string };
+  g.home ??= starterHome(legacyHome.housing ?? 'studio');
+  delete legacyHome.housing;
+  g.listings ??= drawListings(START_LISTINGS);
+  g.housingTarget ??= null;
+  if (g.housingTarget && !g.listings.some((l) => l.id === g.housingTarget)) g.housingTarget = null;
+  g.schedule.housing ??= 0;
   // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
   const legacy = g.stats as unknown as Record<string, number | undefined>;
   if (!g.skills) {
@@ -262,6 +273,262 @@ function progressTraining(s: GameState) {
   }
 }
 
+// ---------- Logement ----------
+
+export const housingTypeById = (id: string): HousingType => HOUSING_TYPES[id] ?? HOUSING_TYPES.studio;
+
+/** Logement de départ : loué au loyer de base en centre-ville, sans caution (le joueur y vit déjà). */
+function starterHome(typeId: string): Home {
+  return { typeId, area: 'center', tenure: 'rent', rent: housingTypeById(typeId).rent ?? 0, deposit: 0, value: 0, charges: 0, loan: null };
+}
+
+/** Nouvelle annonce pour un type de bien : à louer ou à vendre (50/50 si les deux sont possibles), dans un quartier tiré au sort. */
+function makeListing(typeId: string): HousingListing {
+  const type = housingTypeById(typeId);
+  const tenure = type.rent === null ? 'buy' : type.price === null || Math.random() < 0.5 ? 'rent' : 'buy';
+  const area = drawWeighted(AREA_IDS, (a) => AREAS[a].weight, 1)[0];
+  const base = (tenure === 'rent' ? type.rent : type.price)!;
+  const raw = base * AREAS[area].price * (1 + rollFactor());
+  return {
+    id: Math.random().toString(36).slice(2, 8),
+    typeId,
+    area,
+    tenure,
+    price: tenure === 'rent' ? Math.round(raw / 5) * 5 : Math.round(raw / 500) * 500,
+    monthsLeft: LISTING_MONTHS[type.grade],
+  };
+}
+
+/**
+ * Tire `count` annonces, chaque type de bien indépendamment des autres (un même type peut revenir dans un autre quartier) :
+ * les plus rares (villa) apparaissent bien moins souvent que les communs (studio).
+ */
+const drawListings = (count: number): HousingListing[] =>
+  Array.from({ length: count }, () => makeListing(
+    drawWeighted(Object.keys(HOUSING_TYPES), (id) => LISTING_WEIGHT[HOUSING_TYPES[id].grade], 1)[0],
+  ));
+
+/** Effet mensuel du confort du bien et de l'ambiance du quartier sur la santé et le bonheur. */
+export function comfortOf(typeId: string, area: Home['area']): Record<StatKey, number> {
+  const type = housingTypeById(typeId);
+  return { health: type.comfort.health ?? 0, happiness: (type.comfort.happiness ?? 0) + AREAS[area].happiness };
+}
+
+export const housingEffects = (state: GameState): Record<StatKey, number> => comfortOf(state.home.typeId, state.home.area);
+
+/** Heures de trajet ajoutées chaque semaine par l'éloignement du logement (seulement si l'on travaille). */
+export const housingCommute = (state: GameState): number =>
+  state.job || state.gig ? AREAS[state.home.area].commute : 0;
+
+/** Revenus mensuels vus par un propriétaire ou une banque : salaire et boulot rapide. */
+const rentIncome = (state: GameState): number => {
+  const gig = gigById(state.gig);
+  return currentSalary(state) + (gig ? gigPay(state, gig) : 0);
+};
+
+/** Ce que rapporte la vente automatique du bien possédé : valeur moins frais de revente et prêt restant dû. */
+export const saleNet = (state: GameState): number =>
+  Math.round(state.home.value * (1 - OWNING.saleFee)) - Math.round(state.home.loan?.balance ?? 0);
+
+/** Argent récupéré en quittant son logement : la caution d'un locataire, ou le produit de la vente d'un propriétaire. */
+export const moveCredit = (state: GameState): number => (state.home.tenure === 'own' ? saleNet(state) : state.home.deposit);
+
+export interface RentQuote {
+  rent: number;
+  deposit: number;
+  fees: number;
+  moving: number;
+  /** À payer à l'emménagement : caution, frais d'agence et déménagement. */
+  upfront: number;
+  /** Récupéré sur l'ancien logement. */
+  credit: number;
+  affordable: boolean;
+}
+
+export function rentQuote(state: GameState, l: HousingListing): RentQuote {
+  const deposit = l.price * RENT.depositMonths[housingTypeById(l.typeId).grade];
+  const fees = Math.round(l.price * RENT.feeMonths);
+  const upfront = deposit + fees + MOVING_COST;
+  const credit = moveCredit(state);
+  return { rent: l.price, deposit, fees, moving: MOVING_COST, upfront, credit, affordable: state.money + credit >= upfront };
+}
+
+export type RentBonus =
+  | { type: 'income'; value: number; ratio: number }
+  | { type: 'job' | 'savings'; value: number };
+
+export interface RentBreakdown {
+  base: number;
+  bonuses: RentBonus[];
+  total: number;
+}
+
+/** Chance d'être accepté chaque mois : base selon la rareté du bien, rapport revenus/loyer, emploi stable et épargne de sécurité. */
+export function rentBreakdown(state: GameState, l: HousingListing): RentBreakdown {
+  const base = RENT_CHANCE[housingTypeById(l.typeId).grade];
+  const bonuses: RentBonus[] = [];
+  const ratio = rentIncome(state) / l.price;
+  const tier = RENT.incomeTiers.find((x) => ratio >= x.ratio)!;
+  if (tier.bonus) bonuses.push({ type: 'income', value: tier.bonus, ratio });
+  if (state.job) bonuses.push({ type: 'job', value: RENT.jobBonus });
+  if (state.money + totalSavings(state) >= l.price * RENT.cushionMonths) bonuses.push({ type: 'savings', value: RENT.cushionBonus });
+  const total = Math.min(RENT_CHANCE_MAX, Math.max(RENT_CHANCE_MIN, base + bonuses.reduce((sum, b) => sum + b.value, 0)));
+  return { base, bonuses, total };
+}
+
+export const rentChance = (state: GameState, l: HousingListing): number => rentBreakdown(state, l).total;
+
+/** Mensualité constante d'un prêt amorti sur `months` mois. */
+const annuity = (principal: number, rate: number, months: number): number => {
+  const r = rate / 12;
+  return Math.round((principal * r) / (1 - Math.pow(1 + r, -months)));
+};
+
+export interface BuyQuote {
+  price: number;
+  notary: number;
+  down: number;
+  loan: number;
+  rate: number;
+  monthly: number;
+  /** Coût total du crédit (intérêts). */
+  interest: number;
+  /** Charges mensuelles du propriétaire. */
+  charges: number;
+  /** À payer à la signature : apport, frais de notaire et déménagement. */
+  upfront: number;
+  credit: number;
+  /** Part des revenus (salaire) absorbée par la mensualité. */
+  debtRatio: number;
+  /** Pourquoi l'achat est impossible : prêt refusé (pas d'emploi, trop d'endettement) ou pas assez d'argent. */
+  reason: null | 'invalid' | 'job' | 'debt' | 'cash';
+}
+
+export function buyQuote(state: GameState, l: HousingListing, downPct: number, years: number): BuyQuote {
+  const price = l.price;
+  const down = Math.round(price * downPct);
+  const loan = price - down;
+  const rate = OWNING.rates[years] ?? 0;
+  const monthly = loan > 0 ? annuity(loan, rate, years * 12) : 0;
+  const upfront = down + Math.round(price * OWNING.notaryRate) + MOVING_COST;
+  const credit = moveCredit(state);
+  const income = currentSalary(state);
+  const debtRatio = income > 0 ? monthly / income : monthly > 0 ? Infinity : 0;
+  let reason: BuyQuote['reason'] = null;
+  if (!OWNING.downChoices.includes(downPct) || !OWNING.terms.includes(years)) reason = 'invalid';
+  else if (loan > 0 && !state.job) reason = 'job';
+  else if (loan > 0 && debtRatio > OWNING.debtCap) reason = 'debt';
+  else if (state.money + credit < upfront) reason = 'cash';
+  return {
+    price, notary: Math.round(price * OWNING.notaryRate), down, loan, rate, monthly,
+    interest: loan > 0 ? monthly * years * 12 - loan : 0,
+    charges: Math.round((price * OWNING.chargesRate) / 12),
+    upfront, credit, debtRatio, reason,
+  };
+}
+
+/** Dépose (ou retire avec null) un dossier de location pour une annonce visible. */
+export function setHousingTarget(state: GameState, id: string | null): GameState {
+  if (id === state.housingTarget) return state;
+  if (id !== null) {
+    const l = state.listings.find((x) => x.id === id);
+    if (!l || l.tenure !== 'rent' || !rentQuote(state, l).affordable) return state;
+  }
+  const s = structuredClone(state);
+  s.housingTarget = id;
+  return s;
+}
+
+/** Quitte l'ancien logement (caution rendue ou bien vendu), paie l'entrée dans le nouveau et retire l'annonce. */
+function moveInto(s: GameState, home: Home, listingId: string, cost: number, credit: number) {
+  if (s.home.tenure === 'own') addLog(s, 'log.homeSold', { homeId: s.home.typeId, amount: credit });
+  s.money += credit - cost;
+  s.home = home;
+  s.listings = s.listings.filter((l) => l.id !== listingId);
+  s.housingTarget = null;
+}
+
+/** Achète un bien à vendre, avec l'apport et la durée de prêt choisis, si la banque accepte et que l'argent suffit. */
+export function buyHome(state: GameState, id: string, downPct: number, years: number): GameState {
+  const l = state.listings.find((x) => x.id === id);
+  if (!l || l.tenure !== 'buy') return state;
+  const q = buyQuote(state, l, downPct, years);
+  if (q.reason) return state;
+  const s = structuredClone(state);
+  moveInto(s, {
+    typeId: l.typeId,
+    area: l.area,
+    tenure: 'own',
+    rent: 0,
+    deposit: 0,
+    value: l.price,
+    charges: q.charges,
+    loan: q.loan > 0 ? { balance: q.loan, monthly: q.monthly, rate: q.rate, monthsLeft: years * 12 } : null,
+  }, l.id, q.upfront, q.credit);
+  addLog(s, 'log.homeBought', { homeId: l.typeId, price: l.price }, 'good');
+  return s;
+}
+
+/** Tirage de l'acceptation du dossier : il reste ouvert tant que l'annonce existe, mais il faut pouvoir payer l'entrée. */
+function resolveHousingApplication(s: GameState) {
+  const l = s.listings.find((x) => x.id === s.housingTarget);
+  if (!l) {
+    s.housingTarget = null;
+    return;
+  }
+  const quote = rentQuote(s, l);
+  if (!quote.affordable) {
+    addLog(s, 'log.housingBroke', { homeId: l.typeId }, 'bad');
+    s.housingTarget = null;
+    return;
+  }
+  if (Math.random() < rentChance(s, l)) {
+    moveInto(s, { typeId: l.typeId, area: l.area, tenure: 'rent', rent: l.price, deposit: quote.deposit, value: 0, charges: 0, loan: null },
+      l.id, quote.upfront, quote.credit);
+    addLog(s, 'log.housingFound', { homeId: l.typeId, rent: l.price }, 'good');
+  } else {
+    addLog(s, 'log.housingNone', { homeId: l.typeId });
+  }
+}
+
+/** Fin de mois d'un propriétaire : le bien prend un peu de valeur et le prêt s'amortit. */
+function progressHome(s: GameState) {
+  const home = s.home;
+  if (home.tenure !== 'own') return;
+  home.value = Math.round(home.value * Math.pow(1 + OWNING.appreciation, 1 / 12));
+  const loan = home.loan;
+  if (!loan) return;
+  loan.balance = Math.max(0, loan.balance * (1 + loan.rate / 12) - loan.monthly);
+  loan.monthsLeft -= 1;
+  if (loan.monthsLeft <= 0) {
+    home.loan = null;
+    addLog(s, 'log.loanRepaid', {}, 'good');
+  }
+}
+
+/** Les annonces vieillissent et expirent ; chaque heure de recherche de logement par semaine en amène une nouvelle par mois. */
+function refreshListings(s: GameState) {
+  const target = s.listings.find((l) => l.id === s.housingTarget);
+  s.listings = s.listings.map((l) => ({ ...l, monthsLeft: l.monthsLeft - 1 })).filter((l) => l.monthsLeft > 0);
+  if (target && !s.listings.some((l) => l.id === target.id)) {
+    addLog(s, 'log.listingExpired', { homeId: target.typeId });
+    s.housingTarget = null;
+  }
+  const wanted = scheduleEffects(s.schedule).searchListings;
+  if (wanted <= 0) return;
+  const fresh = drawListings(wanted);
+  const overflow = s.listings.length + fresh.length - LISTINGS_MAX;
+  if (overflow > 0) {
+    const drop = s.listings
+      .filter((l) => l.id !== s.housingTarget)
+      .sort((a, b) => a.monthsLeft - b.monthsLeft)
+      .slice(0, overflow);
+    s.listings = s.listings.filter((l) => !drop.includes(l));
+  }
+  s.listings.push(...fresh);
+  addLog(s, 'log.newListings', { count: fresh.length }, 'good');
+}
+
 // ---------- Planning de la semaine ----------
 
 const weeklyHours = (schedule: Schedule, key: ScheduleKey) =>
@@ -276,6 +543,7 @@ export interface WeekBreakdown {
   study: number;
   sport: number;
   search: number;
+  housing: number;
   /** Heures non planifiées sur les 168 h. */
   free: number;
 }
@@ -286,12 +554,13 @@ export function weekBreakdown(state: GameState): WeekBreakdown {
   const planned = {
     sleep: weeklyHours(state.schedule, 'sleep'),
     work: (job?.hours ?? 0) + (gig?.hours ?? 0),
-    commute: (job?.commute ?? 0) + (gig?.commute ?? 0),
+    commute: (job?.commute ?? 0) + (gig?.commute ?? 0) + housingCommute(state),
     essentials: ESSENTIALS_PER_WEEK,
     leisure: weeklyHours(state.schedule, 'leisure'),
     study: weeklyHours(state.schedule, 'study'),
     sport: weeklyHours(state.schedule, 'sport'),
     search: weeklyHours(state.schedule, 'search'),
+    housing: weeklyHours(state.schedule, 'housing'),
   };
   const used = Object.values(planned).reduce((a, h) => a + h, 0);
   return { ...planned, free: HOURS_PER_WEEK - used };
@@ -317,7 +586,7 @@ export function setSchedule(state: GameState, key: ScheduleKey, value: number): 
 
 /** Une ligne du détail mensuel : `id` sert à retrouver le libellé traduit selon `kind`. */
 export interface MoneyLine {
-  kind: 'job' | 'gig' | 'food' | 'housing' | 'car' | 'leisure' | 'training';
+  kind: 'job' | 'gig' | 'food' | 'housing' | 'loan' | 'charges' | 'car' | 'leisure' | 'training';
   id?: string;
   amount: number;
 }
@@ -331,12 +600,16 @@ export function monthlyIncomeLines(state: GameState): MoneyLine[] {
   return lines;
 }
 
-/** Nourriture + loyer + entretien de la voiture + coût des loisirs + frais de formation. */
+/** Nourriture + loyer (ou mensualité du prêt et charges) + entretien de la voiture + coût des loisirs + frais de formation. */
 export function monthlyExpenseLines(state: GameState): MoneyLine[] {
-  const lines: MoneyLine[] = [
-    { kind: 'food', amount: FOOD_COST },
-    { kind: 'housing', id: state.housing, amount: HOUSING[state.housing]?.rent ?? 0 },
-  ];
+  const { home } = state;
+  const lines: MoneyLine[] = [{ kind: 'food', amount: FOOD_COST }];
+  if (home.tenure === 'rent') {
+    lines.push({ kind: 'housing', id: home.typeId, amount: home.rent });
+  } else {
+    if (home.loan) lines.push({ kind: 'loan', id: home.typeId, amount: home.loan.monthly });
+    lines.push({ kind: 'charges', id: home.typeId, amount: home.charges });
+  }
   if (state.car) lines.push({ kind: 'car', id: state.car, amount: CARS[state.car]?.upkeep ?? 0 });
   lines.push({ kind: 'leisure', amount: Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR) });
   if (state.training) lines.push({ kind: 'training', id: state.training.id, amount: trainingTuition(state) });
@@ -361,6 +634,8 @@ export function scheduleEffects(schedule: Schedule) {
     sportStrength: schedule.sport * (SKILL_RULES.perSportHour.strength ?? 0),
     /** Nouvelles offres d'emploi par mois : 1 par heure de recherche hebdomadaire. */
     searchOffers: schedule.search,
+    /** Nouvelles annonces de logement par mois : 1 par heure de recherche hebdomadaire. */
+    searchListings: schedule.housing,
   };
 }
 
@@ -369,9 +644,10 @@ export function projectNextStats(state: GameState): Record<StatKey, number> {
   const fx = scheduleEffects(state.schedule);
   const debt = state.money < 0 ? DEBT_HAPPINESS_LOSS : 0;
   const drawbacks = monthlyDrawbacks(state);
+  const comfort = housingEffects(state);
   return {
-    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth + drawbacks.health),
-    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt + drawbacks.happiness),
+    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth + drawbacks.health + comfort.health),
+    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt + drawbacks.happiness + comfort.happiness),
   };
 }
 
@@ -767,12 +1043,15 @@ export function endTurn(state: GameState): GameState {
   const expenses = monthlyExpenses(s);
   s.money -= expenses;
   addLog(s, 'log.expenses', { amount: expenses });
+  progressHome(s);
   accrueSavings(s);
 
   progressTraining(s);
 
   resolveApplication(s);
+  resolveHousingApplication(s);
   refreshOffers(s);
+  refreshListings(s);
 
   if (s.stats.happiness < 20) addLog(s, 'log.lowMood', {}, 'bad');
   if (s.money < 0) addLog(s, 'log.overdraft', {}, 'bad');

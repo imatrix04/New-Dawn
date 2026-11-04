@@ -25,6 +25,7 @@ export function formatLogEntry(t: TFunction, entry: LogEntry): string {
     const context = typeof params.gender === 'string' ? params.gender : undefined;
     params.job = t(`jobs.${params.jobId}`, { context }).toLowerCase();
   }
+  if (typeof params.homeId === 'string') params.home = t(`housing.${params.homeId}`);
   if (typeof params.trainingId === 'string') params.training = t(`trainings.${params.trainingId}.name`);
   if (typeof params.gigId === 'string') params.gig = t(`gigs.${params.gigId}.name`).toLowerCase();
   if (typeof params.field === 'string') params.field = t(`fields.${params.field}`);

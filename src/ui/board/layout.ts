@@ -2,11 +2,11 @@
 // C'est une préférence d'affichage du joueur, stockée à part de la partie.
 import { create } from 'zustand';
 
-export type WindowId = 'schedule' | 'status' | 'profile' | 'wallet' | 'career' | 'journal';
-export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'profile', 'wallet', 'career', 'journal'];
+export type WindowId = 'schedule' | 'status' | 'profile' | 'wallet' | 'career' | 'housing' | 'journal';
+export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'profile', 'wallet', 'career', 'housing', 'journal'];
 /** Largeur par défaut de chaque carte. */
 export const WINDOW_WIDTH: Record<WindowId, number> = {
-  schedule: 620, status: 330, profile: 380, wallet: 400, career: 780, journal: 330,
+  schedule: 620, status: 330, profile: 380, wallet: 400, career: 780, housing: 780, journal: 330,
 };
 /** Taille minimale d'une carte redimensionnée. */
 export const MIN_SIZE = { w: 260, h: 140 };
@@ -51,6 +51,8 @@ export function defaultLayout(boardWidth: number, boardHeight = 600): Layout {
     journal: { open: true, x: stackX, y: journalY, z: 3, ...size('journal'), h: journalH },
     // La carte Carrière se range par défaut : on l'ouvre depuis la barre du haut quand on cherche un poste.
     career: { open: false, x: middleX, y: GAP, z: 5, ...size('career') },
+    // Comme la carte Carrière, le Logement s'ouvre à la demande.
+    housing: { open: false, x: middleX + 15, y: GAP + 15, z: 7, ...size('housing') },
     profile: { open: false, x: middleX + 30, y: GAP + 30, z: 6, ...size('profile') },
     wallet: {
       open: wide,

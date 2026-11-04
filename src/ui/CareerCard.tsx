@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CATALOG_REFRESH_MONTHS, GIGS, HIRE_CHANCE_MAX, JOBS, OFFERS_MAX, TRAININGS } from '../data/content';
+import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, OFFERS_MAX, TRAININGS } from '../data/content';
 import type { Company, Gig, TrainingConfig } from '../data/content';
 import {
   companyById, currentSalary, experienceMonths, gigPay, hireBreakdown, hireChance, jobById, jobDrawback, jobEligibility,
@@ -10,12 +9,13 @@ import {
 import type { Drawback, GameState, Job, Qualification, SkillId } from '../game/types';
 import { formatMoney, formatSigned } from '../i18n/format';
 import { useStore } from '../store';
+import { ChanceBar, DetailHead, Facts, Split, Tile } from './cardKit';
+import type { Rarity } from './cardKit';
 
 type Tab = 'gigs' | 'offers' | 'quick' | 'training';
 const TABS: Tab[] = ['gigs', 'offers', 'quick', 'training'];
 
-/** Rareté de 1 (commun) à 4 (très rare) : le grade pour un poste, la fréquence de retour au catalogue pour le reste. */
-type Rarity = 1 | 2 | 3 | 4;
+/** Rareté : le grade pour un poste, la fréquence de retour au catalogue pour le reste. */
 const rarityOfWeight = (weight: number): Rarity => (weight >= 4 ? 1 : weight === 3 ? 2 : weight === 2 ? 3 : 4);
 const rarityOfJob = (job: Job): Rarity => Math.min(4, Math.max(1, job.grade)) as Rarity;
 
@@ -40,120 +40,11 @@ function RefreshNote({ game }: { game: GameState }) {
   return <p className="muted small">{t('career.refreshIn', { count: CATALOG_REFRESH_MONTHS - (game.month % CATALOG_REFRESH_MONTHS) })}</p>;
 }
 
-/** Losanges de rareté : plus il y en a d'allumés, plus l'élément est rare. */
-function Pips({ rarity }: { rarity: Rarity }) {
-  const { t } = useTranslation();
-  return (
-    <span className="pips" title={t(`career.rarity.${rarity}`)} aria-label={t(`career.rarity.${rarity}`)}>
-      {[1, 2, 3, 4].map((n) => <i key={n} className={n <= rarity ? 'on' : ''} />)}
-    </span>
-  );
-}
-
-/** Teinte de la barre : rouge pour les petites chances, vert pour les grandes. */
-const chanceHue = (chance: number) => Math.round(Math.min(1, chance / HIRE_CHANCE_MAX) * 120);
-
-function ChanceBar({ chance, big = false }: { chance: number; big?: boolean }) {
-  const { t } = useTranslation();
-  const pct = Math.round(chance * 100);
-  return (
-    <div
-      className={`cbar${big ? ' big' : ''}`}
-      style={{ '--h': chanceHue(chance) } as CSSProperties}
-      role="progressbar"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={pct}
-      aria-label={t('career.chanceLabel')}
-      title={`${t('career.chanceLabel')} : ${pct} %`}
-    >
-      <i style={{ width: `${chance * 100}%` }} />
-    </div>
-  );
-}
-
-interface TileProps {
-  rarity: Rarity;
-  selected: boolean;
-  index: number;
-  state?: 'current' | 'target' | 'locked' | 'done';
-  onSelect: () => void;
-  children: ReactNode;
-}
-
-/** Carte sélectionnable de la liste de gauche. La couleur et l'éclat dépendent de la rareté. */
-function Tile({ rarity, selected, index, state, onSelect, children }: TileProps) {
-  return (
-    <div
-      className={`ctile${selected ? ' selected' : ''}${state ? ` ${state}` : ''}`}
-      data-rarity={rarity}
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      style={{ animationDelay: `${index * 40}ms` }}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-    >
-      <Pips rarity={rarity} />
-      {children}
-    </div>
-  );
-}
-
-/** Liste de cartes à gauche (2 par ligne), détail fixe à droite, ou consigne tant que rien n'est sélectionné. */
-function Split({ tab, list, detail }: { tab: Tab; list: ReactNode; detail: ReactNode | null }) {
-  const { t } = useTranslation();
-  return (
-    <div className="career-split">
-      <div className="career-main">{list}</div>
-      <aside className="career-aside">
-        {detail ?? (
-          <div className="aside-empty">
-            <span className="aside-empty-icon" aria-hidden>☝️</span>
-            <strong>{t(`career.select.${tab}`)}</strong>
-            <span className="muted small">{t('career.selectHint')}</span>
-          </div>
-        )}
-      </aside>
-    </div>
-  );
-}
-
-/** En-tête du détail : l'entreprise en haut à gauche, la rareté en haut à droite, l'intitulé centré en dessous. */
-function DetailHead({ rarity, title, source, subtitle }: { rarity: Rarity; title: string; source?: string; subtitle?: string }) {
-  const { t } = useTranslation();
-  return (
-    <div className="detail-head" data-rarity={rarity}>
-      <div className="detail-top">
-        <span className="detail-source">{source}</span>
-        <span className="rarity-label"><Pips rarity={rarity} /> {t(`career.rarity.${rarity}`)}</span>
-      </div>
-      <h3>{title}</h3>
-      {subtitle && <p className="muted small">{subtitle}</p>}
-    </div>
-  );
-}
-
 interface OfferView {
   job: Job;
   monthsLeft: number;
   salary: number;
   company: Company | null;
-}
-
-function Facts({ rows }: { rows: [string, ReactNode][] }) {
-  return (
-    <dl className="facts">
-      {rows.map(([label, value]) => (
-        <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
-      ))}
-    </dl>
-  );
 }
 
 // ---------- Carte ----------
@@ -249,7 +140,7 @@ function Gigs({ game, selected, onSelect }: PaneProps) {
       <p className="muted small">{t('career.gigsHint')}</p>
       <RefreshNote game={game} />
       <Split
-        tab="gigs"
+        title={t('career.select.gigs')}
         detail={gig ? detail(gig) : null}
         list={
           <div className="card-grid">
@@ -337,7 +228,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
               ))}
               <li className="total"><span>{t('career.chanceLabel')}</span><b>{pct(breakdown.total)}</b></li>
             </ul>
-            <ChanceBar chance={breakdown.total} big />
+            <ChanceBar chance={breakdown.total} label={t('career.chanceLabel')} big />
           </div>
         )}
 
@@ -364,7 +255,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
       </div>
       {offers.length === 0 && <p className="muted small">{t('career.noOffers')}</p>}
       <Split
-        tab="offers"
+        title={t('career.select.offers')}
         detail={picked ? detail(picked) : null}
         list={
           <div className="card-grid">
@@ -378,7 +269,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
                   <span className="ctile-name">{jobName(job.id)}</span>
                   <span className="ctile-meta">{t('career.perMonth', { amount: formatMoney(salary, lng) })}</span>
                   <span className={`ctile-meta${monthsLeft <= 1 ? ' warn' : ''}`}>{t('career.expiresIn', { count: monthsLeft })}</span>
-                  {elig.ok ? <ChanceBar chance={hireChance(game, job)} /> : <span className="ctile-meta">🔒 {t('career.status.locked')}</span>}
+                  {elig.ok ? <ChanceBar chance={hireChance(game, job)} label={t('career.chanceLabel')} /> : <span className="ctile-meta">🔒 {t('career.status.locked')}</span>}
                   {isTarget && <span className="status-badge current">{t('career.applied')}</span>}
                 </Tile>
               );
@@ -465,7 +356,7 @@ function Trainings({ game, selected, onSelect, quick }: PaneProps & { quick: boo
       <RefreshNote game={game} />
       {list.length === 0 && <p className="muted small">{t('career.noneLeft')}</p>}
       <Split
-        tab={tab}
+        title={t(`career.select.${tab}`)}
         detail={picked ? detail(picked[0], picked[1]) : null}
         list={
           <div className="card-grid">

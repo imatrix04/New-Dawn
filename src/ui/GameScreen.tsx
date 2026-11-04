@@ -5,6 +5,7 @@ import { Board } from './board/Board';
 import { BoardWindow } from './board/BoardWindow';
 import { CareerCard } from './CareerCard';
 import { EventPanel } from './EventPanel';
+import { HousingCard } from './HousingCard';
 import { LogPanel } from './LogPanel';
 import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
@@ -43,6 +44,9 @@ export function GameScreen({ game }: { game: GameState }) {
         </BoardWindow>
         <BoardWindow id="career" title={t('windows.career')}>
           <CareerCard game={game} />
+        </BoardWindow>
+        <BoardWindow id="housing" title={t('windows.housing')}>
+          <HousingCard game={game} />
         </BoardWindow>
         <BoardWindow id="journal" title={t('windows.journal')}>
           <LogPanel log={game.log} />

@@ -20,6 +20,7 @@
     "wallet": "Portefeuille",
     "profile": "Profil",
     "career": "Carrière",
+    "housing": "Logement",
     "journal": "Journal"
   },
   "skills": {
@@ -290,7 +291,70 @@
   },
   "housing": {
     "studio": "Petit studio",
-    "shared": "Colocation"
+    "shared": "Colocation",
+    "t2": "Appartement T2",
+    "t3": "Appartement T3",
+    "duplex": "Duplex",
+    "cottage": "Petite maison",
+    "family": "Maison familiale",
+    "penthouse": "Penthouse",
+    "villa": "Villa avec piscine"
+  },
+  "estate": {
+    "current": "Logement actuel",
+    "tabs": { "rent": "À louer", "buy": "À acheter" },
+    "kind": { "all": "Tous", "studio": "Studios", "apartment": "Appartements", "house": "Maisons" },
+    "area": { "center": "Centre-ville", "suburb": "Banlieue", "country": "Campagne" },
+    "tenant": "Locataire • {{amount}}/mois",
+    "owner": "Propriétaire • valeur estimée {{value}}",
+    "ownerCharges": "Charges : {{amount}}/mois",
+    "loanLine": "Prêt : {{monthly}}/mois • reste {{balance}} ({{months}} mois)",
+    "noLoan": "Sans prêt",
+    "extraCommute": "🚌 +{{hours}} h/sem. de trajet",
+    "rentHint": "Dépose un dossier : la réponse tombe à la fin du mois. Le propriétaire regarde tes revenus, ton emploi et ton épargne. Les biens rares attirent plus de candidats. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
+    "buyHint": "Choisis ton apport et la durée du prêt : la banque exige un emploi et au plus 35 % de ton salaire en mensualité. Quand tu déménages, ton bien est vendu automatiquement. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
+    "listingsCount": "Annonces visibles : {{count}} / {{max}}",
+    "searchRate_one": "🏠 {{count}} nouvelle annonce par mois",
+    "searchRate_other": "🏠 {{count}} nouvelles annonces par mois",
+    "noListings": "Aucune annonce pour le moment. Passe des heures à chercher un logement pour en faire apparaître.",
+    "noMatch": "Aucune annonce ne correspond à ce filtre.",
+    "select": { "rent": "Sélectionne une location", "buy": "Sélectionne un bien à acheter" },
+    "fact": {
+      "rent": "Loyer", "price": "Prix", "surface": "Surface", "commute": "Trajet en plus", "none": "Aucun",
+      "deposit": "Caution", "fees": "Frais d'agence", "moving": "Déménagement", "upfront": "À payer à l'entrée",
+      "credit": "Récupéré sur ton logement actuel", "notary": "Frais de notaire", "charges": "Charges",
+      "down": "Apport", "loan": "Emprunt", "rate": "Taux", "monthly": "Mensualité", "debt": "Endettement",
+      "interest": "Coût du crédit", "signing": "À payer à la signature", "comfort": "Confort"
+    },
+    "m2": "{{n}} m²",
+    "chance": "Chance d'être accepté chaque mois",
+    "chanceDetail": {
+      "title": "D'où vient ta chance",
+      "base": "Chance de base (bien de rareté {{grade}})",
+      "income": "Revenus : {{ratio}} fois le loyer",
+      "job": "Tu as un emploi",
+      "savings": "Épargne : 6 mois de loyer d'avance"
+    },
+    "apply": "Déposer un dossier",
+    "cancel": "Retirer le dossier",
+    "applied": "Dossier déposé",
+    "applyNote": "Dossier déposé : réponse à la fin du mois.",
+    "tooPoor": "Tu n'as pas de quoi payer l'entrée ({{amount}} manquent).",
+    "saleNote": "Ton bien actuel sera vendu : {{net}} (valeur moins 5 % de frais et le prêt restant).",
+    "buy": {
+      "down": "Apport",
+      "term": "Durée du prêt",
+      "cash": "Comptant",
+      "years": "{{count}} ans",
+      "confirm": "Acheter ce bien",
+      "reason": {
+        "invalid": "Choix de financement invalide.",
+        "job": "La banque refuse : il te faut un emploi pour emprunter.",
+        "debt": "La banque refuse : la mensualité dépasse 35 % de ton salaire.",
+        "cash": "Il te manque {{amount}} pour payer l'apport, les frais de notaire et le déménagement."
+      }
+    },
+    "lines": { "loan": "Prêt immobilier", "charges": "Charges du logement" }
   },
   "cars": {
     "small": "Petite voiture"
@@ -339,7 +403,9 @@
       "happiness": "😊 {{delta}}/mois",
       "skill": "🧠 {{delta}}/mois",
       "search_one": "🔎 +{{count}} offre/mois",
-      "search_other": "🔎 +{{count}} offres/mois"
+      "search_other": "🔎 +{{count}} offres/mois",
+      "housing_one": "🏠 +{{count}} annonce/mois",
+      "housing_other": "🏠 +{{count}} annonces/mois"
     },
     "overHint": "Réduis ton planning pour pouvoir passer le mois.",
     "target": "→ {{job}}",
@@ -357,6 +423,7 @@
       "study": { "label": "Études", "hint": "Intelligence et numérique" },
       "sport": { "label": "Sport", "hint": "Santé et force" },
       "search": { "label": "Recherche d'emploi", "hint": "1 h/sem. = 1 nouvelle offre d'emploi par mois (0 h : aucune)" },
+      "housing": { "label": "Recherche de logement", "hint": "1 h/sem. = 1 nouvelle annonce de logement par mois (0 h : aucune)" },
       "free": { "label": "Temps libre", "hint": "" }
     }
   },
@@ -380,6 +447,15 @@
     "gigPay": "Boulot rapide ({{gig}}) : +{{amount, number}} €.",
     "newOffers_one": "{{count}} nouvelle offre d'emploi.",
     "newOffers_other": "{{count}} nouvelles offres d'emploi.",
+    "newListings_one": "{{count}} nouvelle annonce de logement.",
+    "newListings_other": "{{count}} nouvelles annonces de logement.",
+    "listingExpired": "L'annonce ({{home}}) a disparu, ton dossier tombe à l'eau.",
+    "housingFound": "Dossier accepté : tu emménages ({{home}}), loyer de {{rent, number}} €/mois.",
+    "housingNone": "Ton dossier ({{home}}) n'a pas été retenu ce mois-ci.",
+    "housingBroke": "Tu n'as plus de quoi payer l'entrée ({{home}}) : le propriétaire se désiste.",
+    "homeBought": "Tu es propriétaire ! {{home}} acheté {{price, number}} €.",
+    "homeSold": "Ton ancien bien ({{home}}) est vendu : {{amount, number}} € nets.",
+    "loanRepaid": "Ton prêt immobilier est entièrement remboursé !",
     "noOffers": "Plus aucune offre d'emploi visible : il faut chercher pour en trouver de nouvelles.",
     "offerExpired": "L'offre de {{job}} a disparu, ta candidature tombe à l'eau.",
     "experienceReached": "Tu as {{months}} mois d'expérience en {{field}} : de nouveaux postes s'ouvrent.",
@@ -452,6 +528,18 @@
       "text": "Un ami te propose de parier 100 € sur un match.",
       "choices": ["Parier (-100 € ou +250 €)", "Refuser"],
       "outcomes": { "won": "Tu gagnes !", "lost": "Perdu...", "declined": "Prudent." }
+    },
+    "rentRaise": {
+      "title": "Hausse de loyer",
+      "text": "Ton propriétaire t'annonce une augmentation de loyer de 5 %.",
+      "choices": ["Accepter", "Contester"],
+      "outcomes": { "accepted": "Le loyer monte, tu paieras plus chaque mois.", "won": "Il renonce à la hausse.", "lost": "Il maintient la hausse, et l'ambiance se tend." }
+    },
+    "homeRepairs": {
+      "title": "Travaux dans ton logement",
+      "text": "Une fuite et une chaudière fatiguée : le bien a besoin de réparations.",
+      "choices": ["Faire les travaux (-800 €)", "Reporter"],
+      "outcomes": { "repaired": "Tout est remis en état.", "postponed": "Humidité et froid : tu le sens dans ton moral et ta santé." }
     },
     "parents": {
       "title": "Coup de pouce familial",
