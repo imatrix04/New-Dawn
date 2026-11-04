@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import {
   closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, migrateGame, openSavings,
-  resolveChoice, setJobTarget, setSchedule, withdrawSavings,
+  resolveChoice, setGig, setJobTarget, setSchedule, withdrawSavings,
 } from './game/engine';
 import type { GameState, Profile, SavingsProduct, ScheduleKey } from './game/types';
 
@@ -39,6 +39,7 @@ interface Store {
   endTurn: () => void;
   choose: (index: number) => void;
   setJobTarget: (id: string | null) => void;
+  setGig: (id: string | null) => void;
   enrollTraining: (id: string) => void;
   dropTraining: () => void;
   openSavings: (product: SavingsProduct) => void;
@@ -73,6 +74,7 @@ export const useStore = create<Store>((set, get) => {
     endTurn: () => { const g = get().game; if (g) update(endTurn(g)); },
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
     setJobTarget: (id) => { const g = get().game; if (g) update(setJobTarget(g, id)); },
+    setGig: (id) => { const g = get().game; if (g) update(setGig(g, id)); },
     enrollTraining: (id) => { const g = get().game; if (g) update(enrollTraining(g, id)); },
     dropTraining: () => { const g = get().game; if (g) update(dropTraining(g)); },
     openSavings: (product) => { const g = get().game; if (g) update(openSavings(g, product)); },

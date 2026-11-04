@@ -58,16 +58,48 @@
     "hotelSchool": {
       "name": "École hôtelière",
       "desc": "Service en salle et savoir-être : ouvre les portes des restaurants haut de gamme."
+    },
+    "caces": {
+      "name": "CACES cariste",
+      "desc": "Certificat de conduite de chariots élévateurs : ouvre les postes de cariste."
+    },
+    "barista": {
+      "name": "Initiation barista",
+      "desc": "Café, service et relation client : un plus pour décrocher un poste en restauration."
+    },
+    "officeSuite": {
+      "name": "Bureautique avancée",
+      "desc": "Tableurs, traitement de texte et organisation : ouvre les postes d'assistant administratif."
     }
   },
+  "gigs": {
+    "delivery": { "name": "Livraison à vélo", "desc": "Des courses à livrer en ville, aux horaires qui t'arrangent." },
+    "babysitting": { "name": "Baby-sitting", "desc": "Garder des enfants en soirée et le week-end." },
+    "moving": { "name": "Aide au déménagement", "desc": "Porter des cartons et des meubles pour des particuliers." }
+  },
   "career": {
-    "hint": "Choisis le poste que tu vises, puis règle tes heures de recherche dans l'emploi du temps.",
     "current": "Poste actuel",
-    "jobs": "Postes",
-    "training": "Formation",
-    "aim": "Viser",
+    "tabs": { "gigs": "Boulot rapide", "offers": "Offres d'emploi", "quick": "Formation rapide", "training": "Formation" },
+    "gigsHint": "Des petits boulots toujours disponibles, sans candidature. Un seul à la fois, payé à la fin de chaque mois.",
+    "gigInfo": "{{pay}}/mois • {{hours}} h de travail et {{commute}} h de trajet par semaine",
+    "gigStart": "Commencer",
+    "gigStop": "Arrêter",
+    "offersHint": "Tu ne vois qu'une partie des offres, et elles disparaissent avec le temps. Plus un poste est prestigieux, moins son offre dure. Règle tes heures de recherche dans l'emploi du temps pour en trouver de nouvelles.",
+    "offersCount": "Offres visibles : {{count}} / {{max}}",
+    "searchRate_one": "🔎 {{count}} nouvelle offre par mois",
+    "searchRate_other": "🔎 {{count}} nouvelles offres par mois",
+    "noOffers": "Aucune offre pour le moment. Passe des heures à chercher un emploi pour en faire apparaître.",
+    "expiresIn_one": "Expire dans {{count}} mois",
+    "expiresIn_other": "Expire dans {{count}} mois",
+    "chance": "{{pct}} % de chance d'être pris chaque mois",
+    "apply": "Postuler",
     "cancel": "Annuler",
-    "targetNote": "Règle tes heures de recherche dans l'emploi du temps.",
+    "applyNote": "Candidature envoyée : réponse à la fin du mois.",
+    "quickHint": "De courtes formations hors diplôme : elles donnent des compétences, ouvrent certains métiers et augmentent tes chances d'être embauché. Une seule formation à la fois.",
+    "trainingHint": "Les formations longues mènent à un diplôme. Une seule formation à la fois.",
+    "hireBonus": "+{{pct}} % de chance d'embauche en {{field}}",
+    "unlocks": "Ouvre : {{job}}",
+    "certified": "Certifié",
     "status": { "current": "En poste", "locked": "Verrouillé" },
     "req": {
       "experience": "{{months}} mois d'expérience en {{field}}",
@@ -236,6 +268,9 @@
     "cashier_female": "Caissière",
     "driver": "Livreur",
     "driver_female": "Livreuse",
+    "forklift": "Cariste",
+    "adminAssistant": "Assistant administratif",
+    "adminAssistant_female": "Assistante administrative",
     "office": "Employé de bureau",
     "office_female": "Employée de bureau",
     "accountant": "Comptable",
@@ -259,7 +294,8 @@
       "health": "❤️ {{delta}}/mois",
       "happiness": "😊 {{delta}}/mois",
       "skill": "🧠 {{delta}}/mois",
-      "search": "🔎 {{pct}} % de chance"
+      "search_one": "🔎 +{{count}} offre/mois",
+      "search_other": "🔎 +{{count}} offres/mois"
     },
     "overHint": "Réduis ton planning pour pouvoir passer le mois.",
     "target": "→ {{job}}",
@@ -274,7 +310,7 @@
       "leisure": { "label": "Loisirs", "hint": "Bonheur : ±1 par heure autour de 5 h/jour • coûte de l'argent" },
       "study": { "label": "Études", "hint": "Intelligence et numérique" },
       "sport": { "label": "Sport", "hint": "Santé et force" },
-      "search": { "label": "Recherche d'emploi", "hint": "Chance de décrocher un meilleur poste" },
+      "search": { "label": "Recherche d'emploi", "hint": "1 h/sem. = 1 nouvelle offre d'emploi par mois (0 h : aucune)" },
       "free": { "label": "Temps libre", "hint": "" }
     }
   },
@@ -293,6 +329,12 @@
     "trainingDropped": "Tu abandonnes ta formation : {{training}}.",
     "trainingSkipped": "Formation : il te faut au moins {{hours}} h d'études par semaine, tu ne progresses pas ce mois-ci.",
     "diploma": "Diplôme obtenu : {{training}} !",
+    "certificate": "Formation terminée : {{training}} !",
+    "gigPay": "Boulot rapide ({{gig}}) : +{{amount, number}} €.",
+    "newOffers_one": "{{count}} nouvelle offre d'emploi.",
+    "newOffers_other": "{{count}} nouvelles offres d'emploi.",
+    "noOffers": "Plus aucune offre d'emploi visible : il faut chercher pour en trouver de nouvelles.",
+    "offerExpired": "L'offre de {{job}} a disparu, ta candidature tombe à l'eau.",
     "experienceReached": "Tu as {{months}} mois d'expérience en {{field}} : de nouveaux postes s'ouvrent.",
     "interest": "Intérêts du mois : +{{amount, number}} €.",
     "pelClosed": "PEL clôturé : {{amount, number}} € récupérés.",
@@ -300,7 +342,7 @@
     "pelMatured": "Ton PEL arrive à son terme (10 ans) : {{amount, number}} € versés sur ton compte.",
     "jeuneClosed": "Tu as 25 ans : ton Livret Jeune est clôturé, {{amount, number}} € versés sur ton compte.",
     "jobFound": "Tu décroches un poste : {{job}} ({{salary, number}} €/mois).",
-    "jobNone": "Aucune offre intéressante pour le moment.",
+    "jobNone": "Ta candidature pour {{job}} n'a pas abouti ce mois-ci.",
     "eventLine": "{{title}} : {{text}}",
     "eventLineFx": "{{title}} : {{text}} ({{fx}})"
   },

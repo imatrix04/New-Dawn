@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS } from '../data/content';
 import {
-  canSearch, isOverbooked, jobById, monthlyExpenses, monthlyIncome, scheduleEffects, weekBreakdown,
+  isOverbooked, monthlyExpenses, monthlyIncome, scheduleEffects, weekBreakdown,
 } from '../game/engine';
 import type { GameState, ScheduleKey } from '../game/types';
 import { formatNumber, formatSigned } from '../i18n/format';
@@ -23,7 +23,6 @@ export function SchedulePanel({ game }: { game: GameState }) {
   const week = weekBreakdown(game);
   const over = isOverbooked(game);
   const fx = scheduleEffects(game.schedule);
-  const target = jobById(game.jobTarget);
   const lng = i18n.language;
 
   const income = monthlyIncome(game);
@@ -40,7 +39,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'leisure': return { text: t('schedule.effect.happiness', { delta: formatSigned(fx.leisureHappiness, lng) }), tone: tone(fx.leisureHappiness) };
       case 'sport': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sportHealth, lng) }), tone: tone(fx.sportHealth) };
       case 'study': return { text: t('schedule.effect.skill', { delta: formatSigned(fx.studyIntelligence, lng) }), tone: tone(fx.studyIntelligence) };
-      case 'search': return { text: t('schedule.effect.search', { pct: Math.round(fx.searchChance * 100) }), tone: tone(fx.searchChance) };
+      case 'search': return { text: t('schedule.effect.search', { count: fx.searchOffers }), tone: tone(fx.searchOffers) };
     }
   };
 
@@ -63,7 +62,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
       </div>
 
       <div className="tiles">
-        {SLIDERS.filter((k) => k !== 'search' || canSearch(game)).map((key, i) => {
+        {SLIDERS.map((key, i) => {
           const def = SCHEDULE[key];
           const value = game.schedule[key];
           const eff = effect(key);
@@ -95,13 +94,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
                 aria-label={t(`schedule.cats.${key}.label`)}
               />
               <div className="tile-foot">
-                <span className="muted">
-                  {def.perDay
-                    ? t('schedule.perWeek', { hours: week[key] })
-                    : key === 'search' && target
-                      ? t('schedule.target', { job: t(`jobs.${target.id}`, { context: game.gender }) })
-                      : ''}
-                </span>
+                <span className="muted">{def.perDay ? t('schedule.perWeek', { hours: week[key] }) : ''}</span>
                 <span className={`badge ${eff.tone}`}>{eff.text}</span>
               </div>
             </div>

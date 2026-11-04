@@ -116,8 +116,9 @@ header { display: flex; justify-content: space-between; align-items: center; mar
   position: relative; z-index: 50;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   margin: 0; padding: 8px 16px;
-  background: #171a26; border-bottom: 1px solid #2e3450;
+  background: #171a26; border-top: 1px solid #2e3450;
 }
+.topbar-left { display: flex; align-items: center; gap: 20px; min-width: 140px; }
 .topbar-id { display: flex; flex-direction: column; line-height: 1.2; min-width: 140px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; min-width: 140px; justify-content: flex-end; }
 .topbar .money { font-size: 1.1rem; }
@@ -146,6 +147,8 @@ header { display: flex; justify-content: space-between; align-items: center; mar
   transition: transform .2s cubic-bezier(.2, .9, .3, 1.2), box-shadow .2s ease;
   animation: win-enter .3s cubic-bezier(.2, .9, .3, 1) backwards;
 }
+.win-status { background: rgba(28, 32, 48, .55); backdrop-filter: blur(3px); }
+.win-status .win-title { background: rgba(37, 42, 64, .6); }
 .win.dragging { transform: scale(1.025) rotate(var(--tilt, 0deg)); box-shadow: 0 20px 44px rgba(0, 0, 0, .6); transition-duration: .12s; }
 .win.exiting { animation: win-exit .2s ease-in forwards; pointer-events: none; }
 .win-title {
@@ -471,6 +474,17 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 .career .small { margin: 0; }
 .csec h3 { margin: 0 0 8px; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .cur-job { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; background: #151826; font-size: .9rem; }
+
+.career-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 3px; border-radius: 10px; background: #0f1220; }
+.career-nav button {
+  all: unset; box-sizing: border-box; padding: 6px 4px; border-radius: 8px; text-align: center; font-size: .74rem; font-weight: 600;
+  line-height: 1.2; color: var(--muted); cursor: pointer; transition: color .2s, background .2s;
+}
+.career-nav button:hover { color: var(--text); }
+.career-nav button.on { color: #10131f; background: var(--accent); }
+.career-nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.offers-meta { display: flex; justify-content: space-between; gap: 8px; margin: 6px 0 8px; font-size: .75rem; color: var(--muted); }
+.offers-meta .good { color: var(--good); }
 
 .job-list { display: flex; flex-direction: column; gap: 6px; }
 .job-row {

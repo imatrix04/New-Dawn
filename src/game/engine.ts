@@ -1,15 +1,16 @@
 // Logique pure du jeu : aucune dépendance à React ni aux textes.
 // Les messages sont des clés de traduction (voir src/i18n/locales).
 import {
-  CARS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_JOB_TARGET, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE,
-  FOOD_COST, HOURS_PER_WEEK, HOUSING, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, SAVINGS, SCHEDULE,
-  SEARCH_CHANCE_MAX, SEARCH_CHANCE_PER_HOUR, SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START,
-  START_SKILLS, START_STATS, TRAININGS,
+  CARS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK, EVENT_CHANCE,
+  FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING, JOBS, LEISURE_COST_PER_WEEKLY_HOUR,
+  LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, SAVINGS, SCHEDULE, SKILL_RULES, SKILLS, SLEEP_NEUTRAL,
+  SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS, TRAININGS,
 } from '../data/content';
+import type { Gig } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
-  Account, Fx, GameState, Job, LogClass, LogEntry, Profile, Savings, SavingsProduct, Schedule, ScheduleKey,
-  SkillId, StatKey,
+  Account, Fx, GameState, Job, JobOffer, LogClass, LogEntry, Profile, Savings, SavingsProduct, Schedule,
+  ScheduleKey, SkillId, StatKey,
 } from './types';
 
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
@@ -25,8 +26,9 @@ export function createGame(profile: Profile): GameState {
     experience: {},
     diplomas: [],
     training: null,
-    // Sans emploi au départ : on vise le poste d'entrée de gamme pour que la recherche soit utilisable tout de suite.
-    jobTarget: profile.job ? null : DEFAULT_JOB_TARGET,
+    jobTarget: null,
+    offers: starterOffers(),
+    gig: null,
     skills: { ...START_SKILLS },
     history: {},
     month: 0,
@@ -42,12 +44,17 @@ export function createGame(profile: Profile): GameState {
     stats: { ...START_STATS },
     log: [],
   };
-  normalizeSchedule(state);
   addLog(state, profile.path === 'comfort' ? 'log.startComfort' : 'log.startTight', {}, 'month');
   return state;
 }
 
 export const jobById = (id: string | null): Job | null => JOBS.find((j) => j.id === id) ?? null;
+export const gigById = (id: string | null): Gig | null => GIGS.find((g) => g.id === id) ?? null;
+
+const offerFor = (job: Job): JobOffer => ({ jobId: job.id, monthsLeft: OFFER_MONTHS[job.grade] });
+
+/** Premières offres visibles : les postes de départ, qui durent longtemps. */
+const starterOffers = (): JobOffer[] => STARTER_JOBS.map((id) => offerFor(jobById(id)!));
 
 /** Complète une sauvegarde d'une version antérieure avec les champs ajoutés depuis. */
 export function migrateGame(raw: GameState): GameState {
@@ -57,6 +64,8 @@ export function migrateGame(raw: GameState): GameState {
   g.diplomas ??= [];
   g.training ??= null;
   g.jobTarget ??= null;
+  g.gig ??= null;
+  g.offers ??= starterOffers();
   g.history ??= {};
   // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
   const legacy = g.stats as unknown as Record<string, number | undefined>;
@@ -65,6 +74,7 @@ export function migrateGame(raw: GameState): GameState {
   delete legacy.energy;
   if (g.job === 'waiter') g.job = 'fastFood'; // l'ancien « serveur » devient serveur en restauration rapide
   if (g.jobTarget === 'waiter') g.jobTarget = 'fastFood';
+  if (g.jobTarget && !g.offers.some((o) => o.jobId === g.jobTarget)) g.jobTarget = null;
   g.savings = migrateSavings(g.savings);
   return g;
 }
@@ -88,22 +98,37 @@ export function jobEligibility(state: GameState, job: Job): Eligibility {
   return { skills, qualified, ok: skills && qualified };
 }
 
-/** La recherche d'emploi n'a de sens que si on vise un poste accessible, différent du poste actuel. */
-export function canSearch(state: GameState): boolean {
-  const target = jobById(state.jobTarget);
-  return target !== null && target.id !== state.job && jobEligibility(state, target).ok;
+/**
+ * Chance d'être embauché chaque mois sur ce poste : dépend du grade, plus les bonus des formations rapides
+ * suivies dans le même domaine.
+ */
+export function hireChance(state: GameState, job: Job): number {
+  const bonus = state.diplomas.reduce((sum, id) => {
+    const b = TRAININGS[id]?.hireBonus;
+    return b && b.field === job.field ? sum + b.bonus : sum;
+  }, 0);
+  return Math.min(HIRE_CHANCE_MAX, HIRE_CHANCE[job.grade] + bonus);
 }
 
-/** Choisit (ou annule avec null) le poste visé. Seuls les postes accessibles peuvent l'être. */
+/** Postule (ou annule avec null) à une offre visible. Seules les offres accessibles peuvent être visées. */
 export function setJobTarget(state: GameState, id: string | null): GameState {
   if (id === state.jobTarget) return state;
   if (id !== null) {
     const job = jobById(id);
-    if (!job || job.id === state.job || !jobEligibility(state, job).ok) return state;
+    if (!job || job.id === state.job || !state.offers.some((o) => o.jobId === id) || !jobEligibility(state, job).ok) {
+      return state;
+    }
   }
   const s = structuredClone(state);
   s.jobTarget = id;
-  normalizeSchedule(s);
+  return s;
+}
+
+/** Démarre un boulot rapide (ou l'arrête avec null) : un seul à la fois. */
+export function setGig(state: GameState, id: string | null): GameState {
+  if (id === state.gig || (id !== null && !gigById(id))) return state;
+  const s = structuredClone(state);
+  s.gig = id;
   return s;
 }
 
@@ -153,7 +178,8 @@ function progressTraining(s: GameState) {
   if (training.monthsDone >= cfg.months) {
     s.diplomas.push(training.id);
     s.training = null;
-    addLog(s, 'log.diploma', { trainingId: training.id }, 'good');
+    for (const [id, v] of Object.entries(cfg.skills ?? {}) as [SkillId, number][]) s.skills[id] = clamp(s.skills[id] + v);
+    addLog(s, cfg.quick ? 'log.certificate' : 'log.diploma', { trainingId: training.id }, 'good');
   }
 }
 
@@ -177,10 +203,11 @@ export interface WeekBreakdown {
 
 export function weekBreakdown(state: GameState): WeekBreakdown {
   const job = jobById(state.job);
+  const gig = gigById(state.gig);
   const planned = {
     sleep: weeklyHours(state.schedule, 'sleep'),
-    work: job?.hours ?? 0,
-    commute: job?.commute ?? 0,
+    work: (job?.hours ?? 0) + (gig?.hours ?? 0),
+    commute: (job?.commute ?? 0) + (gig?.commute ?? 0),
     essentials: ESSENTIALS_PER_WEEK,
     leisure: weeklyHours(state.schedule, 'leisure'),
     study: weeklyHours(state.schedule, 'study'),
@@ -199,7 +226,6 @@ export const isOverbooked = (state: GameState): boolean => weekBreakdown(state).
  * c'est au joueur de corriger (le dépassement est signalé et bloque le passage du mois).
  */
 export function setSchedule(state: GameState, key: ScheduleKey, value: number): GameState {
-  if (key === 'search' && !canSearch(state)) return state;
   const def = SCHEDULE[key];
   const next = clamp(Math.round(value), def.min, def.max);
   if (next === state.schedule[key]) return state;
@@ -208,14 +234,10 @@ export function setSchedule(state: GameState, key: ScheduleKey, value: number): 
   return s;
 }
 
-/** La recherche d'emploi n'a plus de sens (curseur masqué) : ses heures ne doivent plus compter. */
-function normalizeSchedule(s: GameState) {
-  if (!canSearch(s)) s.schedule.search = 0;
-}
-
 // ---------- Effets du planning ----------
 
-export const monthlyIncome = (state: GameState): number => jobById(state.job)?.salary ?? 0;
+export const monthlyIncome = (state: GameState): number =>
+  (jobById(state.job)?.salary ?? 0) + (gigById(state.gig)?.pay ?? 0);
 
 /** Nourriture + loyer + entretien de la voiture + coût des loisirs. */
 export function monthlyExpenses(state: GameState): number {
@@ -235,7 +257,8 @@ export function scheduleEffects(schedule: Schedule) {
     leisureHappiness: schedule.leisure - LEISURE_NEUTRAL,
     studyIntelligence: schedule.study * (SKILL_RULES.perStudyHour.intelligence ?? 0),
     sportStrength: schedule.sport * (SKILL_RULES.perSportHour.strength ?? 0),
-    searchChance: Math.min(SEARCH_CHANCE_MAX, schedule.search * SEARCH_CHANCE_PER_HOUR),
+    /** Nouvelles offres d'emploi par mois : 1 par heure de recherche hebdomadaire. */
+    searchOffers: schedule.search,
   };
 }
 
@@ -265,6 +288,7 @@ export function skillGains(state: GameState): Record<SkillId, number> {
   add(SKILL_RULES.perLeisureHour, state.schedule.leisure);
   const job = jobById(state.job);
   if (job) add(SKILL_RULES.perJobMonth[job.field]);
+  add(gigById(state.gig)?.skills);
   return gains;
 }
 
@@ -495,6 +519,71 @@ function rollEvent(s: GameState) {
   s.lastEvent = event.id;
 }
 
+// ---------- Offres d'emploi ----------
+
+/** Tirage de l'embauche pour l'offre visée : la candidature reste ouverte tant que l'offre existe. */
+function resolveApplication(s: GameState) {
+  const target = jobById(s.jobTarget);
+  if (!target) return;
+  if (!s.offers.some((o) => o.jobId === target.id) || !jobEligibility(s, target).ok) {
+    s.jobTarget = null;
+    return;
+  }
+  if (Math.random() < hireChance(s, target)) {
+    s.job = target.id;
+    s.jobTarget = null;
+    s.offers = s.offers.filter((o) => o.jobId !== target.id);
+    addLog(s, 'log.jobFound', { jobId: target.id, gender: s.gender, salary: target.salary }, 'good');
+  } else {
+    addLog(s, 'log.jobNone', { jobId: target.id, gender: s.gender });
+  }
+}
+
+/** Tire `count` postes distincts, les plus prestigieux étant les plus rares (poids par grade). */
+function drawJobs(candidates: Job[], count: number): Job[] {
+  const pool = [...candidates];
+  const picked: Job[] = [];
+  while (picked.length < count && pool.length) {
+    let roll = Math.random() * pool.reduce((sum, j) => sum + OFFER_WEIGHT[j.grade], 0);
+    const i = pool.findIndex((j) => (roll -= OFFER_WEIGHT[j.grade]) < 0);
+    picked.push(...pool.splice(i === -1 ? pool.length - 1 : i, 1));
+  }
+  return picked;
+}
+
+/**
+ * Fin de mois côté offres : les offres vieillissent et expirent, puis chaque heure de recherche hebdomadaire
+ * amène une nouvelle offre qui remplace les plus anciennes quand la liste est pleine. Sans recherche, rien de neuf.
+ */
+function refreshOffers(s: GameState) {
+  const before = s.offers.length;
+  s.offers = s.offers.map((o) => ({ ...o, monthsLeft: o.monthsLeft - 1 })).filter((o) => o.monthsLeft > 0);
+  if (s.jobTarget && !s.offers.some((o) => o.jobId === s.jobTarget)) {
+    addLog(s, 'log.offerExpired', { jobId: s.jobTarget, gender: s.gender });
+    s.jobTarget = null;
+  }
+  const expired = before - s.offers.length;
+  if (expired > 0 && !s.offers.length) addLog(s, 'log.noOffers');
+
+  const wanted = scheduleEffects(s.schedule).searchOffers;
+  if (wanted <= 0) return;
+  const shown = new Set(s.offers.map((o) => o.jobId));
+  const fresh = drawJobs(JOBS.filter((j) => j.id !== s.job && !shown.has(j.id)), wanted);
+  if (!fresh.length) return;
+
+  // Place : on retire d'abord les offres les plus proches de l'expiration (jamais celle à laquelle on postule).
+  const overflow = s.offers.length + fresh.length - OFFERS_MAX;
+  if (overflow > 0) {
+    const drop = s.offers
+      .filter((o) => o.jobId !== s.jobTarget)
+      .sort((a, b) => a.monthsLeft - b.monthsLeft)
+      .slice(0, overflow);
+    s.offers = s.offers.filter((o) => !drop.includes(o));
+  }
+  s.offers.push(...fresh.map(offerFor));
+  addLog(s, 'log.newOffers', { count: fresh.length }, 'good');
+}
+
 // ---------- Actions publiques ----------
 
 /** Passe au mois suivant en appliquant le planning actuel. */
@@ -514,6 +603,11 @@ export function endTurn(state: GameState): GameState {
     addLog(s, 'log.pay', { jobId: job.id, gender: s.gender, amount: job.salary }, 'good');
     gainExperience(s, job);
   }
+  const gig = gigById(s.gig);
+  if (gig) {
+    s.money += gig.pay;
+    addLog(s, 'log.gigPay', { gigId: gig.id, amount: gig.pay }, 'good');
+  }
   const expenses = monthlyExpenses(s);
   s.money -= expenses;
   addLog(s, 'log.expenses', { amount: expenses });
@@ -521,16 +615,8 @@ export function endTurn(state: GameState): GameState {
 
   progressTraining(s);
 
-  if (s.schedule.search > 0 && canSearch(s)) {
-    if (Math.random() < scheduleEffects(s.schedule).searchChance) {
-      const target = jobById(s.jobTarget)!;
-      s.job = target.id;
-      s.jobTarget = null;
-      addLog(s, 'log.jobFound', { jobId: target.id, gender: s.gender, salary: target.salary }, 'good');
-    } else {
-      addLog(s, 'log.jobNone');
-    }
-  }
+  resolveApplication(s);
+  refreshOffers(s);
 
   if (s.stats.happiness < 20) addLog(s, 'log.lowMood', {}, 'bad');
   if (s.money < 0) addLog(s, 'log.overdraft', {}, 'bad');
@@ -539,7 +625,6 @@ export function endTurn(state: GameState): GameState {
   addLog(s, 'log.monthMark', { month: s.month }, 'month');
   closeExpiredSavings(s);
 
-  normalizeSchedule(s);
   checkOver(s);
   if (!s.over) rollEvent(s);
   return s;

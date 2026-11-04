@@ -58,16 +58,48 @@
     "hotelSchool": {
       "name": "Hotel school",
       "desc": "Table service and etiquette: opens the doors of fine-dining restaurants."
+    },
+    "caces": {
+      "name": "Forklift licence",
+      "desc": "Forklift operator certificate: opens forklift operator jobs."
+    },
+    "barista": {
+      "name": "Barista basics",
+      "desc": "Coffee, service and customer care: a plus when applying in restaurants."
+    },
+    "officeSuite": {
+      "name": "Advanced office skills",
+      "desc": "Spreadsheets, word processing and organisation: opens administrative assistant jobs."
     }
   },
+  "gigs": {
+    "delivery": { "name": "Bike delivery", "desc": "Deliveries around town, on hours that suit you." },
+    "babysitting": { "name": "Babysitting", "desc": "Looking after children in the evenings and at weekends." },
+    "moving": { "name": "Moving help", "desc": "Carrying boxes and furniture for private customers." }
+  },
   "career": {
-    "hint": "Pick the job you're aiming for, then set your job-search hours in the schedule.",
     "current": "Current job",
-    "jobs": "Jobs",
-    "training": "Training",
-    "aim": "Aim for it",
+    "tabs": { "gigs": "Quick job", "offers": "Job offers", "quick": "Quick training", "training": "Training" },
+    "gigsHint": "Small jobs that are always available, no application needed. One at a time, paid at the end of each month.",
+    "gigInfo": "{{pay}}/month • {{hours}} h of work and {{commute}} h of commuting per week",
+    "gigStart": "Start",
+    "gigStop": "Stop",
+    "offersHint": "You only see some of the offers, and they disappear over time. The more prestigious the job, the shorter its offer lasts. Spend hours job hunting in the schedule to find new ones.",
+    "offersCount": "Visible offers: {{count}} / {{max}}",
+    "searchRate_one": "🔎 {{count}} new offer per month",
+    "searchRate_other": "🔎 {{count}} new offers per month",
+    "noOffers": "No offers right now. Spend hours job hunting to bring new ones up.",
+    "expiresIn_one": "Expires in {{count}} month",
+    "expiresIn_other": "Expires in {{count}} months",
+    "chance": "{{pct}}% chance of being hired each month",
+    "apply": "Apply",
     "cancel": "Cancel",
-    "targetNote": "Set your job-search hours in the schedule.",
+    "applyNote": "Application sent: you'll hear back at the end of the month.",
+    "quickHint": "Short non-diploma courses: they give skills, open certain jobs and raise your odds of being hired. One training at a time.",
+    "trainingHint": "Long courses lead to a diploma. One training at a time.",
+    "hireBonus": "+{{pct}}% hiring chance in {{field}}",
+    "unlocks": "Unlocks: {{job}}",
+    "certified": "Certified",
     "status": { "current": "Employed", "locked": "Locked" },
     "req": {
       "experience": "{{months}} months of experience in {{field}}",
@@ -231,6 +263,8 @@
     "fineDining": "Fine-dining server",
     "cashier": "Cashier",
     "driver": "Delivery driver",
+    "forklift": "Forklift operator",
+    "adminAssistant": "Administrative assistant",
     "office": "Office clerk",
     "accountant": "Accountant",
     "engineer": "Engineer"
@@ -252,7 +286,8 @@
       "health": "❤️ {{delta}}/mo",
       "happiness": "😊 {{delta}}/mo",
       "skill": "🧠 {{delta}}/mo",
-      "search": "🔎 {{pct}}% chance"
+      "search_one": "🔎 +{{count}} offer/mo",
+      "search_other": "🔎 +{{count}} offers/mo"
     },
     "overHint": "Trim your schedule to be able to pass the month.",
     "target": "→ {{job}}",
@@ -267,7 +302,7 @@
       "leisure": { "label": "Leisure", "hint": "Happiness: ±1 per hour around 5 h/day • costs money" },
       "study": { "label": "Study", "hint": "Intelligence and digital" },
       "sport": { "label": "Exercise", "hint": "Health and strength" },
-      "search": { "label": "Job search", "hint": "Chance to land a better job" },
+      "search": { "label": "Job search", "hint": "1 h/wk = 1 new job offer per month (0 h: none)" },
       "free": { "label": "Free time", "hint": "" }
     }
   },
@@ -286,6 +321,12 @@
     "trainingDropped": "You drop out of your training: {{training}}.",
     "trainingSkipped": "Training: you need at least {{hours}} study hours per week, so you make no progress this month.",
     "diploma": "Diploma earned: {{training}}!",
+    "certificate": "Training completed: {{training}}!",
+    "gigPay": "Quick job ({{gig}}): +€{{amount, number}}.",
+    "newOffers_one": "{{count}} new job offer.",
+    "newOffers_other": "{{count}} new job offers.",
+    "noOffers": "No job offers left: you need to search to find new ones.",
+    "offerExpired": "The {{job}} offer is gone, your application falls through.",
     "experienceReached": "You have {{months}} months of experience in {{field}}: new jobs open up.",
     "interest": "Interest this month: +€{{amount, number}}.",
     "pelClosed": "PEL closed: €{{amount, number}} recovered.",
@@ -293,7 +334,7 @@
     "pelMatured": "Your PEL reaches its term (10 years): €{{amount, number}} paid into your account.",
     "jeuneClosed": "You turned 25: your Livret Jeune is closed, €{{amount, number}} paid into your account.",
     "jobFound": "You land a job: {{job}} (€{{salary, number}}/month).",
-    "jobNone": "No interesting offers right now.",
+    "jobNone": "Your application for {{job}} didn't work out this month.",
     "eventLine": "{{title}}: {{text}}",
     "eventLineFx": "{{title}}: {{text}} ({{fx}})"
   },

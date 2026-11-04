@@ -194,7 +194,7 @@ export function BoardWindow({ id, title, children }: Props) {
   return (
     <div
       ref={ref}
-      className={`win${exiting ? ' exiting' : ''}${dragging ? ' dragging' : ''}${resizing ? ' resizing' : ''}`}
+      className={`win win-${id}${exiting ? ' exiting' : ''}${dragging ? ' dragging' : ''}${resizing ? ' resizing' : ''}`}
       style={{ left: win.x, top: win.y, zIndex: win.z, width: win.w, height: win.h ?? undefined }}
       onPointerDown={() => focus(id)}
       onAnimationEnd={(e) => {

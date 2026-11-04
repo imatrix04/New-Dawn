@@ -85,8 +85,12 @@ export interface GameState {
   /** Diplômes obtenus (voir TRAININGS). */
   diplomas: string[];
   training: Training | null;
-  /** Poste visé par la recherche d'emploi (curseur « Recherche » du planning). */
+  /** Offre visible à laquelle on postule : une chance d'embauche est tirée chaque mois tant qu'elle existe. */
   jobTarget: string | null;
+  /** Offres d'emploi visibles. Elles expirent, et ne se renouvellent qu'avec les heures de recherche. */
+  offers: JobOffer[];
+  /** Boulot rapide en cours (voir GIGS), ou null. */
+  gig: string | null;
   /** Compétences du personnage. */
   skills: Record<SkillId, number>;
   /** Mois travaillés par poste (job.id) : détail de l'expérience, affiché dans le profil. */
@@ -122,8 +126,16 @@ export type Qualification =
   | { type: 'experience'; field: string; months: number }
   | { type: 'diploma'; id: string };
 
+export interface JobOffer {
+  jobId: string;
+  /** Mois restants avant que l'offre disparaisse. */
+  monthsLeft: number;
+}
+
 export interface Job {
   id: string; // texte : jobs.<id> (version féminine : jobs.<id>_female)
+  /** Prestige, de 1 (poste de base, offre durable) à 4 (offre très éphémère). */
+  grade: number;
   /** Domaine, pour l'expérience (textes : fields.<field>). */
   field: string;
   salary: number;

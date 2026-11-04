@@ -26,6 +26,7 @@ export function formatLogEntry(t: TFunction, entry: LogEntry): string {
     params.job = t(`jobs.${params.jobId}`, { context }).toLowerCase();
   }
   if (typeof params.trainingId === 'string') params.training = t(`trainings.${params.trainingId}.name`);
+  if (typeof params.gigId === 'string') params.gig = t(`gigs.${params.gigId}.name`).toLowerCase();
   if (typeof params.field === 'string') params.field = t(`fields.${params.field}`);
   if (typeof params.productId === 'string') params.product = t(`wallet.products.${params.productId}.name`);
   if (typeof params.month === 'number') params.age = formatAge(t, params.month);

@@ -110,9 +110,6 @@ export const SAVINGS_COLORS = {
 } as const;
 /** Savoir gagné par heure d'étude hebdomadaire et par mois. */
 export const KNOWLEDGE_PER_STUDY_HOUR = 0.3;
-/** Chance de trouver un meilleur emploi par heure de recherche hebdomadaire (plafonnée). */
-export const SEARCH_CHANCE_PER_HOUR = 0.15;
-export const SEARCH_CHANCE_MAX = 0.9;
 /** Coût mensuel des loisirs, par heure hebdomadaire de loisirs. */
 export const LEISURE_COST_PER_WEEKLY_HOUR = 3;
 
@@ -136,22 +133,76 @@ export const START: Record<StartPath, { money: number; housing: string; car: str
   tight: { money: 300, housing: 'shared', car: null },
 };
 
-/** Petits boulots proposés au départ confortable (aucune qualification requise). */
+/** Petits boulots proposés au départ confortable (aucune qualification requise). Au départ, ce sont aussi les premières offres visibles. */
 export const STARTER_JOBS = ['fastFood', 'diner', 'cashier', 'driver'];
 
-/** Poste visé par défaut quand on démarre sans emploi : le curseur de recherche est utilisable tout de suite. */
-export const DEFAULT_JOB_TARGET = 'fastFood';
+// ---------- Offres d'emploi ----------
+
+/**
+ * Les offres visibles sont limitées : elles ne se renouvellent que grâce aux heures de recherche
+ * (1 h/semaine = 1 nouvelle offre par mois, jusqu'à 10) et elles expirent d'autant plus vite que le poste est prestigieux.
+ */
+export const OFFERS_MAX = 10;
+
+/** Durée de vie d'une offre, en mois, selon le grade du poste (1 = poste de base, 4 = très prestigieux). */
+export const OFFER_MONTHS: Record<number, number> = { 1: 6, 2: 3, 3: 2, 4: 1 };
+
+/** Poids du tirage d'une nouvelle offre selon le grade : les postes prestigieux sont plus rares. */
+export const OFFER_WEIGHT: Record<number, number> = { 1: 6, 2: 4, 3: 2, 4: 1 };
+
+/** Chance d'être embauché chaque mois où l'on postule à une offre encore valable, selon le grade. */
+export const HIRE_CHANCE: Record<number, number> = { 1: 0.6, 2: 0.45, 3: 0.35, 4: 0.25 };
+export const HIRE_CHANCE_MAX = 0.95;
+
+// ---------- Boulots rapides ----------
+
+/**
+ * Petits boulots toujours disponibles, sans candidature : un seul à la fois, payés chaque mois.
+ * Leurs heures et leurs trajets s'ajoutent à la semaine. Paye ≈ SMIC horaire net × heures × 4,3 semaines.
+ */
+export interface Gig {
+  id: string; // textes : gigs.<id>
+  icon: string;
+  hours: number;
+  commute: number;
+  pay: number;
+  skills: Partial<Record<SkillId, number>>;
+}
+
+export const GIGS: Gig[] = [
+  { id: 'delivery', icon: '🛵', hours: 8, commute: 1, pay: 380, skills: { logistics: 0.3, strength: 0.1 } },
+  { id: 'babysitting', icon: '🧸', hours: 6, commute: 1, pay: 260, skills: { charisma: 0.3 } },
+  { id: 'moving', icon: '📦', hours: 8, commute: 2, pay: 400, skills: { strength: 0.3 } },
+];
 
 /**
  * Formations. Elles coûtent de l'argent chaque mois et ne progressent que si le joueur étudie
  * au moins `minStudyHours` heures par semaine (curseur « Études » du planning).
  *
+ * Les formations rapides (`quick`) sont de courts certificats hors diplôme : à la fin elles donnent des compétences
+ * (`skills`), comptent comme qualification pour certains postes et augmentent la chance d'être embauché
+ * dans un domaine (`hireBonus`). Les montants sont des estimations de jeu.
+ *
  * École hôtelière : école privée, 9 100 € par an (Ferrandi Paris, année de mise à niveau, tarif 2026 selon l'Onisep),
  * soit 758 € par mois sur 24 mois (≈ 18 200 € au total). Les lycées hôteliers publics sont gratuits, mais ils ne
  * sont pas modélisés pour l'instant.
  */
-export const TRAININGS: Record<string, { months: number; tuition: number; minStudyHours: number }> = {
+export interface TrainingConfig {
+  months: number;
+  tuition: number;
+  minStudyHours: number;
+  quick?: boolean;
+  /** Compétences gagnées à la fin de la formation. */
+  skills?: Partial<Record<SkillId, number>>;
+  /** Bonus de chance d'embauche pour les postes de ce domaine. */
+  hireBonus?: { field: string; bonus: number };
+}
+
+export const TRAININGS: Record<string, TrainingConfig> = {
   hotelSchool: { months: 24, tuition: 758, minStudyHours: 10 },
+  caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 6 }, hireBonus: { field: 'transport', bonus: 0.15 } },
+  barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 4 }, hireBonus: { field: 'restaurant', bonus: 0.15 } },
+  officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 8 }, hireBonus: { field: 'office', bonus: 0.15 } },
 };
 
 export const START_STATS = { health: 80, happiness: 60 };
@@ -176,18 +227,26 @@ export const STATS: StatDef[] = [
  * Le jeu n'a pas d'augmentations avec l'ancienneté : ces montants sont fixes.
  */
 export const JOBS: Job[] = [
-  { id: 'fastFood', field: 'restaurant', salary: 1478, hours: 35, commute: 3 },
-  { id: 'diner', field: 'restaurant', salary: 1600, hours: 35, commute: 4 },
+  { id: 'fastFood', grade: 1, field: 'restaurant', salary: 1478, hours: 35, commute: 3 },
+  { id: 'diner', grade: 1, field: 'restaurant', salary: 1600, hours: 35, commute: 4 },
   {
-    id: 'fineDining', field: 'restaurant', salary: 1900, hours: 39, commute: 6,
+    id: 'fineDining', grade: 3, field: 'restaurant', salary: 1900, hours: 39, commute: 6,
     anyOf: [
       { type: 'experience', field: 'restaurant', months: 24 },
       { type: 'diploma', id: 'hotelSchool' },
     ],
   },
-  { id: 'cashier', field: 'retail', salary: 1500, minSkills: { charisma: 10 }, hours: 35, commute: 4 },
-  { id: 'driver', field: 'transport', salary: 1650, minSkills: { logistics: 12 }, hours: 40, commute: 2 },
-  { id: 'office', field: 'office', salary: 1700, minSkills: { digital: 20 }, hours: 35, commute: 7 },
-  { id: 'accountant', field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
-  { id: 'engineer', field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
+  { id: 'cashier', grade: 1, field: 'retail', salary: 1500, minSkills: { charisma: 10 }, hours: 35, commute: 4 },
+  { id: 'driver', grade: 1, field: 'transport', salary: 1650, minSkills: { logistics: 12 }, hours: 40, commute: 2 },
+  {
+    id: 'forklift', grade: 2, field: 'transport', salary: 1700, hours: 35, commute: 5,
+    anyOf: [{ type: 'diploma', id: 'caces' }],
+  },
+  { id: 'office', grade: 2, field: 'office', salary: 1700, minSkills: { digital: 20 }, hours: 35, commute: 7 },
+  {
+    id: 'adminAssistant', grade: 2, field: 'office', salary: 1800, minSkills: { digital: 25 }, hours: 35, commute: 7,
+    anyOf: [{ type: 'diploma', id: 'officeSuite' }],
+  },
+  { id: 'accountant', grade: 3, field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
+  { id: 'engineer', grade: 4, field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
 ];

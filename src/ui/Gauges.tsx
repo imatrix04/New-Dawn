@@ -15,12 +15,12 @@ const RADIUS = 42;
 const GHOST_RADIUS = 33;
 const circumference = (r: number) => 2 * Math.PI * r;
 
-/** Tendance affichée sous la jauge : flèche + variation prévue. */
-function Trend({ diff, compact = false }: { diff: number; compact?: boolean }) {
+/** Tendance affichée sous la jauge : variation prévue, verte ou rouge. */
+function Trend({ diff }: { diff: number }) {
   const { i18n } = useTranslation();
-  const tone = diff > 0.05 ? 'good' : diff < -0.05 ? 'bad' : '';
-  const arrow = diff > 0.05 ? '▲' : diff < -0.05 ? '▼' : '=';
-  return <span className={`trend ${tone}`}>{compact ? arrow : `${arrow} ${formatSigned(diff, i18n.language)}`}</span>;
+  if (Math.abs(diff) <= 0.05) return null;
+  const tone = diff > 0 ? 'good' : 'bad';
+  return <span className={`trend ${tone}`}>{formatSigned(diff, i18n.language)}</span>;
 }
 
 /** Anneau animé (santé, bonheur) : le chiffre est au centre, l'arc fin intérieur montre le mois prochain. */

@@ -28,8 +28,6 @@ export function GameScreen({ game }: { game: GameState }) {
 
   return (
     <section className="screen wide game-screen">
-      <TopBar game={game} onPause={() => setPaused(true)} />
-
       <Board>
         <BoardWindow id="schedule" title={t('windows.schedule')}>
           <SchedulePanel game={game} />
@@ -50,6 +48,8 @@ export function GameScreen({ game }: { game: GameState }) {
           <LogPanel log={game.log} />
         </BoardWindow>
       </Board>
+
+      <TopBar onPause={() => setPaused(true)} />
 
       {game.pendingEvent && (
         <div className="overlay">
