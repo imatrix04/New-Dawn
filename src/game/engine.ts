@@ -4,7 +4,7 @@ import {
   CARS, CATALOG_MAX, COMPANIES, CATALOG_REFRESH_MONTHS, DEBT_HAPPINESS_LOSS, DEBT_LIMIT, DEFAULT_SCHEDULE, ESSENTIALS_PER_WEEK,
   EVENT_CHANCE, EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FOOD_COST, GIGS, HIRE_CHANCE, HIRE_CHANCE_MAX, HOURS_PER_WEEK, HOUSING, JOBS,
   LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, OFFER_MONTHS, OFFER_WEIGHT, OFFERS_MAX, PRICE_VARIATION, SAVINGS, SCHEDULE, SMIC_NET,
-  SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS,
+  SKILL_MAX, SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_SKILLS, START_STATS, STARTER_JOBS,
   TRAININGS,
 } from '../data/content';
 import type { Company, Gig } from '../data/content';
@@ -33,6 +33,7 @@ export function createGame(profile: Profile): GameState {
     gig: null,
     catalog: { gigs: [], quick: [], training: [], factors: {} },
     skills: { ...START_SKILLS },
+    skillMax: SKILL_MAX,
     history: {},
     month: 0,
     money: start.money,
@@ -119,9 +120,17 @@ export function migrateGame(raw: GameState): GameState {
   g.jobSalary ??= null;
   // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
   const legacy = g.stats as unknown as Record<string, number | undefined>;
-  g.skills ??= { ...START_SKILLS, intelligence: legacy.knowledge ?? START_SKILLS.intelligence };
+  if (!g.skills) {
+    g.skills = { ...START_SKILLS, intelligence: legacy.knowledge === undefined ? START_SKILLS.intelligence : legacy.knowledge * (SKILL_MAX / 100) };
+    g.skillMax = SKILL_MAX;
+  }
   delete legacy.knowledge;
   delete legacy.energy;
+  // Les compétences allaient de 0 à 100 ; elles vont maintenant de 0 à 1000.
+  if (g.skillMax !== SKILL_MAX) {
+    for (const id of Object.keys(g.skills) as SkillId[]) g.skills[id] *= SKILL_MAX / (g.skillMax ?? 100);
+    g.skillMax = SKILL_MAX;
+  }
   if (g.job === 'waiter') g.job = 'fastFood'; // l'ancien « serveur » devient serveur en restauration rapide
   if (g.jobTarget === 'waiter') g.jobTarget = 'fastFood';
   if (g.jobTarget && !g.offers.some((o) => o.jobId === g.jobTarget)) g.jobTarget = null;
@@ -248,7 +257,7 @@ function progressTraining(s: GameState) {
   if (training.monthsDone >= cfg.months) {
     s.diplomas.push(training.id);
     s.training = null;
-    for (const [id, v] of Object.entries(cfg.skills ?? {}) as [SkillId, number][]) s.skills[id] = clamp(s.skills[id] + v);
+    for (const [id, v] of Object.entries(cfg.skills ?? {}) as [SkillId, number][]) s.skills[id] = clamp(s.skills[id] + v, 0, SKILL_MAX);
     addLog(s, cfg.quick ? 'log.certificate' : 'log.diploma', { trainingId: training.id }, 'good');
   }
 }
@@ -594,7 +603,7 @@ function applyFx(s: GameState, fx: Fx) {
   }
   for (const { id } of SKILLS) {
     const v = fx[id];
-    if (v) s.skills[id] = clamp(s.skills[id] + v);
+    if (v) s.skills[id] = clamp(s.skills[id] + v, 0, SKILL_MAX);
   }
 }
 

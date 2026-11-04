@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { JOBS, SKILLS, TRAININGS } from '../data/content';
+import { JOBS, SKILL_MAX, SKILLS, TRAININGS } from '../data/content';
 import { experienceGoal, experienceMonths, skillGains } from '../game/engine';
 import type { GameState } from '../game/types';
 import { formatAge, formatSigned } from '../i18n/format';
@@ -23,7 +23,7 @@ function SkillRow({ id, icon, color, value, gain, index }: {
           <span className="skill-val">{Math.round(shown)}</span>
         </span>
       </div>
-      <div className="meter"><div style={{ width: `${shown}%` }} /></div>
+      <div className="meter"><div style={{ width: `${(shown / SKILL_MAX) * 100}%` }} /></div>
       <span className="job-meta">{t(`skills.${id}.how`)}</span>
     </div>
   );

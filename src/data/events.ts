@@ -59,7 +59,7 @@ export const EVENTS: GameEvent[] = [
   {
     id: 'course',
     choices: [
-      { run: () => ({ outcome: 'followed', fx: { digital: 4 }, good: true }) },
+      { run: () => ({ outcome: 'followed', fx: { digital: 40 }, good: true }) },
       { run: () => ({ outcome: 'ignored', fx: {} }) },
     ],
   },

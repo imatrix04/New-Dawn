@@ -97,6 +97,8 @@ export interface GameState {
   catalog: Catalog;
   /** Compétences du personnage. */
   skills: Record<SkillId, number>;
+  /** Échelle des compétences de la sauvegarde (absente = ancienne échelle de 0 à 100). */
+  skillMax?: number;
   /** Mois travaillés par poste (job.id) : détail de l'expérience, affiché dans le profil. */
   history: Record<string, number>;
   /** Mois écoulés depuis les 18 ans. */

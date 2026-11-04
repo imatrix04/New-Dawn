@@ -56,26 +56,29 @@ export const SKILLS: { id: SkillId; icon: string; color: string }[] = [
   { id: 'logistics', icon: '📦', color: '#5bd48a' },
 ];
 
+/** Valeur maximale d'une compétence (échelle de 0 à 1000). */
+export const SKILL_MAX = 1000;
+
 export const START_SKILLS: Record<SkillId, number> = {
-  digital: 10, charisma: 10, strength: 10, intelligence: 10, logistics: 5,
+  digital: 10, charisma: 10, strength: 10, intelligence: 10, logistics: 10,
 };
 
 /** Gains de compétences par mois (une valeur par heure de planning, ou par mois travaillé dans le domaine). */
 export const SKILL_RULES = {
   /** Par heure d'études hebdomadaire. */
-  perStudyHour: { intelligence: 0.2, digital: 0.1 } as Partial<Record<SkillId, number>>,
+  perStudyHour: { intelligence: 2, digital: 1 } as Partial<Record<SkillId, number>>,
   /** Par heure de sport hebdomadaire. */
-  perSportHour: { strength: 0.25 } as Partial<Record<SkillId, number>>,
+  perSportHour: { strength: 2 } as Partial<Record<SkillId, number>>,
   /** Par heure de loisirs quotidienne. */
-  perLeisureHour: { charisma: 0.1 } as Partial<Record<SkillId, number>>,
+  perLeisureHour: { charisma: 1 } as Partial<Record<SkillId, number>>,
   /** Chaque mois travaillé dans un domaine (job.field). */
   perJobMonth: {
-    restaurant: { charisma: 0.5, logistics: 0.3 },
-    retail: { charisma: 0.4, logistics: 0.6 },
-    transport: { logistics: 0.8, strength: 0.3 },
-    office: { digital: 0.6 },
-    finance: { digital: 0.5, intelligence: 0.3 },
-    engineering: { digital: 0.5, intelligence: 0.5 },
+    restaurant: { charisma: 5, logistics: 3 },
+    retail: { charisma: 4, logistics: 6 },
+    transport: { logistics: 8, strength: 3 },
+    office: { digital: 6 },
+    finance: { digital: 5, intelligence: 3 },
+    engineering: { digital: 5, intelligence: 5 },
   } as Record<string, Partial<Record<SkillId, number>>>,
 };
 
@@ -192,9 +195,9 @@ export interface Gig {
 }
 
 export const GIGS: Gig[] = [
-  { id: 'delivery', icon: '🛵', hours: 8, commute: 1, pay: 380, skills: { logistics: 0.3, strength: 0.1 }, weight: 3, drawback: { health: -1.5, happiness: -0.5 } },
-  { id: 'babysitting', icon: '🧸', hours: 6, commute: 1, pay: 260, skills: { charisma: 0.3 }, weight: 2, drawback: { health: -0.5, happiness: -1.5 } },
-  { id: 'moving', icon: '📦', hours: 8, commute: 2, pay: 400, skills: { strength: 0.3 }, weight: 2, drawback: { health: -2, happiness: -0.5 } },
+  { id: 'delivery', icon: '🛵', hours: 8, commute: 1, pay: 380, skills: { logistics: 3, strength: 1 }, weight: 3, drawback: { health: -1.5, happiness: -0.5 } },
+  { id: 'babysitting', icon: '🧸', hours: 6, commute: 1, pay: 260, skills: { charisma: 3 }, weight: 2, drawback: { health: -0.5, happiness: -1.5 } },
+  { id: 'moving', icon: '📦', hours: 8, commute: 2, pay: 400, skills: { strength: 3 }, weight: 2, drawback: { health: -2, happiness: -0.5 } },
 ];
 
 /**
@@ -228,12 +231,12 @@ export interface TrainingConfig {
 
 export const TRAININGS: Record<string, TrainingConfig> = {
   hotelSchool: { months: 24, tuition: 758, minStudyHours: 20, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
-  caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 6 }, hireBonus: { field: 'transport', bonus: 0.15 }, weight: 2, drawback: { health: -1 } },
-  permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 3 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
-  permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 2, strength: 1 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
-  permisC: { months: 3, tuition: 1000, minStudyHours: 6, quick: true, skills: { logistics: 5 }, hireBonus: { field: 'transport', bonus: 0.15 }, requires: ['permisB'], weight: 1, drawback: { health: -1, happiness: -2 } },
-  barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 4 }, hireBonus: { field: 'restaurant', bonus: 0.15 }, weight: 4, drawback: { happiness: -1 } },
-  officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 8 }, hireBonus: { field: 'office', bonus: 0.15 }, weight: 3, drawback: { happiness: -1.5 } },
+  caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 60 }, hireBonus: { field: 'transport', bonus: 0.15 }, weight: 2, drawback: { health: -1 } },
+  permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 30 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
+  permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 20, strength: 10 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
+  permisC: { months: 3, tuition: 1000, minStudyHours: 6, quick: true, skills: { logistics: 50 }, hireBonus: { field: 'transport', bonus: 0.15 }, requires: ['permisB'], weight: 1, drawback: { health: -1, happiness: -2 } },
+  barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 40 }, hireBonus: { field: 'restaurant', bonus: 0.15 }, weight: 4, drawback: { happiness: -1 } },
+  officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 80 }, hireBonus: { field: 'office', bonus: 0.15 }, weight: 3, drawback: { happiness: -1.5 } },
 };
 
 export const START_STATS = { health: 80, happiness: 60 };
@@ -267,8 +270,8 @@ export const JOBS: Job[] = [
       { type: 'diploma', id: 'hotelSchool' },
     ],
   },
-  { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, minSkills: { charisma: 10 }, hours: 35, commute: 4 },
-  { id: 'driver', grade: 1, drawback: { health: -1.5, happiness: -0.5 }, field: 'transport', salary: 1650, minSkills: { logistics: 12 }, hours: 40, commute: 2 },
+  { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, minSkills: { charisma: 100 }, hours: 35, commute: 4 },
+  { id: 'driver', grade: 1, drawback: { health: -1.5, happiness: -0.5 }, field: 'transport', salary: 1650, minSkills: { logistics: 120 }, hours: 40, commute: 2 },
   {
     id: 'forklift', grade: 2, drawback: { health: -2, happiness: -0.5 }, field: 'transport', salary: 1700, hours: 35, commute: 5,
     anyOf: [{ type: 'diploma', id: 'caces' }],
@@ -276,13 +279,13 @@ export const JOBS: Job[] = [
   { id: 'vtc', grade: 2, drawback: { health: -1, happiness: -1.5 }, field: 'transport', salary: 1800, hours: 40, commute: 2, anyOf: [{ type: 'diploma', id: 'permisB' }] },
   { id: 'motoCourier', grade: 2, drawback: { health: -2, happiness: -1 }, field: 'transport', salary: 1750, hours: 39, commute: 2, anyOf: [{ type: 'diploma', id: 'permisA' }] },
   { id: 'truckDriver', grade: 3, drawback: { health: -2, happiness: -1.5 }, field: 'transport', salary: 2000, hours: 39, commute: 3, anyOf: [{ type: 'diploma', id: 'permisC' }] },
-  { id: 'office', grade: 2, drawback: { health: -0.5, happiness: -1.5 }, field: 'office', salary: 1700, minSkills: { digital: 20 }, hours: 35, commute: 7 },
+  { id: 'office', grade: 2, drawback: { health: -0.5, happiness: -1.5 }, field: 'office', salary: 1700, minSkills: { digital: 200 }, hours: 35, commute: 7 },
   {
-    id: 'adminAssistant', grade: 2, drawback: { health: -0.5, happiness: -1 }, field: 'office', salary: 1800, minSkills: { digital: 25 }, hours: 35, commute: 7,
+    id: 'adminAssistant', grade: 2, drawback: { health: -0.5, happiness: -1 }, field: 'office', salary: 1800, minSkills: { digital: 250 }, hours: 35, commute: 7,
     anyOf: [{ type: 'diploma', id: 'officeSuite' }],
   },
-  { id: 'accountant', grade: 3, drawback: { health: -0.5, happiness: -2 }, field: 'finance', salary: 1750, minSkills: { digital: 30, intelligence: 30 }, hours: 39, commute: 9 },
-  { id: 'engineer', grade: 4, drawback: { health: -1, happiness: -2.5 }, field: 'engineering', salary: 2350, minSkills: { intelligence: 45, digital: 35 }, hours: 42, commute: 12 },
+  { id: 'accountant', grade: 3, drawback: { health: -0.5, happiness: -2 }, field: 'finance', salary: 1750, minSkills: { digital: 300, intelligence: 300 }, hours: 39, commute: 9 },
+  { id: 'engineer', grade: 4, drawback: { health: -1, happiness: -2.5 }, field: 'engineering', salary: 2350, minSkills: { intelligence: 450, digital: 350 }, hours: 42, commute: 12 },
 ];
 // ---------- Entreprises (fictives) ----------
 
