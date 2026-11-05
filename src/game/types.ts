@@ -44,7 +44,7 @@ export interface Profile {
  * Semaine type réglée par le joueur. Sommeil et loisirs sont en heures PAR JOUR,
  * le reste en heures PAR SEMAINE (voir SCHEDULE dans data/content.ts).
  */
-export type ScheduleKey = 'sleep' | 'leisure' | 'study' | 'sport' | 'search' | 'housing';
+export type ScheduleKey = 'sleep' | 'work' | 'leisure' | 'study' | 'sport' | 'search' | 'housing';
 export type Schedule = Record<ScheduleKey, number>;
 
 /** Quartier : fait varier le prix, le trajet et l'ambiance d'un logement (voir AREAS). */
@@ -140,12 +140,16 @@ export interface Savings {
   pel: PelAccount | null;
 }
 
-/** Formation en cours : `monthsDone` ne progresse que les mois où le joueur étudie assez. */
+/** Formation en cours : un mois avec blâme ne fait pas progresser `monthsDone`. */
 export interface Training {
   id: string; // textes : trainings.<id>
   monthsDone: number;
+  /** Blâmes reçus pour manque d'heures d'étude : renvoi au troisième. */
+  blames: number;
   /** Coût mensuel fixé à l'inscription (le prix de base varie de ±10 % selon le catalogue). */
   tuition: number;
+  /** Formation payée par l'employeur dans le cadre d'une promotion : sur les heures de travail, sans frais ni blâme. */
+  sponsored?: boolean;
 }
 
 export interface GameState {
@@ -157,8 +161,22 @@ export interface GameState {
   /** Diplômes obtenus (voir TRAININGS). */
   diplomas: string[];
   training: Training | null;
-  /** Offre visible à laquelle on postule : une chance d'embauche est tirée chaque mois tant qu'elle existe. */
-  jobTarget: string | null;
+  /** Candidatures en cours (3 au plus) : chacune reçoit une réponse une fois son délai écoulé. */
+  applications: Application[];
+  /** Réponses reçues à la fin du mois, en attente de choix du joueur (alerte). */
+  jobDecision: JobDecision | null;
+  /** Poste de manager proposé par l'employeur, en attente de réponse (voir PROMOTIONS), ou null. */
+  promotion: string | null;
+  /** L'employeur a déjà fait une proposition : les suivantes deviennent rares. */
+  promotionSeen: boolean;
+  /** Mois de la dernière demande de promotion faite par le joueur, ou null. */
+  promotionRequested: number | null;
+  /** Blâmes reçus au poste actuel pour heures sautées : renvoi au troisième. */
+  jobBlames: number;
+  /** Mois de la partie où le poste actuel a commencé (sert à la période d'essai). */
+  jobStart: number;
+  /** Mois du dernier renvoi, ou null : il pèse sur les candidatures des mois suivants. */
+  firedMonth: number | null;
   /** Offres d'emploi visibles. Elles expirent, et ne se renouvellent qu'avec les heures de recherche. */
   offers: JobOffer[];
   /** Boulot rapide en cours (voir GIGS), ou null. */
@@ -234,8 +252,22 @@ export interface JobOffer {
   salary: number;
 }
 
+/** Candidature à une offre visible ; la réponse tombe quand `monthsLeft` atteint 0. */
+export interface Application {
+  jobId: string;
+  monthsLeft: number;
+}
+
+/** Réponses du mois : offres acceptées (à prendre ou laisser) et candidatures refusées. */
+export interface JobDecision {
+  accepted: { jobId: string; companyId: string; salary: number }[];
+  refused: string[];
+}
+
 export interface Job {
   id: string; // texte : jobs.<id> (version féminine : jobs.<id>_female)
+  /** Mois de période d'essai (sinon selon le grade, voir PROBATION_MONTHS) : les blâmes y comptent double. */
+  probation?: number;
   /** Prestige, de 1 (poste de base, offre durable) à 4 (offre très éphémère). */
   grade: number;
   /** Ce que le métier coûte chaque mois en santé et en bonheur (pénibilité physique, pression mentale). */

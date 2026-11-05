@@ -33,7 +33,7 @@
   "profile": {
     "money": "Money",
     "perMonth": "mo",
-    "sources": { "study": "Studies", "sport": "Sport", "leisure": "Leisure", "job": "Job: {{name}}", "gig": "Side gig: {{name}}" },
+    "sources": { "study": "Studies", "training": "Training: {{name}}","sport": "Sport", "leisure": "Leisure", "job": "Job: {{name}}", "gig": "Side gig: {{name}}" },
     "tabs": { "skills": "Skills", "experience": "Experience" },
     "diplomas": "Diplomas",
     "noDiplomas": "No diploma yet",
@@ -84,12 +84,57 @@
     "officeSuite": {
       "name": "Advanced office skills",
       "desc": "Spreadsheets, word processing and organisation: opens administrative assistant jobs."
+    },
+    "tpMum": {
+      "name": "Retail unit manager (professional title)",
+      "desc": "Two-year work-study professional title (bac+2): running a point of sale and its team. Opens fast-food manager jobs."
+    },
+    "bpService": {
+      "name": "Professional certificate in restaurant service and sales",
+      "desc": "Two-year work-study professional certificate (bac level): leading the service and the customers. Opens casual-restaurant manager jobs."
+    },
+    "btsMhr": {
+      "name": "Hospitality management BTS (restaurant option)",
+      "desc": "Two-year bac+2 with internship: running a restaurant unit. Opens fine-dining manager jobs."
     }
+  },
+  "promotion": {
+    "title": "An offer from your employer",
+    "text": "After all this time, {{company}} offers you the job of {{job}}.",
+    "yourEmployer": "your employer",
+    "trained": "You already have the training: you take the job right away.",
+    "training": "You first have to complete the \"{{training}}\" training ({{count}} months). Your employer pays for it and it happens during your work hours; at the end, you become a manager.",
+    "busy": "You are already in training: finish it or drop it before accepting.",
+    "accept": "Accept the promotion",
+    "refuse": "Decline for now"
+  },
+  "jobDecision": {
+    "title": "Answers to your applications",
+    "textAccepted": "Some companies got back to you: you can accept one of the positions or keep your situation.",
+    "textRefused": "No company followed up on your applications.",
+    "refused": "Turned down",
+    "accepted": "Accepted: pick a position",
+    "nowOrNever": "It's now or never: the offers you turn down disappear.",
+    "ok": "Got it",
+    "stay": "Stay in my job ({{job}})",
+    "stayJobless": "Accept nothing"
   },
   "gigs": {
     "delivery": { "name": "Bike delivery", "desc": "Deliveries around town, on hours that suit you." },
     "babysitting": { "name": "Babysitting", "desc": "Looking after children in the evenings and at weekends." },
-    "moving": { "name": "Moving help", "desc": "Carrying boxes and furniture for private customers." }
+    "moving": { "name": "Moving help", "desc": "Carrying boxes and furniture for private customers." },
+    "dataEntry": { "name": "Data entry", "desc": "Copy and sort data from home, for companies." },
+    "tutoring": { "name": "Tutoring", "desc": "Help students revise their lessons after school." },
+    "pcRepair": { "name": "Computer repair", "desc": "Fix computers and install software for private customers." },
+    "freelanceWeb": { "name": "Web freelancing", "desc": "Build websites and retouch images remotely for clients." },
+    "translation": { "name": "Translation and writing", "desc": "Translate and write texts remotely, at your own pace." },
+    "waiter": { "name": "Restaurant extra", "desc": "Wait tables during a restaurant's rush hours." },
+    "baristaExtra": { "name": "Barista extra", "desc": "Make coffee at the counter, backing up the team." },
+    "rideshare": { "name": "Rideshare driver", "desc": "Drive passengers in your own car." },
+    "carDelivery": { "name": "Van delivery", "desc": "Deliver bulky parcels by van." },
+    "forklift": { "name": "Warehouse forklift driver", "desc": "Operate a forklift to load and stack pallets." },
+    "fitnessCoach": { "name": "Fitness coach", "desc": "Lead workout sessions. Good for health and mood." },
+    "eventHost": { "name": "Event host", "desc": "Welcome and entertain the crowd at events." }
   },
   "career": {
     "current": "Current job",
@@ -100,6 +145,8 @@
     "noneLeft": "Nothing on offer right now.",
     "gigStart": "Start",
     "gigStop": "Stop",
+    "gigLocked": "You don't meet the requirements for this gig yet.",
+    "commuteTile": "{{hours}} h commute/wk",
     "offersHint": "You only see some of the offers, and they disappear over time. The more prestigious the job, the shorter its offer lasts. Spend hours job hunting in the schedule to find new ones.",
     "offersCount": "Visible offers: {{count}} / {{max}}",
     "searchRate_one": "🔎 {{count}} new offer per month",
@@ -119,7 +166,7 @@
     "selectHint": "Details will show up here.",
     "fact": {
       "pay": "Pay", "salary": "Salary", "hours": "Work", "commute": "Commute",
-      "expires": "Offer lasts", "duration": "Duration", "tuition": "Cost", "study": "Minimum study"
+      "expires": "Offer lasts", "duration": "Duration", "tuition": "Cost", "study": "Reserved hours"
     },
     "chanceLabel": "Chance of being hired each month",
     "applied": "Applied",
@@ -129,11 +176,22 @@
       "title": "Where your chance comes from",
       "base": "Base chance (grade {{grade}} job)",
       "training": "Training: {{name}}",
-      "experience": "Experience in {{field}} ({{months}} months)"
+      "experience": "Experience in {{field}} ({{months}} months)",
+      "fired_one": "Fired {{count}} month ago",
+      "fired_other": "Fired {{count}} months ago"
     },
     "apply": "Apply",
     "cancel": "Cancel",
-    "applyNote": "Application sent: you'll hear back at the end of the month.",
+    "applyNote_one": "Application sent: answer in {{count}} month.",
+    "applyNote_other": "Application sent: answer in {{count}} months.",
+    "slowReview_one": "Prestigious position: the answer takes {{count}} month to arrive.",
+    "slowReview_other": "Prestigious position: the answer takes {{count}} months to arrive.",
+    "applicationsCount": "Applications: {{count}} / {{max}}",
+    "applicationsFull": "You already have {{max}} applications pending: withdraw one to apply here.",
+    "probation_one": "Probation: {{count}} month left (warnings count double)",
+    "probation_other": "Probation: {{count}} months left (warnings count double)",
+    "quit": "Resign",
+    "quitConfirm": "Confirm resignation",
     "quickHint": "Short non-diploma courses: they give skills, open certain jobs and raise your odds of being hired, but they weigh on health and mood. One training or study at a time.",
     "trainingHint": "Long studies lead to a diploma and weigh on health and mood. One training or study at a time.",
     "hireBonus": "+{{pct}}% hiring chance in {{field}}",
@@ -146,12 +204,21 @@
       "or": " or "
     },
     "monthsOf": "{{done}} / {{total}} months",
-    "trainingInfo": "{{months}} months • {{tuition}}/month • at least {{hours}} study hours per week",
+    "trainingInfo": "{{months}} months • {{tuition}}/month • {{hours}} study hours per week reserved",
     "progress": "Progress",
-    "lowStudy": "Study at least {{hours}} h/wk to progress (currently {{current}} h).",
+    "blames": "Warnings (expelled at 3)",
+    "lowStudy": "You study {{current}} h/wk instead of {{hours}} h: {{risk}}% chance of a warning this month.",
     "enroll": "Enroll",
     "drop": "Drop out",
-    "diploma": "Graduated"
+    "diploma": "Graduated",
+    "sponsored": "Training paid for by your employer, during your work hours: no fees and no warnings.",
+    "sponsoredHours": "Part of your work",
+    "promotion": {
+      "chance": "You can ask to become {{job}}: {{pct}}% chance.",
+      "wait_one": "You can ask again in {{count}} month.",
+      "wait_other": "You can ask again in {{count}} months.",
+      "ask": "Ask for a promotion"
+    }
   },
   "wallet": {
     "checking": "Checking account",
@@ -394,6 +461,9 @@
   "jobs": {
     "fastFood": "Fast-food server",
     "diner": "Casual restaurant server",
+    "fastFoodManager": "Fast-food manager",
+    "dinerManager": "Casual restaurant manager",
+    "fineDiningManager": "Fine-dining manager",
     "fineDining": "Fine-dining server",
     "cashier": "Cashier",
     "driver": "Delivery driver",
@@ -422,7 +492,8 @@
     "effect": {
       "health": "❤️ {{delta}}/mo",
       "happiness": "😊 {{delta}}/mo",
-      "skill": "🧠 {{delta}}/mo",
+      "blame": "⚠️ {{pct}}% warning risk",
+      "noBlame": "✓ No risk",
       "search_one": "🔎 +{{count}} offer/mo",
       "search_other": "🔎 +{{count}} offers/mo",
       "housing_one": "🏠 +{{count}} listing/mo",
@@ -437,7 +508,7 @@
     "blocked": "Too many hours scheduled",
     "cats": {
       "sleep": { "label": "Sleep", "hint": "Health: ±1 per hour around 7 h/day" },
-      "work": { "label": "Work", "hint": "Set by your job" },
+      "work": { "label": "Work", "hint": "Your working hours. Working less than your contract risks a warning and unpaid hours." },
       "commute": { "label": "Commute", "hint": "Set by your job" },
       "essentials": { "label": "Daily life", "hint": "Meals, hygiene, errands (fixed)" },
       "leisure": { "label": "Leisure", "hint": "Happiness: ±1 per hour around 5 h/day • costs money" },
@@ -461,7 +532,8 @@
     "opened": "{{product}} opened.",
     "enrolled": "You enroll: {{training}}.",
     "trainingDropped": "You drop out of your training: {{training}}.",
-    "trainingSkipped": "Training: you need at least {{hours}} study hours per week, so you make no progress this month.",
+    "trainingBlamed": "Training: warning {{count}}/{{max}} for lack of attendance ({{training}}), this month doesn't count.",
+    "trainingExpelled": "Third warning: you are expelled from your training ({{training}}).",
     "diploma": "Diploma earned: {{training}}!",
     "certificate": "Training completed: {{training}}!",
     "catalogRefreshed": "The quick jobs, trainings and studies on offer have changed.",
@@ -494,7 +566,17 @@
     "jeuneClosed": "You turned 25: your Livret Jeune is closed, €{{amount, number}} paid into your account.",
     "jobFoundAt": "You land a job: {{job}} at {{company}} (€{{salary, number}}/month).",
     "jobFound": "You land a job: {{job}} (€{{salary, number}}/month).",
-    "jobNone": "Your application for {{job}} didn't work out this month.",
+    "jobNone": "Your application for {{job}} didn't work out.",
+    "jobQuit": "You resign from your position: {{job}}.",
+    "promotionOffer": "Your employer offers you a {{job}} position.",
+    "promotionGranted": "Your employer agrees to your request for a promotion.",
+    "promotionDenied": "Your employer isn't ready to promote you yet.",
+    "promotionRefused": "You turn down the {{job}} position. Your employer might offer it again later.",
+    "promotionTraining": "Your employer enrolls you in training: {{training}}, during your work hours.",
+    "promoted": "Promotion! You become {{job}} (€{{salary, number}}/month).",
+    "trainingLost": "You lose your job: the training paid for by your employer stops ({{training}}).",
+    "jobBlamed": "Skipped hours noticed ({{job}}): warning {{n}}/{{max}}, {{lost, number}} € withheld from your pay.",
+    "jobFired": "Third warning: you are fired ({{job}}), {{lost, number}} € withheld. This will weigh on your applications for 6 months.",
     "eventLine": "{{title}}: {{text}}",
     "eventLineFx": "{{title}}: {{text}} ({{fx}})"
   },

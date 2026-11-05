@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS } from '../data/content';
 import {
-  isOverbooked, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, scheduleEffects, weekBreakdown,
+  blameChance, isOverbooked, jobBlameChance, jobById, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, scheduleEffects, weekBreakdown,
   type MoneyLine,
 } from '../game/engine';
 import type { GameState, ScheduleKey } from '../game/types';
@@ -14,7 +14,7 @@ import { WeekDonut } from './WeekDonut';
 /** Durée à maintenir le bouton pour passer le mois (limite les clics accidentels). */
 const HOLD_MS = 1000;
 
-const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'sport', 'search', 'housing'];
+const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'work', 'sport', 'search', 'housing'];
 const FIXED = ['work', 'commute', 'essentials'] as const;
 const cat = (id: string) => TIME_CATS.find((c) => c.id === id)!;
 
@@ -41,12 +41,22 @@ export function SchedulePanel({ game }: { game: GameState }) {
   const over = isOverbooked(game);
   const fx = scheduleEffects(game.schedule);
   const lng = i18n.language;
+  const studyRisk = blameChance(game);
+  const workRisk = jobBlameChance(game);
+  const job = jobById(game.job);
+  // Les curseurs « Études » et « Travail » n'existent que pendant une formation ou avec un poste, qui en réservent les heures.
+  const sliders = SLIDERS.filter((key) => (key !== 'study' || (game.training && !game.training.sponsored)) && (key !== 'work' || job));
+  const maxOf = (key: ScheduleKey) => (key === 'work' ? job?.hours ?? 0 : SCHEDULE[key].max);
 
   const income = monthlyIncome(game);
   const expenses = monthlyExpenses(game);
   const balance = income - expenses;
   const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
   const money = (n: number) => `${sign(n)}${formatNumber(Math.abs(n), lng)} €`;
+
+  const blameEffect = (risk: number): { text: string; tone: 'good' | 'bad' } => risk > 0
+    ? { text: t('schedule.effect.blame', { pct: Math.round(risk * 100) }), tone: 'bad' }
+    : { text: t('schedule.effect.noBlame'), tone: 'good' };
 
   /** Effet mensuel du curseur, affiché en pastille sur la tuile. */
   const effect = (key: ScheduleKey): { text: string; tone: 'good' | 'bad' | '' } => {
@@ -55,7 +65,8 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'sleep': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sleepHealth, lng) }), tone: tone(fx.sleepHealth) };
       case 'leisure': return { text: t('schedule.effect.happiness', { delta: formatSigned(fx.leisureHappiness, lng) }), tone: tone(fx.leisureHappiness) };
       case 'sport': return { text: t('schedule.effect.health', { delta: formatSigned(fx.sportHealth, lng) }), tone: tone(fx.sportHealth) };
-      case 'study': return { text: t('schedule.effect.skill', { delta: formatSigned(fx.studyIntelligence, lng) }), tone: tone(fx.studyIntelligence) };
+      case 'study': return blameEffect(studyRisk);
+      case 'work': return blameEffect(workRisk);
       case 'search': return { text: t('schedule.effect.search', { count: fx.searchOffers }), tone: tone(fx.searchOffers) };
       case 'housing': return { text: t('schedule.effect.housing', { count: fx.searchListings }), tone: tone(fx.searchListings) };
     }
@@ -97,8 +108,8 @@ export function SchedulePanel({ game }: { game: GameState }) {
       </div>
 
       <div className="tiles">
-        {SLIDERS.map((key, i) => {
-          const def = SCHEDULE[key];
+        {sliders.map((key, i) => {
+          const def = { ...SCHEDULE[key], max: maxOf(key) };
           const value = game.schedule[key];
           const eff = effect(key);
           return (

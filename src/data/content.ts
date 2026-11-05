@@ -13,6 +13,7 @@ export const ESSENTIALS_PER_WEEK = 14;
 /** Réglages du planning : bornes et unité (par jour ou par semaine). */
 export const SCHEDULE: Record<ScheduleKey, { min: number; max: number; perDay: boolean }> = {
   sleep:   { min: 3, max: 9,  perDay: true },
+  work:    { min: 0, max: 60, perDay: false }, // le maximum réel est le contrat du poste
   leisure: { min: 0, max: 7,  perDay: true },
   study:   { min: 0, max: 20, perDay: false },
   sport:   { min: 0, max: 14, perDay: false },
@@ -20,7 +21,7 @@ export const SCHEDULE: Record<ScheduleKey, { min: number; max: number; perDay: b
   housing: { min: 0, max: 10, perDay: false },
 };
 
-export const DEFAULT_SCHEDULE: Schedule = { sleep: 7, leisure: 5, study: 0, sport: 2, search: 0, housing: 0 };
+export const DEFAULT_SCHEDULE: Schedule = { sleep: 7, work: 0, leisure: 5, study: 0, sport: 2, search: 0, housing: 0 };
 
 /** Catégories affichées dans l'anneau de la semaine (ordre = ordre d'affichage). */
 export const TIME_CATS = [
@@ -265,6 +266,18 @@ export const OFFER_WEIGHT: Record<number, number> = { 1: 6, 2: 4, 3: 2, 4: 1 };
 /** Chance d'être embauché chaque mois où l'on postule à une offre encore valable, selon le grade. */
 export const HIRE_CHANCE: Record<number, number> = { 1: 0.5, 2: 0.4, 3: 0.3, 4: 0.15 };
 export const HIRE_CHANCE_MAX = 0.95;
+/** Même un dossier très fragilisé garde un minimum de chances. */
+export const HIRE_CHANCE_MIN = 0.05;
+
+/** Candidatures simultanées au maximum. */
+export const MAX_APPLICATIONS = 3;
+/** Mois avant la réponse à une candidature, selon le grade : les postes prestigieux sont longs à intégrer. */
+export const REVIEW_MONTHS: Record<number, number> = { 1: 1, 2: 1, 3: 2, 4: 3 };
+/** Période d'essai par défaut, en mois, selon le grade (un poste peut fixer la sienne avec `probation`). */
+export const PROBATION_MONTHS: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 6 };
+/** Après un renvoi, la chance d'embauche baisse de ce montant pendant ce nombre de mois. */
+export const FIRED_HIRE_PENALTY = 0.15;
+export const FIRED_MEMORY_MONTHS = 6;
 
 // ---------- Prix variables ----------
 
@@ -296,22 +309,43 @@ export interface Gig {
   id: string; // textes : gigs.<id>
   icon: string;
   hours: number;
+  /** Heures de trajet par semaine (0 = à distance). */
   commute: number;
   pay: number;
   skills: Partial<Record<SkillId, number>>;
+  /** Conditions pour exercer : une seule suffit (compétence atteinte ou certificat obtenu). Absent = ouvert à tous. */
+  anyOf?: GigRequirement[];
   weight: number;
   drawback: Drawback;
 }
+
+export type GigRequirement = { skill: SkillId; min: number } | { diploma: string };
 
 export const GIGS: Gig[] = [
   { id: 'delivery', icon: '🛵', hours: 8, commute: 1, pay: 380, skills: { logistics: 3, strength: 1 }, weight: 3, drawback: { health: -1.5, happiness: -0.5 } },
   { id: 'babysitting', icon: '🧸', hours: 6, commute: 1, pay: 260, skills: { charisma: 3 }, weight: 2, drawback: { health: -0.5, happiness: -1.5 } },
   { id: 'moving', icon: '📦', hours: 8, commute: 2, pay: 400, skills: { strength: 3 }, weight: 2, drawback: { health: -2, happiness: -0.5 } },
+  // Boulots qualifiés : mieux payés, mais verrouillés tant qu'on n'a pas la compétence ou le certificat.
+  { id: 'dataEntry', icon: '⌨️', hours: 8, commute: 0, pay: 450, skills: { digital: 3 }, anyOf: [{ skill: 'digital', min: 80 }], weight: 3, drawback: { happiness: -1 } },
+  { id: 'tutoring', icon: '📚', hours: 5, commute: 1, pay: 330, skills: { intelligence: 2, charisma: 2 }, anyOf: [{ skill: 'intelligence', min: 150 }], weight: 2, drawback: { happiness: -0.5 } },
+  { id: 'pcRepair', icon: '🛠️', hours: 6, commute: 1, pay: 440, skills: { digital: 4 }, anyOf: [{ skill: 'digital', min: 200 }], weight: 2, drawback: { happiness: -0.5 } },
+  { id: 'freelanceWeb', icon: '🖥️', hours: 10, commute: 0, pay: 850, skills: { digital: 5 }, anyOf: [{ skill: 'digital', min: 350 }], weight: 1, drawback: { health: -0.5, happiness: -1 } },
+  { id: 'translation', icon: '🌐', hours: 8, commute: 0, pay: 620, skills: { intelligence: 4 }, anyOf: [{ skill: 'intelligence', min: 250 }], weight: 1, drawback: { happiness: -1 } },
+  { id: 'waiter', icon: '🍽️', hours: 8, commute: 1, pay: 430, skills: { charisma: 3, logistics: 1 }, anyOf: [{ diploma: 'barista' }, { skill: 'charisma', min: 100 }], weight: 3, drawback: { health: -1, happiness: -0.5 } },
+  { id: 'baristaExtra', icon: '☕', hours: 6, commute: 1, pay: 360, skills: { charisma: 3 }, anyOf: [{ diploma: 'barista' }], weight: 3, drawback: { health: -0.5, happiness: -0.5 } },
+  { id: 'rideshare', icon: '🚗', hours: 10, commute: 1, pay: 700, skills: { logistics: 4, charisma: 1 }, anyOf: [{ diploma: 'permisB' }], weight: 2, drawback: { health: -2, happiness: -1 } },
+  { id: 'carDelivery', icon: '🚐', hours: 8, commute: 1, pay: 470, skills: { logistics: 4 }, anyOf: [{ diploma: 'permisB' }], weight: 2, drawback: { health: -1, happiness: -0.5 } },
+  { id: 'forklift', icon: '🏗️', hours: 8, commute: 2, pay: 500, skills: { logistics: 5, strength: 1 }, anyOf: [{ diploma: 'caces' }], weight: 2, drawback: { health: -1.5 } },
+  { id: 'fitnessCoach', icon: '🏋️', hours: 5, commute: 1, pay: 360, skills: { strength: 2, charisma: 1 }, anyOf: [{ skill: 'strength', min: 250 }], weight: 1, drawback: { health: 1, happiness: 0.5 } },
+  { id: 'eventHost', icon: '🎪', hours: 6, commute: 2, pay: 380, skills: { charisma: 4 }, anyOf: [{ skill: 'charisma', min: 150 }], weight: 2, drawback: { health: -0.5 } },
 ];
 
+/** Blâmes après lesquels le joueur est renvoyé de sa formation. */
+export const MAX_BLAMES = 3;
+
 /**
- * Formations. Elles coûtent de l'argent chaque mois et ne progressent que si le joueur étudie
- * au moins `minStudyHours` heures par semaine (curseur « Études » du planning).
+ * Formations. Elles coûtent de l'argent chaque mois. L'inscription réserve `minStudyHours` heures par semaine
+ * dans le curseur « Études » du planning ; en faire moins expose à un blâme (d'autant plus probable que l'écart est grand).
  *
  * Les formations rapides (`quick`) sont de courts certificats hors diplôme : à la fin elles donnent des compétences
  * (`skills`), comptent comme qualification pour certains postes et augmentent la chance d'être embauché
@@ -328,6 +362,8 @@ export interface TrainingConfig {
   quick?: boolean;
   /** Compétences gagnées à la fin de la formation. */
   skills?: Partial<Record<SkillId, number>>;
+  /** Compétences gagnées chaque mois de formation (au prorata des heures faites) ; remplace le gain des heures d'étude. */
+  monthlySkills?: Partial<Record<SkillId, number>>;
   /** Bonus de chance d'embauche pour les postes de ce domaine. */
   hireBonus?: { field: string; bonus: number };
   /** Formations à avoir déjà obtenues pour s'inscrire (ex : le permis poids lourd suppose le permis B). */
@@ -339,16 +375,43 @@ export interface TrainingConfig {
 }
 
 export const TRAININGS: Record<string, TrainingConfig> = {
-  hotelSchool: { months: 24, tuition: 758, minStudyHours: 20, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
+  hotelSchool: { months: 24, tuition: 758, minStudyHours: 20, monthlySkills: { digital: 5, intelligence: 5, charisma: 20 }, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
   caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 60 }, hireBonus: { field: 'transport', bonus: 0.15 }, weight: 2, drawback: { health: -1 } },
   permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 30 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
   permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 20, strength: 10 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
   permisC: { months: 3, tuition: 1000, minStudyHours: 6, quick: true, skills: { logistics: 50 }, hireBonus: { field: 'transport', bonus: 0.15 }, requires: ['permisB'], weight: 1, drawback: { health: -1, happiness: -2 } },
   barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 40 }, hireBonus: { field: 'restaurant', bonus: 0.15 }, weight: 4, drawback: { happiness: -1 } },
+  // Formations de manager, une par niveau de restauration (diplômes réels, en alternance de 24 mois ; coûts mensuels estimés).
+  tpMum: { months: 24, tuition: 300, minStudyHours: 8, skills: { charisma: 40, intelligence: 30 }, weight: 3, drawback: { health: -0.5, happiness: -1.5 } },
+  bpService: { months: 24, tuition: 350, minStudyHours: 8, skills: { charisma: 50, intelligence: 30 }, weight: 3, drawback: { health: -0.5, happiness: -1.5 } },
+  btsMhr: { months: 24, tuition: 450, minStudyHours: 12, skills: { charisma: 60, intelligence: 60 }, weight: 2, drawback: { health: -1, happiness: -2 } },
   officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 80 }, hireBonus: { field: 'office', bonus: 0.15 }, weight: 3, drawback: { happiness: -1.5 } },
 };
 
-export const START_STATS = { health: 80, happiness: 60 };
+// ---------- Promotions ----------
+
+/**
+ * Promotion proposée par l'employeur : après `months` mois au poste (clé), il propose le poste de manager `to`.
+ * Le joueur accepte ou refuse. S'il accepte sans avoir la formation `training`, elle est payée par l'employeur et
+ * suivie pendant les heures de travail ; à la fin il devient manager. Il peut aussi la payer lui-même (catalogue)
+ * et postuler au poste. Les montants et la durée de la formation sont des estimations de jeu.
+ */
+export const PROMOTIONS: Record<string, { to: string; training: string; months: number }> = {
+  fastFood: { to: 'fastFoodManager', training: 'tpMum', months: 36 },
+  diner: { to: 'dinerManager', training: 'bpService', months: 36 },
+  fineDining: { to: 'fineDiningManager', training: 'btsMhr', months: 48 },
+};
+/** Après un premier refus (ou une première proposition), chance par mois d'une nouvelle proposition. */
+export const PROMOTION_CHANCE = 0.03;
+/** Demande de promotion du joueur : chance de base, bonus par année d'ancienneté au-delà du seuil (plafonné), malus par blâme. */
+export const PROMOTION_REQUEST_BASE = 0.35;
+export const PROMOTION_REQUEST_PER_YEAR = 0.05;
+export const PROMOTION_REQUEST_MAX_BONUS = 0.2;
+export const PROMOTION_REQUEST_BLAME_PENALTY = 0.15;
+/** Mois à attendre entre deux demandes de promotion. */
+export const PROMOTION_REQUEST_COOLDOWN = 6;
+
+export const START_STATS ={ health: 80, happiness: 60 };
 
 export const STATS: StatDef[] = [
   { key: 'health',    icon: '❤️', color: '#ff7a95' },
@@ -357,7 +420,7 @@ export const STATS: StatDef[] = [
 
 /**
  * Postes disponibles. Les trois niveaux de serveur forment la filière « restauration » : le haut de gamme
- * demande 2 ans d'expérience dans le domaine OU une formation en école hôtelière (règle du jeu : en France
+ * demande 4 ans d'expérience dans le domaine OU une formation en école hôtelière (règle du jeu : en France
  * le métier est accessible sans diplôme, mais les maisons exigeantes recrutent des profils formés ou expérimentés).
  *
  * Salaires : NETS mensuels à temps plein, hors pourboires, niveau débutant (novembre 2026). Sources
@@ -370,14 +433,26 @@ export const STATS: StatDef[] = [
  * Le jeu n'a pas d'augmentations avec l'ancienneté : ces montants sont fixes.
  */
 export const JOBS: Job[] = [
-  { id: 'fastFood', grade: 1, drawback: { health: -1.5, happiness: -1.5 }, field: 'restaurant', salary: 1478, hours: 35, commute: 3 },
+  { id: 'fastFood', grade: 1, drawback: { health: -1.5, happiness: -1.5 }, field: 'restaurant', salary: 1351, hours: 32, commute: 3 },
   { id: 'diner', grade: 1, drawback: { health: -1.5, happiness: -1 }, field: 'restaurant', salary: 1600, hours: 35, commute: 4 },
   {
     id: 'fineDining', grade: 3, drawback: { health: -2, happiness: -2.5 }, field: 'restaurant', salary: 1900, hours: 39, commute: 6,
     anyOf: [
-      { type: 'experience', field: 'restaurant', months: 24 },
+      { type: 'experience', field: 'restaurant', months: 48 },
       { type: 'diploma', id: 'hotelSchool' },
     ],
+  },
+  {
+    id: 'fastFoodManager', grade: 2, drawback: { health: -1.5, happiness: -2 }, field: 'restaurant', salary: 1850, hours: 39, commute: 3,
+    anyOf: [{ type: 'diploma', id: 'tpMum' }, { type: 'diploma', id: 'bpService' }, { type: 'diploma', id: 'btsMhr' }],
+  },
+  {
+    id: 'dinerManager', grade: 2, drawback: { health: -1.5, happiness: -1.5 }, field: 'restaurant', salary: 1950, hours: 39, commute: 4,
+    anyOf: [{ type: 'diploma', id: 'bpService' }, { type: 'diploma', id: 'btsMhr' }],
+  },
+  {
+    id: 'fineDiningManager', grade: 4, drawback: { health: -2, happiness: -3 }, field: 'restaurant', salary: 2600, hours: 42, commute: 6,
+    anyOf: [{ type: 'diploma', id: 'btsMhr' }],
   },
   { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, minSkills: { charisma: 100 }, hours: 35, commute: 4 },
   { id: 'driver', grade: 1, drawback: { health: -1.5, happiness: -0.5 }, field: 'transport', salary: 1650, minSkills: { logistics: 120 }, hours: 40, commute: 2 },
@@ -414,17 +489,17 @@ export interface Company {
 
 export const COMPANIES: Company[] = [
   // Restauration rapide
-  { id: 'burgerBrigade', name: 'Burger Brigade', jobs: ['fastFood'], pay: 0.04, drawback: { happiness: -0.5 } },
-  { id: 'croustyExpress', name: 'Crousty Express', jobs: ['fastFood'], pay: -0.03, drawback: { health: -0.5, happiness: -0.5 } },
-  { id: 'pizzaPronto', name: 'Pizza Pronto', jobs: ['fastFood'], pay: 0.07, drawback: { health: -0.5 } },
+  { id: 'burgerBrigade', name: 'Burger Brigade', jobs: ['fastFood', 'fastFoodManager'], pay: 0.04, drawback: { happiness: -0.5 } },
+  { id: 'croustyExpress', name: 'Crousty Express', jobs: ['fastFood', 'fastFoodManager'], pay: -0.03, drawback: { health: -0.5, happiness: -0.5 } },
+  { id: 'pizzaPronto', name: 'Pizza Pronto', jobs: ['fastFood', 'fastFoodManager'], pay: 0.07, drawback: { health: -0.5 } },
   // Restauration basique
-  { id: 'brasserieCoin', name: 'Brasserie du Coin', jobs: ['diner'], pay: 0, drawback: {} },
-  { id: 'relaisFleuri', name: 'Le Relais Fleuri', jobs: ['diner'], pay: 0.06, drawback: { happiness: 0.5 } },
-  { id: 'chezMarcel', name: 'Chez Marcel & Fils', jobs: ['diner'], pay: -0.05, drawback: { health: -0.5 } },
+  { id: 'brasserieCoin', name: 'Brasserie du Coin', jobs: ['diner', 'dinerManager'], pay: 0,drawback: {} },
+  { id: 'relaisFleuri', name: 'Le Relais Fleuri', jobs: ['diner', 'dinerManager'], pay: 0.06, drawback: { happiness: 0.5 } },
+  { id: 'chezMarcel', name: 'Chez Marcel & Fils', jobs: ['diner', 'dinerManager'], pay: -0.05, drawback: { health: -0.5 } },
   // Restauration haut de gamme
-  { id: 'maisonAubrac', name: 'Maison Aubrac', jobs: ['fineDining'], pay: 0.09, drawback: { happiness: -1 } },
-  { id: 'grandVerger', name: 'Le Grand Verger', jobs: ['fineDining'], pay: 0.02, drawback: { happiness: 0.5 } },
-  { id: 'atelierVelours', name: "L'Atelier Velours", jobs: ['fineDining'], pay: -0.04, drawback: { health: -0.5 } },
+  { id: 'maisonAubrac', name: 'Maison Aubrac', jobs: ['fineDining', 'fineDiningManager'], pay: 0.09, drawback: { happiness: -1 } },
+  { id: 'grandVerger', name: 'Le Grand Verger', jobs: ['fineDining', 'fineDiningManager'], pay: 0.02, drawback: { happiness: 0.5 } },
+  { id: 'atelierVelours', name: "L'Atelier Velours", jobs: ['fineDining', 'fineDiningManager'], pay: -0.04, drawback: { health: -0.5 } },
   // Vente
   { id: 'primeurMarket', name: 'Primeur Market', jobs: ['cashier'], pay: 0, drawback: {} },
   { id: 'epicerieP', name: 'Épicerie Prisma', jobs: ['cashier'], pay: -0.06, drawback: { happiness: 0.5 } },

@@ -6,6 +6,8 @@ import { BoardWindow } from './board/BoardWindow';
 import { CareerCard } from './CareerCard';
 import { EventPanel } from './EventPanel';
 import { HousingCard } from './HousingCard';
+import { JobDecisionPanel } from './JobDecisionPanel';
+import { PromotionPanel } from './PromotionPanel';
 import { LogPanel } from './LogPanel';
 import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
@@ -19,7 +21,10 @@ const SCENE_FILES = import.meta.glob<string>('../asset/image/background/*.jpg', 
 
 /** Préfixes des fichiers `<quartier>_<logement>_image.jpg` : quartier (Area) et logement (typeId). */
 const SCENE_AREA: Partial<Record<Area, string>> = { center: 'centre-ville', suburb: 'banlieue', country: 'campagne' };
-const SCENE_HOME: Record<string, string> = { shared: 'colocation', studio: 'studio', t2: 'T2', t3: 'T3' };
+const SCENE_HOME: Record<string, string> = {
+  shared: 'colocation', studio: 'studio', t2: 'T2', t3: 'T3',
+  cottage: 'cottage', duplex: 'duplex', family: 'maison_familiale', penthouse: 'penthouse', bigHouse: 'grosse-maison',
+};
 
 /** Image de fond selon le logement et son quartier ; sans image, l'ardoise par défaut. */
 function sceneOf(home: Home): string | undefined {
@@ -74,10 +79,11 @@ export function GameScreen({ game }: { game: GameState }) {
       <TopBar onPause={() => setPaused(true)} />
       {import.meta.env.DEV && <DevCheats />}
 
-      {game.pendingEvent && (
+      {/* Les réponses aux candidatures passent avant l'évènement du mois. */}
+      {(game.jobDecision || game.promotion || game.pendingEvent) && (
         <div className="overlay">
           <div className="modal-pop">
-            <EventPanel game={game} />
+            {game.jobDecision ? <JobDecisionPanel game={game} /> : game.promotion ? <PromotionPanel game={game} /> : <EventPanel game={game} />}
           </div>
         </div>
       )}

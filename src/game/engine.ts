@@ -6,16 +6,20 @@ import {
   LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, LETTING, LISTING_MONTHS, LISTING_WEIGHT, LISTINGS_MAX, MOVING_COST, OFFER_MONTHS, OFFER_WEIGHT,
   OFFERS_MAX, OWNING, PRICE_VARIATION, RENT, RENT_CHANCE, RENT_CHANCE_MAX, RENT_CHANCE_MIN, SAVINGS, SCHEDULE, SELLING, SMIC_NET,
   SKILL_MAX, SKILL_RULES, SKILLS, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, START, START_LISTINGS, START_SKILLS, START_STATS, STARTER_JOBS,
-  TRAININGS,
+  FIRED_HIRE_PENALTY, FIRED_MEMORY_MONTHS, HIRE_CHANCE_MIN, MAX_APPLICATIONS, MAX_BLAMES, PROBATION_MONTHS, REVIEW_MONTHS, TRAININGS,
+  PROMOTION_CHANCE, PROMOTION_REQUEST_BASE, PROMOTION_REQUEST_BLAME_PENALTY, PROMOTION_REQUEST_COOLDOWN, PROMOTION_REQUEST_MAX_BONUS,
+  PROMOTION_REQUEST_PER_YEAR, PROMOTIONS,
 } from '../data/content';
 import type { Company, Gig, HousingType } from '../data/content';
 import { EVENTS, eventById } from '../data/events';
 import type {
-  Account, Area, Catalog, Drawback, Fx, GameState, Home, HousingListing, Job, JobOffer, LeaveAction, LogClass, LogEntry, Profile,
+  Account, Application, Area, Catalog, Drawback, Fx, GameState, Home, HousingListing, Job, JobDecision, JobOffer, LeaveAction, LogClass, LogEntry, Profile,
   Property, Savings, SavingsProduct, Schedule, ScheduleKey, SkillId, StatKey,
 } from './types';
 
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
+/** `jobStart` d'un poste occupé depuis longtemps : plus de période d'essai. */
+const NO_PROBATION = -1000;
 
 // ---------- Création / lecture ----------
 
@@ -29,7 +33,14 @@ export function createGame(profile: Profile): GameState {
     experience: {},
     diplomas: [],
     training: null,
-    jobTarget: null,
+    applications: [],
+    jobDecision: null,
+    promotion: null,
+    promotionSeen: false,
+    promotionRequested: null,
+    jobBlames: 0,
+    jobStart: NO_PROBATION,
+    firedMonth: null,
     offers: starterOffers().filter((o) => o.jobId !== profile.job),
     gig: null,
     catalog: { gigs: [], quick: [], training: [], factors: {} },
@@ -47,7 +58,7 @@ export function createGame(profile: Profile): GameState {
     housingLeave: 'sell',
     properties: [],
     car: start.car,
-    schedule: { ...DEFAULT_SCHEDULE },
+    schedule: { ...DEFAULT_SCHEDULE, work: jobById(profile.job)?.hours ?? 0 },
     savings: emptySavings(),
     lastEvent: null,
     pendingEvent: null,
@@ -61,13 +72,17 @@ export function createGame(profile: Profile): GameState {
 }
 
 export const jobById = (id: string | null): Job | null => JOBS.find((j) => j.id === id) ?? null;
-export const gigById = (id: string | null): Gig | null => GIGS.find((g) => g.id === id) ?? null;
+/** Le joueur remplit-il l'une des conditions du boulot rapide (ou n'en a-t-il aucune) ? */
+export const gigUnlocked = (state: GameState, gig: Gig): boolean =>
+  !gig.anyOf || gig.anyOf.some((r) => ('skill' in r ? state.skills[r.skill] >= r.min : state.diplomas.includes(r.diploma)));
+
+export const gigById =(id: string | null): Gig | null => GIGS.find((g) => g.id === id) ?? null;
 
 export const companyById = (id: string | null): Company | null => COMPANIES.find((c) => c.id === id) ?? null;
 
 /** Salaire proposé : le prix de base ajusté par l'entreprise (±10 % au plus), jamais sous le SMIC. */
 export const salaryAt = (job: Job, company: Company | null): number =>
-  Math.max(SMIC_NET, Math.round(job.salary * (1 + (company?.pay ?? 0))));
+  Math.max(Math.round(SMIC_NET * Math.min(1, job.hours / 35)), Math.round(job.salary * (1 + (company?.pay ?? 0))));
 
 /** Pénibilité d'un poste chez une entreprise : celle du poste plus l'ajustement de l'entreprise, sans jamais devenir un bonus. */
 export function jobDrawback(job: Job, company: Company | null): Drawback {
@@ -113,14 +128,32 @@ export function migrateGame(raw: GameState): GameState {
   g.experience ??= {};
   g.diplomas ??= [];
   g.training ??= null;
-  g.jobTarget ??= null;
+  // Avant les candidatures multiples, une seule offre pouvait être visée (jobTarget).
+  const legacyTarget = g as unknown as { jobTarget?: string | null };
+  g.applications ??= legacyTarget.jobTarget === 'waiter' ? [{ jobId: 'fastFood', monthsLeft: 1 }] : legacyTarget.jobTarget ? [{ jobId: legacyTarget.jobTarget, monthsLeft: 1 }] : [];
+  delete legacyTarget.jobTarget;
+  g.jobDecision ??= null;
+  // La formation de manager en restauration rapide s'appelait « fl1 » avant de porter le nom du vrai diplôme.
+  g.diplomas = g.diplomas.map((d) => (d === 'fl1' ? 'tpMum' : d));
+  if (g.training?.id === 'fl1') g.training.id = 'tpMum';
+  g.promotion ??= null;
+  g.promotionSeen ??= false;
+  g.promotionRequested ??= null;
+  g.jobBlames ??= 0;
+  g.jobStart ??= NO_PROBATION;
+  g.firedMonth ??= null;
   g.gig ??= null;
   g.offers ??= starterOffers();
   g.offers = g.offers.map((o) => (o.companyId ? o : { ...makeOffer(jobById(o.jobId) ?? JOBS[0]), jobId: o.jobId, monthsLeft: o.monthsLeft }));
   g.history ??= {};
   g.catalog ??= drawCatalog(g);
   g.catalog.factors ??= {};
-  if (g.training) g.training.tuition ??= TRAININGS[g.training.id].tuition;
+  if (g.training) {
+    g.training.tuition ??= TRAININGS[g.training.id].tuition;
+    g.training.blames ??= 0;
+  } else {
+    g.schedule.study = 0; // le curseur d'études n'existe que pendant une formation
+  }
   g.jobCompany ??= null;
   g.jobSalary ??= null;
   // Avant la carte Logement, le logement n'était qu'un identifiant (studio ou colocation) à loyer fixe.
@@ -158,8 +191,8 @@ export function migrateGame(raw: GameState): GameState {
     g.skillMax = SKILL_MAX;
   }
   if (g.job === 'waiter') g.job = 'fastFood'; // l'ancien « serveur » devient serveur en restauration rapide
-  if (g.jobTarget === 'waiter') g.jobTarget = 'fastFood';
-  if (g.jobTarget && !g.offers.some((o) => o.jobId === g.jobTarget)) g.jobTarget = null;
+  g.applications = g.applications.filter((a) => g.offers.some((o) => o.jobId === a.jobId));
+  g.schedule.work ??= jobById(g.job)?.hours ?? 0;
   g.savings = migrateSavings(g.savings);
   return g;
 }
@@ -185,7 +218,15 @@ export function jobEligibility(state: GameState, job: Job): Eligibility {
 
 export type HireBonus =
   | { type: 'training'; id: string; value: number }
-  | { type: 'experience'; field: string; months: number; value: number };
+  | { type: 'experience'; field: string; months: number; value: number }
+  /** Malus (valeur négative) d'un renvoi récent. */
+  | { type: 'fired'; months: number; value: number };
+
+/** Mois écoulés depuis le dernier renvoi s'il est assez récent pour peser sur les candidatures, sinon null. */
+export const recentFiring = (state: GameState): number | null => {
+  const ago = state.firedMonth === null ? null : state.month - state.firedMonth;
+  return ago !== null && ago < FIRED_MEMORY_MONTHS ? ago : null;
+};
 
 export interface HireBreakdown {
   /** Chance de base, selon le grade du poste. */
@@ -208,29 +249,110 @@ export function hireBreakdown(state: GameState, job: Job): HireBreakdown {
   const months = experienceMonths(state, job.field);
   const value = Math.min(EXPERIENCE_BONUS_MAX, Math.floor(months / 12) * EXPERIENCE_BONUS_PER_YEAR);
   if (value > 0) bonuses.push({ type: 'experience', field: job.field, months, value });
+  const firedAgo = recentFiring(state);
+  if (firedAgo !== null) bonuses.push({ type: 'fired', months: firedAgo, value: -FIRED_HIRE_PENALTY });
   const base = HIRE_CHANCE[job.grade];
-  return { base, bonuses, total: Math.min(HIRE_CHANCE_MAX, base + bonuses.reduce((sum, b) => sum + b.value, 0)) };
+  const total = base + bonuses.reduce((sum, b) => sum + b.value, 0);
+  return { base, bonuses, total: clamp(total, HIRE_CHANCE_MIN, HIRE_CHANCE_MAX) };
 }
 
 export const hireChance = (state: GameState, job: Job): number => hireBreakdown(state, job).total;
 
-/** Postule (ou annule avec null) à une offre visible. Seules les offres accessibles peuvent être visées. */
-export function setJobTarget(state: GameState, id: string | null): GameState {
-  if (id === state.jobTarget) return state;
-  if (id !== null) {
-    const job = jobById(id);
-    if (!job || job.id === state.job || !state.offers.some((o) => o.jobId === id) || !jobEligibility(state, job).ok) {
-      return state;
-    }
-  }
+export const isApplied = (state: GameState, jobId: string): boolean => state.applications.some((a) => a.jobId === jobId);
+
+/** Mois avant la réponse à une candidature : plus long pour les postes prestigieux. */
+export const reviewMonths = (job: Job): number => REVIEW_MONTHS[job.grade];
+
+/**
+ * Postule à une offre visible, ou retire la candidature si elle existe déjà. Seules les offres accessibles
+ * peuvent être visées, et pas plus de MAX_APPLICATIONS à la fois.
+ */
+export function toggleApplication(state: GameState, id: string): GameState {
   const s = structuredClone(state);
-  s.jobTarget = id;
+  if (isApplied(s, id)) {
+    s.applications = s.applications.filter((a) => a.jobId !== id);
+    return s;
+  }
+  const job = jobById(id);
+  if (!job || job.id === s.job || !s.offers.some((o) => o.jobId === id) || !jobEligibility(s, job).ok) return state;
+  if (s.applications.length >= MAX_APPLICATIONS) return state;
+  s.applications.push({ jobId: id, monthsLeft: reviewMonths(job) });
+  return s;
+}
+
+// ---------- Poste actuel : heures, blâmes, période d'essai ----------
+
+/** Heures réellement travaillées par semaine au poste : le curseur, sans dépasser le contrat. */
+export const workedHours = (state: GameState): number => {
+  const job = jobById(state.job);
+  return job ? Math.min(state.schedule.work, job.hours) : 0;
+};
+
+/** Risque de blâme du mois : 0 si le joueur fait toutes ses heures, jusqu'à 1 s'il n'en fait aucune. */
+export function jobBlameChance(state: GameState): number {
+  const job = jobById(state.job);
+  return job ? clamp(1 - workedHours(state) / job.hours, 0, 1) : 0;
+}
+
+export const probationMonths = (job: Job): number => job.probation ?? PROBATION_MONTHS[job.grade];
+
+/** Mois de période d'essai restants au poste actuel (0 = confirmé). */
+export function probationLeft(state: GameState): number {
+  const job = jobById(state.job);
+  return job ? Math.max(0, probationMonths(job) - (state.month - state.jobStart)) : 0;
+}
+
+/** Prend un nouveau poste : compteurs remis à zéro et heures du contrat réservées dans le planning. */
+function startJob(s: GameState, job: Job, salary: number, companyId: string | null) {
+  s.job = job.id;
+  s.jobSalary = salary;
+  s.jobCompany = companyId || null;
+  s.jobBlames = 0;
+  s.jobStart = s.month;
+  s.schedule.work = job.hours;
+}
+
+function leaveJob(s: GameState) {
+  s.job = null;
+  s.jobSalary = null;
+  s.jobCompany = null;
+  s.jobBlames = 0;
+  s.jobStart = NO_PROBATION;
+  s.schedule.work = 0;
+}
+
+/** Démissionne : sans emploi, sans malus. */
+export function quitJob(state: GameState): GameState {
+  const job = jobById(state.job);
+  if (!job) return state;
+  const s = structuredClone(state);
+  addLog(s, 'log.jobQuit', { jobId: job.id, gender: s.gender });
+  leaveJob(s);
+  return s;
+}
+
+/** Réponse à l'alerte de fin de mois : prendre l'une des offres acceptées (id), ou garder sa situation (null). */
+export function resolveJobDecision(state: GameState, jobId: string | null): GameState {
+  const decision = state.jobDecision;
+  if (!decision) return state;
+  const offer = jobId === null ? null : decision.accepted.find((o) => o.jobId === jobId);
+  const job = offer ? jobById(offer.jobId) : null;
+  if (jobId !== null && (!offer || !job)) return state;
+  const s = structuredClone(state);
+  s.jobDecision = null;
+  if (offer && job) {
+    startJob(s, job, offer.salary, offer.companyId);
+    const company = companyById(offer.companyId);
+    addLog(s, company ? 'log.jobFoundAt' : 'log.jobFound', { jobId: job.id, gender: s.gender, salary: offer.salary, company: company?.name ?? '' }, 'good');
+  }
   return s;
 }
 
 /** Démarre un boulot rapide (ou l'arrête avec null) : un seul à la fois. */
 export function setGig(state: GameState, id: string | null): GameState {
-  if (id === state.gig || (id !== null && (!gigById(id) || !state.catalog.gigs.includes(id)))) return state;
+  if (id === state.gig) return state;
+  const gig = gigById(id);
+  if (id !== null && (!gig || !state.catalog.gigs.includes(id) || !gigUnlocked(state, gig))) return state;
   const s = structuredClone(state);
   s.gig = id;
   return s;
@@ -243,7 +365,9 @@ export function enrollTraining(state: GameState, id: string): GameState {
   if (TRAININGS[id].requires?.some((r) => !state.diplomas.includes(r))) return state;
   if (!state.catalog[TRAININGS[id].quick ? 'quick' : 'training'].includes(id)) return state;
   const s = structuredClone(state);
-  s.training = { id, monthsDone: 0, tuition: trainingPrice(state, id) };
+  s.training = { id, monthsDone: 0, blames: 0, tuition: trainingPrice(state, id) };
+  // L'inscription réserve d'office les heures d'étude de la formation dans le planning.
+  s.schedule.study = TRAININGS[id].minStudyHours;
   addLog(s, 'log.enrolled', { trainingId: id }, 'good');
   return s;
 }
@@ -253,7 +377,15 @@ export function dropTraining(state: GameState): GameState {
   const s = structuredClone(state);
   addLog(s, 'log.trainingDropped', { trainingId: state.training.id });
   s.training = null;
+  s.schedule.study = 0;
   return s;
+}
+
+/** Risque de blâme du mois : 0 si le joueur fait ses heures, jusqu'à 1 s'il n'en fait aucune. */
+export function blameChance(state: GameState): number {
+  if (!state.training || state.training.sponsored) return 0;
+  const min = TRAININGS[state.training.id].minStudyHours;
+  return clamp(1 - state.schedule.study / min, 0, 1);
 }
 
 /** Un mois de travail = un mois d'expérience dans le domaine ; on prévient quand un palier utile est franchi. */
@@ -270,22 +402,127 @@ function gainExperience(s: GameState, job: Job) {
   }
 }
 
-/** La formation ne progresse que si le joueur étudie assez chaque semaine. */
+/**
+ * Chaque mois, moins le joueur étudie par rapport aux heures de la formation, plus il risque un blâme.
+ * Un mois blâmé ne compte pas ; au troisième blâme, le joueur est renvoyé et perd la formation.
+ */
 function progressTraining(s: GameState) {
   const training = s.training;
   if (!training) return;
   const cfg = TRAININGS[training.id];
-  if (s.schedule.study < cfg.minStudyHours) {
-    addLog(s, 'log.trainingSkipped', { trainingId: training.id, hours: cfg.minStudyHours }, 'bad');
+  // Une formation payée par l'employeur dépend du poste : sans lui, elle s'arrête.
+  const promotion = training.sponsored ? PROMOTIONS[s.job ?? ''] : undefined;
+  if (training.sponsored && promotion?.training !== training.id) {
+    addLog(s, 'log.trainingLost', { trainingId: training.id }, 'bad');
+    s.training = null;
+    return;
+  }
+  if (Math.random() < blameChance(s)) {
+    training.blames += 1;
+    if (training.blames >= MAX_BLAMES) {
+      addLog(s, 'log.trainingExpelled', { trainingId: training.id }, 'bad');
+      s.training = null;
+      s.schedule.study = 0;
+    } else {
+      addLog(s, 'log.trainingBlamed', { trainingId: training.id, count: training.blames, max: MAX_BLAMES }, 'bad');
+    }
     return;
   }
   training.monthsDone += 1;
   if (training.monthsDone >= cfg.months) {
     s.diplomas.push(training.id);
     s.training = null;
+    s.schedule.study = 0;
     for (const [id, v] of Object.entries(cfg.skills ?? {}) as [SkillId, number][]) s.skills[id] = clamp(s.skills[id] + v, 0, SKILL_MAX);
     addLog(s, cfg.quick ? 'log.certificate' : 'log.diploma', { trainingId: training.id }, 'good');
+    const target = promotion && jobById(promotion.to);
+    if (target) promote(s, target);
   }
+}
+
+// ---------- Promotions ----------
+
+/** Promotion possible au poste actuel : assez d'ancienneté, ni formation en cours ni proposition en attente. */
+export function promotionAvailable(state: GameState): { to: Job; training: string } | null {
+  const job = jobById(state.job);
+  const rule = job && PROMOTIONS[job.id];
+  const to = rule && jobById(rule.to);
+  if (!job || !rule || !to || state.training || state.promotion || state.jobDecision) return null;
+  return (state.history[job.id] ?? 0) >= rule.months ? { to, training: rule.training } : null;
+}
+
+/** Chance que l'employeur accepte la demande de promotion : l'ancienneté aide, les blâmes pèsent. */
+export function promotionRequestChance(state: GameState): number {
+  const rule = PROMOTIONS[state.job ?? ''];
+  if (!rule) return 0;
+  const yearsOver = Math.floor(((state.history[state.job!] ?? 0) - rule.months) / 12);
+  const bonus = Math.min(PROMOTION_REQUEST_MAX_BONUS, Math.max(0, yearsOver) * PROMOTION_REQUEST_PER_YEAR);
+  return clamp(PROMOTION_REQUEST_BASE + bonus - state.jobBlames * PROMOTION_REQUEST_BLAME_PENALTY, 0.05, 0.95);
+}
+
+/** Mois à attendre avant de pouvoir redemander une promotion (0 = possible). */
+export const promotionRequestWait = (state: GameState): number =>
+  state.promotionRequested === null ? 0 : Math.max(0, PROMOTION_REQUEST_COOLDOWN - (state.month - state.promotionRequested));
+
+/** Passe au poste de manager chez le même employeur : nouveau contrat, nouvelle période d'essai. */
+function promote(s: GameState, job: Job) {
+  const salary = salaryAt(job, companyById(s.jobCompany));
+  startJob(s, job, salary, s.jobCompany);
+  addLog(s, 'log.promoted', { jobId: job.id, gender: s.gender, salary }, 'good');
+}
+
+function proposePromotion(s: GameState, to: Job) {
+  s.promotion = to.id;
+  s.promotionSeen = true;
+  addLog(s, 'log.promotionOffer', { jobId: to.id, gender: s.gender }, 'good');
+}
+
+/** Fin de mois : l'employeur propose la promotion dès que le seuil est atteint, puis rarement après un refus. */
+function rollPromotion(s: GameState) {
+  const available = promotionAvailable(s);
+  if (!available) return;
+  if (s.promotionSeen && Math.random() >= PROMOTION_CHANCE) return;
+  proposePromotion(s, available.to);
+}
+
+/** Le joueur demande lui-même une promotion : s'il l'obtient, la proposition arrive aussitôt. */
+export function requestPromotion(state: GameState): GameState {
+  const available = promotionAvailable(state);
+  if (!available || promotionRequestWait(state) > 0) return state;
+  const s = structuredClone(state);
+  s.promotionRequested = s.month;
+  if (Math.random() < promotionRequestChance(state)) {
+    addLog(s, 'log.promotionGranted', {}, 'good');
+    proposePromotion(s, available.to);
+  } else {
+    addLog(s, 'log.promotionDenied', {}, 'bad');
+  }
+  return s;
+}
+
+/**
+ * Réponse à la proposition de l'employeur. Accepter donne le poste tout de suite si le joueur a déjà la formation ;
+ * sinon l'employeur l'inscrit à la formation, payée et suivie pendant les heures de travail.
+ */
+export function resolvePromotion(state: GameState, accept: boolean): GameState {
+  const job = jobById(state.job);
+  const rule = job && PROMOTIONS[job.id];
+  const to = rule && jobById(rule.to);
+  if (!state.promotion || !rule || !to || state.promotion !== to.id) {
+    return state.promotion ? { ...state, promotion: null } : state;
+  }
+  if (accept && state.training) return state;
+  const s = structuredClone(state);
+  s.promotion = null;
+  if (!accept) {
+    addLog(s, 'log.promotionRefused', { jobId: to.id, gender: s.gender });
+  } else if (jobEligibility(s, to).qualified) {
+    promote(s, to);
+  } else {
+    s.training = { id: rule.training, monthsDone: 0, blames: 0, tuition: 0, sponsored: true };
+    addLog(s, 'log.promotionTraining', { trainingId: rule.training }, 'good');
+  }
+  return s;
 }
 
 // ---------- Logement ----------
@@ -737,7 +974,7 @@ export function weekBreakdown(state: GameState): WeekBreakdown {
   const gig = gigById(state.gig);
   const planned = {
     sleep: weeklyHours(state.schedule, 'sleep'),
-    work: (job?.hours ?? 0) + (gig?.hours ?? 0),
+    work: workedHours(state) + (gig?.hours ?? 0),
     commute: (job?.commute ?? 0) + (gig?.commute ?? 0) + housingCommute(state),
     essentials: ESSENTIALS_PER_WEEK,
     leisure: weeklyHours(state.schedule, 'leisure'),
@@ -759,7 +996,9 @@ export const isOverbooked = (state: GameState): boolean => weekBreakdown(state).
  */
 export function setSchedule(state: GameState, key: ScheduleKey, value: number): GameState {
   const def = SCHEDULE[key];
-  const next = clamp(Math.round(value), def.min, def.max);
+  // Les heures de travail ne dépassent jamais le contrat ; sans poste, il n'y en a pas.
+  const max = key === 'work' ? jobById(state.job)?.hours ?? 0 : def.max;
+  const next = clamp(Math.round(value), def.min, max);
   if (next === state.schedule[key]) return state;
   const s = structuredClone(state);
   s.schedule[key] = next;
@@ -802,7 +1041,7 @@ export function monthlyExpenseLines(state: GameState): MoneyLine[] {
   if (propCharges > 0) lines.push({ kind: 'propCharges', amount: propCharges });
   if (state.car) lines.push({ kind: 'car', id: state.car, amount: CARS[state.car]?.upkeep ?? 0 });
   lines.push({ kind: 'leisure', amount: Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR) });
-  if (state.training) lines.push({ kind: 'training', id: state.training.id, amount: trainingTuition(state) });
+  if (state.training && trainingTuition(state) > 0) lines.push({ kind: 'training', id: state.training.id, amount: trainingTuition(state) });
   return lines;
 }
 
@@ -820,7 +1059,6 @@ export function scheduleEffects(schedule: Schedule) {
     sleepHealth: schedule.sleep - SLEEP_NEUTRAL,
     sportHealth: schedule.sport * SPORT_HEALTH_PER_HOUR,
     leisureHappiness: schedule.leisure - LEISURE_NEUTRAL,
-    studyIntelligence: schedule.study * (SKILL_RULES.perStudyHour.intelligence ?? 0),
     sportStrength: schedule.sport * (SKILL_RULES.perSportHour.strength ?? 0),
     /** Nouvelles offres d'emploi par mois : 1 par heure de recherche hebdomadaire. */
     searchOffers: schedule.search,
@@ -855,7 +1093,7 @@ export function skillGains(state: GameState): Record<SkillId, number> {
 }
 
 /** D'où vient chaque gain mensuel de compétence (détail de `skillGains`, pour l'infobulle du profil). */
-export type SkillGainSource = { kind: 'study' | 'sport' | 'leisure' | 'job' | 'gig'; id?: string; amount: number };
+export type SkillGainSource = { kind: 'study' | 'training' | 'sport' | 'leisure' | 'job' | 'gig'; id?: string; amount: number };
 
 export function skillGainSources(state: GameState): Record<SkillId, SkillGainSource[]> {
   const out: Record<SkillId, SkillGainSource[]> = { digital: [], charisma: [], strength: [], intelligence: [], logistics: [] };
@@ -866,7 +1104,10 @@ export function skillGainSources(state: GameState): Record<SkillId, SkillGainSou
       if (v * factor > 0) out[skill].push({ kind, id, amount: v * factor });
     }
   };
-  add('study', SKILL_RULES.perStudyHour, state.schedule.study);
+  // Une formation qui a ses propres gains mensuels remplace ceux des heures d'étude, au prorata de l'assiduité.
+  const cfg = state.training ? TRAININGS[state.training.id] : null;
+  if (cfg?.monthlySkills) add('training', cfg.monthlySkills, Math.min(1, state.schedule.study / cfg.minStudyHours), state.training!.id);
+  else add('study', SKILL_RULES.perStudyHour, state.schedule.study);
   add('sport', SKILL_RULES.perSportHour, state.schedule.sport);
   add('leisure', SKILL_RULES.perLeisureHour, state.schedule.leisure);
   const job = jobById(state.job);
@@ -1105,26 +1346,29 @@ function rollEvent(s: GameState) {
 
 // ---------- Offres d'emploi ----------
 
-/** Tirage de l'embauche pour l'offre visée : la candidature reste ouverte tant que l'offre existe. */
-function resolveApplication(s: GameState) {
-  const target = jobById(s.jobTarget);
-  if (!target) return;
-  if (!s.offers.some((o) => o.jobId === target.id) || !jobEligibility(s, target).ok) {
-    s.jobTarget = null;
-    return;
+/**
+ * Chaque candidature avance d'un mois ; quand son délai est écoulé, la réponse est tirée. Les offres acceptées
+ * sont retirées de la liste et réunies dans une alerte (à prendre tout de suite ou à laisser), les refus aussi.
+ */
+function resolveApplications(s: GameState) {
+  const decision: JobDecision = { accepted: [], refused: [] };
+  const pending: Application[] = [];
+  for (const app of s.applications) {
+    const job = jobById(app.jobId);
+    const offer = s.offers.find((o) => o.jobId === app.jobId);
+    if (!job || !offer || !jobEligibility(s, job).ok) continue; // l'offre ou les conditions ont disparu
+    if (app.monthsLeft > 1) {
+      pending.push({ ...app, monthsLeft: app.monthsLeft - 1 });
+    } else if (Math.random() < hireChance(s, job)) {
+      decision.accepted.push({ jobId: job.id, companyId: offer.companyId, salary: offer.salary });
+      s.offers = s.offers.filter((o) => o !== offer);
+    } else {
+      decision.refused.push(job.id);
+      addLog(s, 'log.jobNone', { jobId: job.id, gender: s.gender });
+    }
   }
-  if (Math.random() < hireChance(s, target)) {
-    const offer = s.offers.find((o) => o.jobId === target.id)!;
-    s.job = target.id;
-    s.jobSalary = offer.salary;
-    s.jobCompany = offer.companyId || null;
-    s.jobTarget = null;
-    s.offers = s.offers.filter((o) => o.jobId !== target.id);
-    const company = companyById(offer.companyId);
-    addLog(s, company ? 'log.jobFoundAt' : 'log.jobFound', { jobId: target.id, gender: s.gender, salary: offer.salary, company: company?.name ?? '' }, 'good');
-  } else {
-    addLog(s, 'log.jobNone', { jobId: target.id, gender: s.gender });
-  }
+  s.applications = pending;
+  if (decision.accepted.length || decision.refused.length) s.jobDecision = decision;
 }
 
 /** Tire `count` éléments distincts, chacun avec une probabilité proportionnelle à son poids. */
@@ -1192,11 +1436,8 @@ export function monthlyDrawbacks(state: GameState): Record<StatKey, number> {
  */
 function refreshOffers(s: GameState) {
   const before = s.offers.length;
-  s.offers = s.offers.map((o) => ({ ...o, monthsLeft: o.monthsLeft - 1 })).filter((o) => o.monthsLeft > 0);
-  if (s.jobTarget && !s.offers.some((o) => o.jobId === s.jobTarget)) {
-    addLog(s, 'log.offerExpired', { jobId: s.jobTarget, gender: s.gender });
-    s.jobTarget = null;
-  }
+  // Une offre à laquelle on a postulé est gelée jusqu'à la réponse.
+  s.offers = s.offers.map((o) => (isApplied(s, o.jobId) ? o : { ...o, monthsLeft: o.monthsLeft - 1 })).filter((o) => o.monthsLeft > 0);
   const expired = before - s.offers.length;
   if (expired > 0 && !s.offers.length) addLog(s, 'log.noOffers');
 
@@ -1210,7 +1451,7 @@ function refreshOffers(s: GameState) {
   const overflow = s.offers.length + fresh.length - OFFERS_MAX;
   if (overflow > 0) {
     const drop = s.offers
-      .filter((o) => o.jobId !== s.jobTarget)
+      .filter((o) => !isApplied(s, o.jobId))
       .sort((a, b) => a.monthsLeft - b.monthsLeft)
       .slice(0, overflow);
     s.offers = s.offers.filter((o) => !drop.includes(o));
@@ -1221,23 +1462,43 @@ function refreshOffers(s: GameState) {
 
 // ---------- Actions publiques ----------
 
+/**
+ * Un blâme au poste (double pendant la période d'essai) ; au troisième, le joueur est renvoyé, et ce renvoi
+ * pèse sur ses candidatures des mois suivants.
+ */
+function blameJob(s: GameState, job: Job, lost: number) {
+  s.jobBlames += probationLeft(s) > 0 ? 2 : 1;
+  if (s.jobBlames >= MAX_BLAMES) {
+    addLog(s, 'log.jobFired', { jobId: job.id, gender: s.gender, lost }, 'bad');
+    leaveJob(s);
+    s.firedMonth = s.month;
+  } else {
+    addLog(s, 'log.jobBlamed', { jobId: job.id, gender: s.gender, n: s.jobBlames, max: MAX_BLAMES, lost }, 'bad');
+  }
+}
+
 /** Passe au mois suivant en appliquant le planning actuel. */
 export function endTurn(state: GameState): GameState {
   if (isOverbooked(state)) return state; // garde-fou : l'interface bloque déjà le bouton
+  if (state.jobDecision || state.promotion) return state; // il faut d'abord répondre aux alertes (candidatures, promotion)
   const s = structuredClone(state);
 
   // Les jauges sont calculées avant de toucher à l'argent, comme dans l'aperçu affiché au joueur.
   const next = projectNextStats(s);
   const gains = skillGains(s);
   s.stats = next;
-  for (const { id } of SKILLS) s.skills[id] = clamp(s.skills[id] + gains[id]);
+  for (const { id } of SKILLS) s.skills[id] = clamp(s.skills[id] + gains[id], 0, SKILL_MAX);
 
   const job = jobById(s.job);
   if (job) {
-    const salary = currentSalary(s);
+    // Heures sautées : si le patron s'en aperçoit, elles ne sont pas payées et le joueur reçoit un blâme.
+    const caught = Math.random() < jobBlameChance(s);
+    const full = currentSalary(s);
+    const salary = caught ? Math.round(full * (workedHours(s) / job.hours)) : full;
     s.money += salary;
     addLog(s, 'log.pay', { jobId: job.id, gender: s.gender, amount: salary }, 'good');
     gainExperience(s, job);
+    if (caught) blameJob(s, job, full - salary);
   }
   const gig = gigById(s.gig);
   if (gig) {
@@ -1259,7 +1520,8 @@ export function endTurn(state: GameState): GameState {
 
   progressTraining(s);
 
-  resolveApplication(s);
+  resolveApplications(s);
+  rollPromotion(s);
   resolveHousingApplication(s);
   refreshOffers(s);
   refreshListings(s);

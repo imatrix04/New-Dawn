@@ -16,6 +16,7 @@ function SkillRow({ id, icon, color, value, gain, sources, gender, index }: {
   const shown = useAnimatedNumber(value);
   const sourceLabel = (s: SkillGainSource) => {
     if (s.kind === 'job') return t('profile.sources.job', { name: t(`jobs.${s.id}`, { context: gender }) });
+    if (s.kind === 'training') return t('profile.sources.training', { name: t(`trainings.${s.id}.name`) });
     if (s.kind === 'gig') return t('profile.sources.gig', { name: t(`gigs.${s.id}.name`) });
     return t(`profile.sources.${s.kind}`);
   };

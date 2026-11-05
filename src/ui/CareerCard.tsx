@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, OFFERS_MAX, TRAININGS } from '../data/content';
-import type { Company, Gig, TrainingConfig } from '../data/content';
+import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, TRAININGS } from '../data/content';
+import type { Company, Gig, GigRequirement, TrainingConfig } from '../data/content';
 import {
-  companyById, currentSalary, experienceMonths, gigPay, hireBreakdown, hireChance, jobById, jobDrawback, jobEligibility,
-  scheduleEffects, trainingPrice,
+  blameChance, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobDrawback, jobEligibility,
+  isApplied, probationLeft, promotionAvailable, promotionRequestChance, promotionRequestWait, reviewMonths, scheduleEffects, trainingPrice,
 } from '../game/engine';
 import type { Drawback, GameState, Job, Qualification, SkillId } from '../game/types';
 import { formatMoney, formatSigned } from '../i18n/format';
@@ -28,7 +28,7 @@ function Drawbacks({ fx }: { fx: Drawback }) {
   return (
     <>
       {entries.map((k) => (
-        <span className="req no" key={k}>{t(`schedule.effect.${k}`, { delta: formatSigned(fx[k]!, i18n.language) })}</span>
+        <span className={`req ${fx[k]! > 0 ? 'ok' : 'no'}`} key={k}>{t(`schedule.effect.${k}`, { delta: formatSigned(fx[k]!, i18n.language) })}</span>
       ))}
     </>
   );
@@ -54,7 +54,12 @@ export function CareerCard({ game }: { game: GameState }) {
   const { t, i18n } = useTranslation();
   const [tab, setTab] = useState<Tab>('offers');
   const [selection, setSelection] = useState<Record<Tab, string | null>>({ gigs: null, offers: null, quick: null, training: null });
+  const { quitJob, requestPromotion } = useStore();
+  const [confirmQuit, setConfirmQuit] = useState(false);
   const current = jobById(game.job);
+  const promotion = promotionAvailable(game);
+  const promotionWait = promotionRequestWait(game);
+  const probation = probationLeft(game);
   const jobName = (id: string) => t(`jobs.${id}`, { context: game.gender });
 
   const select = (id: string) => setSelection((s) => ({ ...s, [tab]: s[tab] === id ? null : id }));
@@ -70,6 +75,26 @@ export function CareerCard({ game }: { game: GameState }) {
             {companyById(game.jobCompany) && <span className="muted small">🏢 {companyById(game.jobCompany)!.name}</span>}
             <span className="muted small">{t('career.perMonth', { amount: formatMoney(currentSalary(game), i18n.language) })}</span>
             <div className="reqs"><Drawbacks fx={jobDrawback(current, companyById(game.jobCompany))} /></div>
+            <div className="reqs">
+              <span className="req ok">⏱ {t('schedule.perWeek', { hours: current.hours })}</span>
+              {probation > 0 && <span className="req no">{t('career.probation', { count: probation })}</span>}
+              <span className={game.jobBlames > 0 ? 'req no' : 'req ok'}>{t('career.blames')} {Math.min(game.jobBlames, MAX_BLAMES)} / {MAX_BLAMES}</span>
+            </div>
+            {promotion && (
+              <>
+                <span className="job-meta">{t('career.promotion.chance', { job: jobName(promotion.to.id), pct: Math.round(promotionRequestChance(game) * 100) })}</span>
+                {promotionWait > 0 && <span className="job-meta warn">{t('career.promotion.wait', { count: promotionWait })}</span>}
+                <button className="big-btn" disabled={promotionWait > 0} onClick={requestPromotion}>{t('career.promotion.ask')}</button>
+              </>
+            )}
+            {confirmQuit ? (
+              <div className="reqs">
+                <button className="big-btn secondary" onClick={() => { quitJob(); setConfirmQuit(false); }}>{t('career.quitConfirm')}</button>
+                <button className="big-btn secondary" onClick={() => setConfirmQuit(false)}>{t('career.cancel')}</button>
+              </div>
+            ) : (
+              <button className="big-btn secondary" onClick={() => setConfirmQuit(true)}>{t('career.quit')}</button>
+            )}
           </>
         ) : (
           <span className="muted">{t('game.noJob')}</span>
@@ -109,8 +134,14 @@ function Gigs({ game, selected, onSelect }: PaneProps) {
   const list = GIGS.filter((g) => game.catalog.gigs.includes(g.id));
   const gig = list.find((g) => g.id === selected);
 
+  const gigReqText = (r: GigRequirement) =>
+    'skill' in r
+      ? `${t(`skills.${r.skill}.name`)} ${r.min} (${Math.min(Math.floor(game.skills[r.skill]), r.min)}/${r.min})`
+      : t(`trainings.${r.diploma}.name`);
+
   const detail = (g: Gig) => {
     const active = game.gig === g.id;
+    const unlocked = gigUnlocked(game, g);
     const gains = Object.entries(g.skills) as [SkillId, number][];
     return (
       <div className="detail" key={g.id} data-rarity={rarityOfWeight(g.weight)}>
@@ -125,11 +156,18 @@ function Gigs({ game, selected, onSelect }: PaneProps) {
           {gains.map(([skill, v]) => (
             <span className="req ok" key={skill}>{t('career.gainPerMonth', { delta: formatSigned(v, lng), skill: t(`skills.${skill}.name`) })}</span>
           ))}
+          {g.anyOf && (
+            <span className={`req ${unlocked ? 'ok' : 'no'}`}>
+              {unlocked ? '✓' : '✗'} {g.anyOf.map((r) => gigReqText(r)).join(t('career.req.or'))}
+            </span>
+          )}
         </div>
         {active ? (
           <button className="big-btn secondary" onClick={() => setGig(null)}>{t('career.gigStop')}</button>
-        ) : (
+        ) : unlocked ? (
           <button className="big-btn" onClick={() => setGig(g.id)}>{t('career.gigStart')}</button>
+        ) : (
+          <span className="job-meta warn">{t('career.gigLocked')}</span>
         )}
       </div>
     );
@@ -145,10 +183,12 @@ function Gigs({ game, selected, onSelect }: PaneProps) {
         list={
           <div className="card-grid">
             {list.map((g, i) => (
-              <Tile key={g.id} rarity={rarityOfWeight(g.weight)} index={i} selected={selected === g.id} state={game.gig === g.id ? 'current' : undefined} onSelect={() => onSelect(g.id)}>
+              <Tile key={g.id} rarity={rarityOfWeight(g.weight)} index={i} selected={selected === g.id} state={game.gig === g.id ? 'current' : gigUnlocked(game, g) ? undefined : 'locked'} onSelect={() => onSelect(g.id)}>
                 <span className="ctile-name">{g.icon} {t(`gigs.${g.id}.name`)}</span>
                 <span className="ctile-meta">{t('career.perMonth', { amount: formatMoney(gigPay(game, g), lng) })}</span>
-                <span className="ctile-meta">{t('schedule.perWeek', { hours: g.hours })}</span>
+                <span className="ctile-meta">⏱ {t('schedule.perWeek', { hours: g.hours })}</span>
+                {g.commute > 0 && <span className="ctile-meta">🚌 {t('career.commuteTile', { hours: g.commute })}</span>}
+                {!gigUnlocked(game, g) && <span className="ctile-meta">🔒 {t('career.status.locked')}</span>}
                 {game.gig === g.id && <span className="status-badge current">{t('career.status.active')}</span>}
               </Tile>
             ))}
@@ -163,8 +203,9 @@ function Gigs({ game, selected, onSelect }: PaneProps) {
 
 function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (id: string) => string }) {
   const { t, i18n } = useTranslation();
-  const { setJobTarget } = useStore();
+  const { toggleApplication } = useStore();
   const lng = i18n.language;
+  const full = game.applications.length >= MAX_APPLICATIONS;
   const perMonth = scheduleEffects(game.schedule).searchOffers;
   const offers = game.offers.flatMap((o) => {
     const job = JOBS.find((j) => j.id === o.jobId);
@@ -180,7 +221,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
 
   const detail = ({ job, monthsLeft, salary, company }: OfferView) => {
     const elig = jobEligibility(game, job);
-    const isTarget = job.id === game.jobTarget;
+    const application = game.applications.find((a) => a.jobId === job.id);
     const breakdown = hireBreakdown(game, job);
     const skillReqs = Object.entries(job.minSkills ?? {}) as [SkillId, number][];
     return (
@@ -217,13 +258,15 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
             <ul className="chance-list">
               <li><span>{t('career.detail.base', { grade: job.grade })}</span><b>{pct(breakdown.base)}</b></li>
               {breakdown.bonuses.map((b) => (
-                <li className="plus" key={b.type === 'training' ? b.id : 'experience'}>
+                <li className={b.value < 0 ? 'minus' : 'plus'} key={b.type === 'training' ? b.id : b.type}>
                   <span>
                     {b.type === 'training'
                       ? t('career.detail.training', { name: t(`trainings.${b.id}.name`) })
-                      : t('career.detail.experience', { months: b.months, field: t(`fields.${b.field}`) })}
+                      : b.type === 'fired'
+                        ? t('career.detail.fired', { count: b.months })
+                        : t('career.detail.experience', { months: b.months, field: t(`fields.${b.field}`) })}
                   </span>
-                  <b>+{pct(b.value)}</b>
+                  <b>{b.value < 0 ? '−' : '+'}{pct(Math.abs(b.value))}</b>
                 </li>
               ))}
               <li className="total"><span>{t('career.chanceLabel')}</span><b>{pct(breakdown.total)}</b></li>
@@ -232,13 +275,17 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
           </div>
         )}
 
-        {isTarget ? (
+        {application ? (
           <>
-            <span className="job-meta target-note">{t('career.applyNote')}</span>
-            <button className="big-btn secondary" onClick={() => setJobTarget(null)}>{t('career.cancel')}</button>
+            <span className="job-meta target-note">{t('career.applyNote', { count: application.monthsLeft })}</span>
+            <button className="big-btn secondary" onClick={() => toggleApplication(job.id)}>{t('career.cancel')}</button>
           </>
         ) : elig.ok ? (
-          <button className="big-btn" onClick={() => setJobTarget(job.id)}>{t('career.apply')}</button>
+          <>
+            {reviewMonths(job) > 1 && <span className="job-meta warn">{t('career.slowReview', { count: reviewMonths(job) })}</span>}
+            {full && <span className="job-meta warn">{t('career.applicationsFull', { max: MAX_APPLICATIONS })}</span>}
+            <button className="big-btn" disabled={full} onClick={() => toggleApplication(job.id)}>{t('career.apply')}</button>
+          </>
         ) : (
           <span className="job-meta warn">{t('career.lockedNote')}</span>
         )}
@@ -251,6 +298,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
       <p className="muted small">{t('career.offersHint')}</p>
       <div className="offers-meta">
         <span>{t('career.offersCount', { count: game.offers.length, max: OFFERS_MAX })}</span>
+        <span className={full ? 'warn' : 'muted'}>{t('career.applicationsCount', { count: game.applications.length, max: MAX_APPLICATIONS })}</span>
         <span className={perMonth > 0 ? 'good' : 'muted'}>{t('career.searchRate', { count: perMonth })}</span>
       </div>
       {offers.length === 0 && <p className="muted small">{t('career.noOffers')}</p>}
@@ -262,7 +310,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
             {offers.map((offer, i) => {
               const { job, monthsLeft, salary, company } = offer;
               const elig = jobEligibility(game, job);
-              const isTarget = job.id === game.jobTarget;
+              const isTarget = isApplied(game, job.id);
               return (
                 <Tile key={job.id} rarity={rarityOfJob(job)} index={i} selected={selected === job.id} state={isTarget ? 'target' : elig.ok ? undefined : 'locked'} onSelect={() => onSelect(job.id)}>
                   {company && <span className="ctile-company">🏢 {company.name}</span>}
@@ -290,13 +338,14 @@ function Trainings({ game, selected, onSelect, quick }: PaneProps & { quick: boo
   const tab: Tab = quick ? 'quick' : 'training';
   const visible = quick ? game.catalog.quick : game.catalog.training;
   // Les diplômes déjà obtenus restent affichés jusqu'au prochain renouvellement du catalogue.
-  const list = Object.entries(TRAININGS).filter(([id, cfg]) => !!cfg.quick === quick && visible.includes(id));
+  const list = Object.entries(TRAININGS).filter(([id, cfg]) => !!cfg.quick === quick && (visible.includes(id) || game.training?.id === id));
   const picked = list.find(([id]) => id === selected);
 
   const detail = (id: string, cfg: TrainingConfig) => {
     const done = game.diplomas.includes(id);
     const active = game.training?.id === id ? game.training : null;
-    const lowStudy = active && game.schedule.study < cfg.minStudyHours;
+    const sponsored = !!active?.sponsored;
+    const lowStudy = active && !sponsored && game.schedule.study < cfg.minStudyHours;
     const missing = (cfg.requires ?? []).filter((r) => !game.diplomas.includes(r));
     const unlocks = JOBS.filter((j) => j.anyOf?.some((q) => q.type === 'diploma' && q.id === id));
     const gains = Object.entries(cfg.skills ?? {}) as [SkillId, number][];
@@ -306,7 +355,7 @@ function Trainings({ game, selected, onSelect, quick }: PaneProps & { quick: boo
         <Facts rows={[
           [t('career.fact.duration'), t('profile.months', { count: cfg.months })],
           [t('career.fact.tuition'), t('career.perMonth', { amount: formatMoney(trainingPrice(game, id), lng) })],
-          [t('career.fact.study'), t('schedule.perWeek', { hours: cfg.minStudyHours })],
+          [t('career.fact.study'), sponsored ? t('career.sponsoredHours') : t('schedule.perWeek', { hours: cfg.minStudyHours })],
         ]} />
         <div className="reqs">
           <Drawbacks fx={cfg.drawback} />
@@ -328,8 +377,18 @@ function Trainings({ game, selected, onSelect, quick }: PaneProps & { quick: boo
               <span className="muted">{t('career.monthsOf', { done: active.monthsDone, total: cfg.months })}</span>
             </div>
             <div className="meter"><div style={{ width: `${(active.monthsDone / cfg.months) * 100}%` }} /></div>
+            {sponsored ? (
+              <span className="job-meta">{t('career.sponsored')}</span>
+            ) : (
+              <div className="xp-head">
+                <span>{t('career.blames')}</span>
+                <span className={active.blames > 0 ? 'warn' : 'muted'}>{active.blames} / {MAX_BLAMES}</span>
+              </div>
+            )}
             {lowStudy && (
-              <span className="job-meta warn">{t('career.lowStudy', { hours: cfg.minStudyHours, current: game.schedule.study })}</span>
+              <span className="job-meta warn">
+                {t('career.lowStudy', { hours: cfg.minStudyHours, current: game.schedule.study, risk: Math.round(blameChance(game) * 100) })}
+              </span>
             )}
           </div>
         )}

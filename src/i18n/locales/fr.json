@@ -33,7 +33,7 @@
   "profile": {
     "money": "Argent",
     "perMonth": "mois",
-    "sources": { "study": "Études", "sport": "Sport", "leisure": "Loisirs", "job": "Métier : {{name}}", "gig": "Petit boulot : {{name}}" },
+    "sources": { "study": "Études", "training": "Formation : {{name}}","sport": "Sport", "leisure": "Loisirs", "job": "Métier : {{name}}", "gig": "Petit boulot : {{name}}" },
     "tabs": { "skills": "Compétences", "experience": "Expérience" },
     "diplomas": "Diplômes",
     "noDiplomas": "Aucun diplôme pour l'instant",
@@ -84,12 +84,57 @@
     "officeSuite": {
       "name": "Bureautique avancée",
       "desc": "Tableurs, traitement de texte et organisation : ouvre les postes d'assistant administratif."
+    },
+    "tpMum": {
+      "name": "Manager d'unité marchande (titre pro)",
+      "desc": "Titre professionnel bac+2 en alternance, 24 mois : gérer un point de vente et son équipe. Ouvre les postes de manager en restauration rapide."
+    },
+    "bpService": {
+      "name": "BP Arts du service et commercialisation en restauration",
+      "desc": "Brevet professionnel de niveau bac en alternance, 24 mois : encadrer le service et la clientèle. Ouvre les postes de manager en restauration basique."
+    },
+    "btsMhr": {
+      "name": "BTS Management en hôtellerie-restauration (option A)",
+      "desc": "Bac+2 en 2 ans, avec stage : diriger une unité de restauration. Ouvre les postes de manager en restauration haut de gamme."
     }
+  },
+  "promotion": {
+    "title": "Une proposition de ton employeur",
+    "text": "Après tout ce temps, {{company}} te propose de devenir {{job}}.",
+    "yourEmployer": "ton employeur",
+    "trained": "Tu as déjà la formation : tu prends le poste tout de suite.",
+    "training": "Tu dois d'abord suivre la formation « {{training}} » ({{count}} mois). Ton employeur la paie et elle se fait pendant tes heures de travail ; à la fin, tu deviens manager.",
+    "busy": "Tu suis déjà une formation : termine-la ou abandonne-la avant d'accepter.",
+    "accept": "Accepter la promotion",
+    "refuse": "Refuser pour l'instant"
+  },
+  "jobDecision": {
+    "title": "Réponses à tes candidatures",
+    "textAccepted": "Des entreprises te répondent : tu peux accepter l'un des postes ou garder ta situation.",
+    "textRefused": "Aucune entreprise n'a donné suite à tes candidatures.",
+    "refused": "Refusé",
+    "accepted": "Acceptée : choisis un poste",
+    "nowOrNever": "C'est maintenant ou jamais : les offres que tu laisses disparaissent.",
+    "ok": "Compris",
+    "stay": "Rester chez moi ({{job}})",
+    "stayJobless": "Ne rien accepter"
   },
   "gigs": {
     "delivery": { "name": "Livraison à vélo", "desc": "Des courses à livrer en ville, aux horaires qui t'arrangent." },
     "babysitting": { "name": "Baby-sitting", "desc": "Garder des enfants en soirée et le week-end." },
-    "moving": { "name": "Aide au déménagement", "desc": "Porter des cartons et des meubles pour des particuliers." }
+    "moving": { "name": "Aide au déménagement", "desc": "Porter des cartons et des meubles pour des particuliers." },
+    "dataEntry": { "name": "Saisie de données", "desc": "Recopier et classer des données depuis chez toi, pour des entreprises." },
+    "tutoring": { "name": "Soutien scolaire", "desc": "Aider des élèves à réviser leurs cours après l'école." },
+    "pcRepair": { "name": "Dépannage informatique", "desc": "Réparer les ordinateurs et installer les logiciels de particuliers." },
+    "freelanceWeb": { "name": "Freelance web", "desc": "Créer des sites et retoucher des images à distance pour des clients." },
+    "translation": { "name": "Traduction et rédaction", "desc": "Traduire et rédiger des textes à distance, à ton rythme." },
+    "waiter": { "name": "Extra en salle", "desc": "Servir en salle lors des coups de feu d'un restaurant." },
+    "baristaExtra": { "name": "Barista en extra", "desc": "Préparer des cafés au comptoir, en renfort de l'équipe." },
+    "rideshare": { "name": "Chauffeur VTC", "desc": "Conduire des passagers avec ta propre voiture." },
+    "carDelivery": { "name": "Livraison en voiture", "desc": "Livrer des colis volumineux en camionnette." },
+    "forklift": { "name": "Cariste en entrepôt", "desc": "Manœuvrer un chariot élévateur pour charger et ranger les palettes." },
+    "fitnessCoach": { "name": "Coach sportif", "desc": "Encadrer des séances de sport. Bon pour la santé et le moral." },
+    "eventHost": { "name": "Animateur événementiel", "desc": "Accueillir et animer le public lors d'événements." }
   },
   "career": {
     "current": "Poste actuel",
@@ -100,6 +145,8 @@
     "noneLeft": "Rien à proposer pour le moment.",
     "gigStart": "Commencer",
     "gigStop": "Arrêter",
+    "gigLocked": "Tu ne remplis pas encore les conditions pour ce boulot.",
+    "commuteTile": "{{hours}} h de trajet/sem.",
     "offersHint": "Tu ne vois qu'une partie des offres, et elles disparaissent avec le temps. Plus un poste est prestigieux, moins son offre dure. Règle tes heures de recherche dans l'emploi du temps pour en trouver de nouvelles.",
     "offersCount": "Offres visibles : {{count}} / {{max}}",
     "searchRate_one": "🔎 {{count}} nouvelle offre par mois",
@@ -119,7 +166,7 @@
     "selectHint": "Les détails s'afficheront ici.",
     "fact": {
       "pay": "Paie", "salary": "Salaire", "hours": "Travail", "commute": "Trajets",
-      "expires": "Offre valable", "duration": "Durée", "tuition": "Coût", "study": "Études minimum"
+      "expires": "Offre valable", "duration": "Durée", "tuition": "Coût", "study": "Heures réservées"
     },
     "chanceLabel": "Chance d'être pris chaque mois",
     "applied": "Candidature envoyée",
@@ -129,11 +176,22 @@
       "title": "D'où vient ta chance",
       "base": "Chance de base (poste de grade {{grade}})",
       "training": "Formation : {{name}}",
-      "experience": "Expérience en {{field}} ({{months}} mois)"
+      "experience": "Expérience en {{field}} ({{months}} mois)",
+      "fired_one": "Renvoyé il y a {{count}} mois",
+      "fired_other": "Renvoyé il y a {{count}} mois"
     },
     "apply": "Postuler",
     "cancel": "Annuler",
-    "applyNote": "Candidature envoyée : réponse à la fin du mois.",
+    "applyNote_one": "Candidature envoyée : réponse dans {{count}} mois.",
+    "applyNote_other": "Candidature envoyée : réponse dans {{count}} mois.",
+    "slowReview_one": "Poste prestigieux : la réponse met {{count}} mois à arriver.",
+    "slowReview_other": "Poste prestigieux : la réponse met {{count}} mois à arriver.",
+    "applicationsCount": "Candidatures : {{count}} / {{max}}",
+    "applicationsFull": "Tu as déjà {{max}} candidatures en cours : retires-en une pour postuler ici.",
+    "probation_one": "Période d'essai : encore {{count}} mois (blâmes doublés)",
+    "probation_other": "Période d'essai : encore {{count}} mois (blâmes doublés)",
+    "quit": "Démissionner",
+    "quitConfirm": "Confirmer la démission",
     "quickHint": "De courtes formations hors diplôme : elles donnent des compétences, ouvrent certains métiers et augmentent tes chances d'être embauché, mais elles pèsent sur la santé et le moral. Une seule formation ou étude à la fois.",
     "trainingHint": "Les études longues mènent à un diplôme et pèsent sur la santé et le moral. Une seule formation ou étude à la fois.",
     "hireBonus": "+{{pct}} % de chance d'embauche en {{field}}",
@@ -146,12 +204,21 @@
       "or": " ou "
     },
     "monthsOf": "{{done}} / {{total}} mois",
-    "trainingInfo": "{{months}} mois • {{tuition}}/mois • {{hours}} h d'études par semaine minimum",
+    "trainingInfo": "{{months}} mois • {{tuition}}/mois • {{hours}} h d'études par semaine réservées",
     "progress": "Progression",
-    "lowStudy": "Étudie au moins {{hours}} h/sem. pour progresser (actuellement {{current}} h).",
+    "blames": "Blâmes (renvoi au 3ᵉ)",
+    "lowStudy": "Tu étudies {{current}} h/sem. au lieu de {{hours}} h : {{risk}} % de risque de blâme ce mois-ci.",
     "enroll": "S'inscrire",
     "drop": "Abandonner",
-    "diploma": "Diplômé"
+    "diploma": "Diplômé",
+    "sponsored": "Formation payée par ton employeur, sur tes heures de travail : pas de frais ni de blâme.",
+    "sponsoredHours": "Comprises dans le travail",
+    "promotion": {
+      "chance": "Tu peux demander à devenir {{job}} : {{pct}} % de chances.",
+      "wait_one": "Tu pourras redemander dans {{count}} mois.",
+      "wait_other": "Tu pourras redemander dans {{count}} mois.",
+      "ask": "Demander une promotion"
+    }
   },
   "wallet": {
     "checking": "Compte courant",
@@ -396,6 +463,9 @@
     "fastFood_female": "Serveuse en restauration rapide",
     "diner": "Serveur en restauration basique",
     "diner_female": "Serveuse en restauration basique",
+    "fastFoodManager": "Manager en restauration rapide",
+    "dinerManager": "Manager en restauration basique",
+    "fineDiningManager": "Manager en restauration haut de gamme",
     "fineDining": "Serveur en restauration haut de gamme",
     "fineDining_female": "Serveuse en restauration haut de gamme",
     "cashier": "Caissier",
@@ -433,7 +503,8 @@
     "effect": {
       "health": "❤️ {{delta}}/mois",
       "happiness": "😊 {{delta}}/mois",
-      "skill": "🧠 {{delta}}/mois",
+      "blame": "⚠️ {{pct}} % de blâme",
+      "noBlame": "✓ Aucun risque",
       "search_one": "🔎 +{{count}} offre/mois",
       "search_other": "🔎 +{{count}} offres/mois",
       "housing_one": "🏠 +{{count}} annonce/mois",
@@ -448,7 +519,7 @@
     "blocked": "Trop d'heures planifiées",
     "cats": {
       "sleep": { "label": "Sommeil", "hint": "Santé : ±1 par heure autour de 7 h/jour" },
-      "work": { "label": "Travail", "hint": "Fixé par ton emploi" },
+      "work": { "label": "Travail", "hint": "Tes heures de travail. En faire moins que ton contrat risque un blâme et des heures non payées." },
       "commute": { "label": "Trajets", "hint": "Fixé par ton emploi" },
       "essentials": { "label": "Vie quotidienne", "hint": "Repas, hygiène, courses (fixe)" },
       "leisure": { "label": "Loisirs", "hint": "Bonheur : ±1 par heure autour de 5 h/jour • coûte de l'argent" },
@@ -472,7 +543,8 @@
     "opened": "{{product}} ouvert.",
     "enrolled": "Tu t'inscris : {{training}}.",
     "trainingDropped": "Tu abandonnes ta formation : {{training}}.",
-    "trainingSkipped": "Formation : il te faut au moins {{hours}} h d'études par semaine, tu ne progresses pas ce mois-ci.",
+    "trainingBlamed": "Formation : blâme {{count}}/{{max}} pour manque d'assiduité ({{training}}), ce mois ne compte pas.",
+    "trainingExpelled": "Troisième blâme : tu es renvoyé de ta formation ({{training}}).",
     "diploma": "Diplôme obtenu : {{training}} !",
     "certificate": "Formation terminée : {{training}} !",
     "catalogRefreshed": "Les boulots rapides, formations et études proposés ont changé.",
@@ -505,7 +577,17 @@
     "jeuneClosed": "Tu as 25 ans : ton Livret Jeune est clôturé, {{amount, number}} € versés sur ton compte.",
     "jobFoundAt": "Tu décroches un poste : {{job}} chez {{company}} ({{salary, number}} €/mois).",
     "jobFound": "Tu décroches un poste : {{job}} ({{salary, number}} €/mois).",
-    "jobNone": "Ta candidature pour {{job}} n'a pas abouti ce mois-ci.",
+    "jobNone": "Ta candidature pour {{job}} n'a pas abouti.",
+    "jobQuit": "Tu démissionnes de ton poste : {{job}}.",
+    "promotionOffer": "Ton employeur te propose un poste de {{job}}.",
+    "promotionGranted": "Ton employeur accepte ta demande de promotion.",
+    "promotionDenied": "Ton employeur n'est pas prêt à te promouvoir pour l'instant.",
+    "promotionRefused": "Tu refuses le poste de {{job}}. Ton employeur pourrait te le reproposer plus tard.",
+    "promotionTraining": "Ton employeur t'inscrit à la formation : {{training}}, sur tes heures de travail.",
+    "promoted": "Promotion ! Tu deviens {{job}} ({{salary, number}} €/mois).",
+    "trainingLost": "Tu perds ton poste : la formation payée par ton employeur s'arrête ({{training}}).",
+    "jobBlamed": "Heures sautées repérées ({{job}}) : blâme {{n}}/{{max}}, {{lost, number}} € retenus sur ta paie.",
+    "jobFired": "Troisième blâme : tu es renvoyé ({{job}}), {{lost, number}} € retenus. Ce renvoi pèsera sur tes candidatures pendant 6 mois.",
     "eventLine": "{{title}} : {{text}}",
     "eventLineFx": "{{title}} : {{text}} ({{fx}})"
   },

@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import {
   buyHome, closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, letProperty, migrateGame, moveToProperty,
-  openSavings, resolveChoice, sellProperty, setGig, setHousingTarget, setJobTarget, setSchedule, withdrawProperty, withdrawSavings,
+  openSavings, quitJob, requestPromotion, resolveChoice, resolveJobDecision, resolvePromotion, sellProperty, setGig, setHousingTarget, setSchedule, toggleApplication,
+  withdrawProperty, withdrawSavings,
 } from './game/engine';
 import type { GameState, LeaveAction, Profile, SavingsProduct, ScheduleKey } from './game/types';
 
@@ -38,7 +39,11 @@ interface Store {
   setSchedule: (key: ScheduleKey, value: number) => void;
   endTurn: () => void;
   choose: (index: number) => void;
-  setJobTarget: (id: string | null) => void;
+  toggleApplication: (id: string) => void;
+  resolveJobDecision: (jobId: string | null) => void;
+  resolvePromotion: (accept: boolean) => void;
+  requestPromotion: () => void;
+  quitJob: () => void;
   setGig: (id: string | null) => void;
   setHousingTarget: (id: string | null, leave?: LeaveAction) => void;
   buyHome: (id: string, downPct: number, years: number, live?: boolean, leave?: LeaveAction) => void;
@@ -81,7 +86,11 @@ export const useStore = create<Store>((set, get) => {
     setSchedule: (key, value) => { const g = get().game; if (g) update(setSchedule(g, key, value)); },
     endTurn: () => { const g = get().game; if (g) update(endTurn(g)); },
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
-    setJobTarget: (id) => { const g = get().game; if (g) update(setJobTarget(g, id)); },
+    toggleApplication: (id) => { const g = get().game; if (g) update(toggleApplication(g, id)); },
+    resolveJobDecision: (jobId) => { const g = get().game; if (g) update(resolveJobDecision(g, jobId)); },
+    resolvePromotion: (accept) => { const g = get().game; if (g) update(resolvePromotion(g, accept)); },
+    requestPromotion: () => { const g = get().game; if (g) update(requestPromotion(g)); },
+    quitJob: () => { const g = get().game; if (g) update(quitJob(g)); },
     setGig: (id) => { const g = get().game; if (g) update(setGig(g, id)); },
     setHousingTarget: (id, leave) => { const g = get().game; if (g) update(setHousingTarget(g, id, leave)); },
     buyHome: (id, downPct, years, live, leave) => { const g = get().game; if (g) update(buyHome(g, id, downPct, years, live, leave)); },
