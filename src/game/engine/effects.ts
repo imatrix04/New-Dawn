@@ -1,0 +1,143 @@
+// Effets mensuels : revenus, dépenses, jauges, compétences et pénibilité.
+import { CARS, DEBT_HAPPINESS_LOSS, FOOD_COST, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, SKILL_RULES, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, TRAININGS } from '../../data/content';
+import type { Drawback, GameState, Schedule, SkillId, StatKey } from '../types';
+import { housingEffects } from './housing';
+import { companyById, currentSalary, gigById, gigPay, jobById, jobDrawback } from './lookup';
+import { lettingIncome } from './property';
+import { weeklyHours } from './schedule';
+import { clamp } from './shared';
+import { trainingTuition } from './training';
+
+/** Une ligne du détail mensuel : `id` sert à retrouver le libellé traduit selon `kind`. */
+export interface MoneyLine {
+  kind: 'job' | 'gig' | 'rentals' | 'food' | 'housing' | 'loan' | 'charges' | 'propLoan' | 'propCharges' | 'car' | 'leisure' | 'training';
+  id?: string;
+  amount: number;
+}
+
+export function monthlyIncomeLines(state: GameState): MoneyLine[] {
+  const job = jobById(state.job);
+  const gig = gigById(state.gig);
+  const lines: MoneyLine[] = [];
+  if (job) lines.push({ kind: 'job', id: job.id, amount: currentSalary(state) });
+  if (gig) lines.push({ kind: 'gig', id: gig.id, amount: gigPay(state, gig) });
+  const rentals = lettingIncome(state);
+  if (rentals > 0) lines.push({ kind: 'rentals', amount: rentals });
+  return lines;
+}
+
+/** Nourriture + loyer (ou mensualité du prêt et charges) + entretien de la voiture + coût des loisirs + frais de formation. */
+export function monthlyExpenseLines(state: GameState): MoneyLine[] {
+  const { home } = state;
+  const lines: MoneyLine[] = [{ kind: 'food', amount: FOOD_COST }];
+  if (home.tenure === 'rent') {
+    lines.push({ kind: 'housing', id: home.typeId, amount: home.rent });
+  } else {
+    if (home.loan) lines.push({ kind: 'loan', id: home.typeId, amount: home.loan.monthly });
+    lines.push({ kind: 'charges', id: home.typeId, amount: home.charges });
+  }
+  const propLoans = state.properties.reduce((sum, p) => sum + (p.loan?.monthly ?? 0), 0);
+  const propCharges = state.properties.reduce((sum, p) => sum + p.charges, 0);
+  if (propLoans > 0) lines.push({ kind: 'propLoan', amount: propLoans });
+  if (propCharges > 0) lines.push({ kind: 'propCharges', amount: propCharges });
+  if (state.car) lines.push({ kind: 'car', id: state.car, amount: CARS[state.car]?.upkeep ?? 0 });
+  lines.push({ kind: 'leisure', amount: Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR) });
+  if (state.training && trainingTuition(state) > 0) lines.push({ kind: 'training', id: state.training.id, amount: trainingTuition(state) });
+  return lines;
+}
+
+const sumLines = (lines: MoneyLine[]): number => lines.reduce((a, l) => a + l.amount, 0);
+
+export const monthlyIncome = (state: GameState): number => sumLines(monthlyIncomeLines(state));
+
+export const monthlyExpenses = (state: GameState): number => sumLines(monthlyExpenseLines(state));
+
+/**
+ * Effets mensuels du planning, tels qu'affichés au joueur et appliqués au passage du mois.
+ * - Santé : ±1 par heure de sommeil/jour au-dessus ou en dessous de 7 h, plus un bonus de sport.
+ * - Bonheur : ±1 par heure de loisirs/jour au-dessus ou en dessous de 5 h.
+ */
+export function scheduleEffects(schedule: Schedule) {
+  return {
+    sleepHealth: schedule.sleep - SLEEP_NEUTRAL,
+    sportHealth: schedule.sport * SPORT_HEALTH_PER_HOUR,
+    leisureHappiness: schedule.leisure - LEISURE_NEUTRAL,
+    sportStrength: schedule.sport * (SKILL_RULES.perSportHour.strength ?? 0),
+    /** Nouvelles offres d'emploi par mois : 1 par heure de recherche hebdomadaire. */
+    searchOffers: schedule.search,
+    /** Nouvelles annonces de logement par mois : 1 par heure de recherche hebdomadaire. */
+    searchListings: schedule.housing,
+  };
+}
+
+/** Jauges attendues le mois prochain avec le planning actuel (hors événements). */
+export function projectNextStats(state: GameState): Record<StatKey, number> {
+  const fx = scheduleEffects(state.schedule);
+  const debt = state.money < 0 ? DEBT_HAPPINESS_LOSS : 0;
+  const drawbacks = monthlyDrawbacks(state);
+  const comfort = housingEffects(state);
+  return {
+    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth + drawbacks.health + comfort.health),
+    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt + drawbacks.happiness + comfort.happiness),
+  };
+}
+
+const NO_GAIN = (): Record<SkillId, number> => ({ digital: 0, charisma: 0, strength: 0, intelligence: 0, logistics: 0 });
+
+/**
+ * Compétences gagnées chaque mois : études (intelligence, numérique), sport (force), loisirs (charisme)
+ * et le métier exercé (voir SKILL_RULES). Sert à l'aperçu du profil et au passage du mois.
+ */
+export function skillGains(state: GameState): Record<SkillId, number> {
+  const gains = NO_GAIN();
+  const sources = skillGainSources(state);
+  for (const id of Object.keys(gains) as SkillId[]) gains[id] = sources[id].reduce((a, s) => a + s.amount, 0);
+  return gains;
+}
+
+/** D'où vient chaque gain mensuel de compétence (détail de `skillGains`, pour l'infobulle du profil). */
+export type SkillGainSource = { kind: 'study' | 'training' | 'sport' | 'leisure' | 'job' | 'gig'; id?: string; amount: number };
+
+export function skillGainSources(state: GameState): Record<SkillId, SkillGainSource[]> {
+  const out: Record<SkillId, SkillGainSource[]> = { digital: [], charisma: [], strength: [], intelligence: [], logistics: [] };
+  const add = (
+    kind: SkillGainSource['kind'], rule: Partial<Record<SkillId, number>> | undefined, factor = 1, id?: string,
+  ) => {
+    for (const [skill, v] of Object.entries(rule ?? {}) as [SkillId, number][]) {
+      if (v * factor > 0) out[skill].push({ kind, id, amount: v * factor });
+    }
+  };
+  // Une formation qui a ses propres gains mensuels remplace ceux des heures d'étude, au prorata de l'assiduité.
+  const cfg = state.training ? TRAININGS[state.training.id] : null;
+  if (cfg?.monthlySkills) add('training', cfg.monthlySkills, Math.min(1, state.schedule.study / cfg.minStudyHours), state.training!.id);
+  else add('study', SKILL_RULES.perStudyHour, state.schedule.study);
+  add('sport', SKILL_RULES.perSportHour, state.schedule.sport);
+  add('leisure', SKILL_RULES.perLeisureHour, state.schedule.leisure);
+  const job = jobById(state.job);
+  if (job) add('job', SKILL_RULES.perJobMonth[job.field], 1, job.id);
+  const gig = gigById(state.gig);
+  if (gig) add('gig', gig.skills, 1, gig.id);
+  return out;
+}
+
+/** Mois d'expérience dans un domaine à partir desquels un poste s'ouvre (0 si aucun poste n'en exige). */
+export const experienceGoal = (field: string): number =>
+  Math.max(0, ...JOBS.flatMap((j) => (j.anyOf ?? []).flatMap((q) => (
+    q.type === 'experience' && q.field === field ? [q.months] : []
+  ))));
+
+/** Désavantages mensuels cumulés sur la santé et le bonheur : gros emploi, boulot rapide et formation en cours. */
+export function monthlyDrawbacks(state: GameState): Record<StatKey, number> {
+  const total: Record<StatKey, number> = { health: 0, happiness: 0 };
+  const job = jobById(state.job);
+  const sources: Drawback[] = [
+    job ? jobDrawback(job, companyById(state.jobCompany)) : {},
+    gigById(state.gig)?.drawback ?? {},
+    state.training ? TRAININGS[state.training.id].drawback : {},
+  ];
+  for (const d of sources) {
+    total.health += d.health ?? 0;
+    total.happiness += d.happiness ?? 0;
+  }
+  return total;
+}

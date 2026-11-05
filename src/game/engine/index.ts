@@ -1,0 +1,20 @@
+// Moteur du jeu : logique pure, sans React ni textes. Chaque module couvre un sujet.
+export { companyById, currentSalary, gigById, gigPay, gigUnlocked, jobById, jobDrawback, salaryAt, trainingPrice } from './lookup';
+export { createGame, migrateGame } from './setup';
+export { experienceMonths, hireBreakdown, hireChance, isApplied, jobEligibility, recentFiring, reviewMonths, toggleApplication } from './career';
+export type { Eligibility, HireBonus, HireBreakdown } from './career';
+export { jobBlameChance, probationLeft, probationMonths, quitJob, resolveJobDecision, setGig, workedHours } from './job';
+export { drawCatalog } from './catalog';
+export { blameChance, dropTraining, enrollTraining, trainingTuition } from './training';
+export { promotionAvailable, promotionRequestChance, promotionRequestWait, requestPromotion, resolvePromotion } from './promotion';
+export { comfortOf, housingCommute, housingEffects, housingTypeById, marketRent, moveCredit, rentBreakdown, rentChance, rentQuote, saleNet, saleProceeds, setHousingTarget } from './housing';
+export type { RentBonus, RentBreakdown, RentQuote } from './housing';
+export { buyHome, buyQuote, letProperty, lettingChance, lettingIncome, moveToProperty, propertyProceeds, sellingChance, sellProperty, withdrawProperty } from './property';
+export type { BuyQuote } from './property';
+export { isOverbooked, setSchedule, weekBreakdown } from './schedule';
+export type { WeekBreakdown } from './schedule';
+export { experienceGoal, monthlyDrawbacks, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, projectNextStats, scheduleEffects, skillGains, skillGainSources } from './effects';
+export type { MoneyLine, SkillGainSource } from './effects';
+export { ageYears, canOpen, checkDeposit, checkWithdraw, closePel, depositSavings, emptySavings, isOpen, livretJeuneEligible, migrateSavings, openSavings, pelClosePreview, SAVINGS_PRODUCTS, savingsBalance, savingsRoom, totalSavings, withdrawSavings } from './savings';
+export type { PelClosePreview, TransferCheck } from './savings';
+export { endTurn, resolveChoice } from './turn';
