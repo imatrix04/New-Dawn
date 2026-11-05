@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { JOBS, SKILL_MAX, SKILLS, TRAININGS } from '../data/content';
-import { experienceGoal, experienceMonths, skillGains } from '../game/engine';
+import { experienceGoal, experienceMonths, skillGainSources, skillGains, type SkillGainSource } from '../game/engine';
 import type { GameState } from '../game/types';
 import { formatAge, formatSigned } from '../i18n/format';
 import { Money } from './Money';
@@ -9,17 +9,33 @@ import { useAnimatedNumber } from './useAnimatedNumber';
 
 type Tab = 'skills' | 'experience';
 
-function SkillRow({ id, icon, color, value, gain, index }: {
-  id: string; icon: string; color: string; value: number; gain: number; index: number;
+function SkillRow({ id, icon, color, value, gain, sources, gender, index }: {
+  id: string; icon: string; color: string; value: number; gain: number; sources: SkillGainSource[]; gender: GameState['gender']; index: number;
 }) {
   const { t, i18n } = useTranslation();
   const shown = useAnimatedNumber(value);
+  const sourceLabel = (s: SkillGainSource) => {
+    if (s.kind === 'job') return t('profile.sources.job', { name: t(`jobs.${s.id}`, { context: gender }) });
+    if (s.kind === 'gig') return t('profile.sources.gig', { name: t(`gigs.${s.id}.name`) });
+    return t(`profile.sources.${s.kind}`);
+  };
   return (
     <div className="skill-row" style={{ '--c': color, animationDelay: `${index * 50}ms` } as CSSProperties}>
       <div className="skill-head">
         <span className="skill-name">{icon} {t(`skills.${id}.name`)}</span>
         <span className="skill-right">
-          {gain > 0 && <span className="badge good">{formatSigned(gain, i18n.language)}/{t('profile.perMonth')}</span>}
+          {gain > 0 && (
+            <span className="badge good has-tip" tabIndex={0}>
+              {formatSigned(gain, i18n.language)}/{t('profile.perMonth')}
+              <span className="money-tip good" role="tooltip">
+                {sources.map((s, i) => (
+                  <span className="money-tip-row" key={`${s.kind}-${s.id ?? ''}`} style={{ animationDelay: `${60 + i * 55}ms` }}>
+                    <span>{sourceLabel(s)}</span><b>{formatSigned(s.amount, i18n.language)}</b>
+                  </span>
+                ))}
+              </span>
+            </span>
+          )}
           <span className="skill-val">{Math.round(shown)}</span>
         </span>
       </div>
@@ -34,6 +50,7 @@ export function ProfileCard({ game }: { game: GameState }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('skills');
   const gains = skillGains(game);
+  const sources = skillGainSources(game);
   const jobName = (id: string) => t(`jobs.${id}`, { context: game.gender });
 
   // Domaines où le joueur a travaillé, dans l'ordre des postes du jeu.
@@ -65,7 +82,7 @@ export function ProfileCard({ game }: { game: GameState }) {
       {tab === 'skills' && (
         <div className="skill-list" key="skills">
           {SKILLS.map((s, i) => (
-            <SkillRow key={s.id} id={s.id} icon={s.icon} color={s.color} value={game.skills[s.id]} gain={gains[s.id]} index={i} />
+            <SkillRow key={s.id} id={s.id} icon={s.icon} color={s.color} value={game.skills[s.id]} gain={gains[s.id]} sources={sources[s.id]} gender={game.gender} index={i} />
           ))}
         </div>
       )}

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { GameState } from '../game/types';
+import type { Area, GameState, Home } from '../game/types';
 import { Board } from './board/Board';
 import { BoardWindow } from './board/BoardWindow';
 import { CareerCard } from './CareerCard';
@@ -15,9 +15,23 @@ import { DevCheats } from './DevCheats';
 import { TopBar } from './TopBar';
 import { WalletCard } from './WalletCard';
 
+const SCENE_FILES = import.meta.glob<string>('../asset/image/background/*.jpg', { eager: true, query: '?url', import: 'default' });
+
+/** Préfixes des fichiers `<quartier>_<logement>_image.jpg` : quartier (Area) et logement (typeId). */
+const SCENE_AREA: Partial<Record<Area, string>> = { center: 'centre-ville', suburb: 'banlieue', country: 'campagne' };
+const SCENE_HOME: Record<string, string> = { shared: 'colocation', studio: 'studio', t2: 'T2', t3: 'T3' };
+
+/** Image de fond selon le logement et son quartier ; sans image, l'ardoise par défaut. */
+function sceneOf(home: Home): string | undefined {
+  const area = SCENE_AREA[home.area];
+  const type = SCENE_HOME[home.typeId];
+  return area && type ? SCENE_FILES[`../asset/image/background/${area}_${type}_image.jpg`] : undefined;
+}
+
 export function GameScreen({ game }: { game: GameState }) {
   const { t } = useTranslation();
   const [paused, setPaused] = useState(false);
+  const scene = sceneOf(game.home);
 
   // Échap ouvre / ferme le menu pause.
   useEffect(() => {
@@ -29,7 +43,10 @@ export function GameScreen({ game }: { game: GameState }) {
   }, []);
 
   return (
-    <section className="screen wide game-screen">
+    <section
+      className={`screen wide game-screen${scene ? ' has-scene' : ''}`}
+      style={scene ? { '--scene': `url("${scene}")` } as CSSProperties : undefined}
+    >
       <Board>
         <BoardWindow id="schedule" title={t('windows.schedule')}>
           <SchedulePanel game={game} />

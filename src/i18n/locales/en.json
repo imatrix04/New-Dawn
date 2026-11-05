@@ -33,6 +33,7 @@
   "profile": {
     "money": "Money",
     "perMonth": "mo",
+    "sources": { "study": "Studies", "sport": "Sport", "leisure": "Leisure", "job": "Job: {{name}}", "gig": "Side gig: {{name}}" },
     "tabs": { "skills": "Skills", "experience": "Experience" },
     "diplomas": "Diplomas",
     "noDiplomas": "No diploma yet",
@@ -298,7 +299,7 @@
     "cottage": "Small house",
     "family": "Family house",
     "penthouse": "Penthouse",
-    "villa": "Villa with pool"
+    "bigHouse": "Big house"
   },
   "estate": {
     "current": "Current home",

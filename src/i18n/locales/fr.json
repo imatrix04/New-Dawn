@@ -33,6 +33,7 @@
   "profile": {
     "money": "Argent",
     "perMonth": "mois",
+    "sources": { "study": "Études", "sport": "Sport", "leisure": "Loisirs", "job": "Métier : {{name}}", "gig": "Petit boulot : {{name}}" },
     "tabs": { "skills": "Compétences", "experience": "Expérience" },
     "diplomas": "Diplômes",
     "noDiplomas": "Aucun diplôme pour l'instant",
@@ -298,7 +299,7 @@
     "cottage": "Petite maison",
     "family": "Maison familiale",
     "penthouse": "Penthouse",
-    "villa": "Villa avec piscine"
+    "bigHouse": "Grosse maison"
   },
   "estate": {
     "current": "Logement actuel",

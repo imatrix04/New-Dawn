@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AREAS, HOUSING_KINDS, LETTING, LISTINGS_MAX, MOVING_COST, OWNING, SELLING } from '../data/content';
+import { HOUSING_KINDS, LETTING, LISTINGS_MAX, MOVING_COST, OWNING, SELLING } from '../data/content';
 import {
   buyQuote, comfortOf, housingEffects, housingTypeById, lettingChance, marketRent, moveCredit, propertyProceeds, rentBreakdown,
   rentChance, rentQuote, saleNet, scheduleEffects, sellingChance,
@@ -86,8 +86,8 @@ export function HousingCard({ game }: { game: GameState }) {
         )}
         <div className="reqs">
           <Comfort fx={housingEffects(game)} />
-          {AREAS[home.area].commute > 0 && (
-            <span className="req no">{t('estate.extraCommute', { hours: AREAS[home.area].commute })}</span>
+          {home.commute > 0 && (
+            <span className="req no">{t('estate.extraCommute', { hours: home.commute })}</span>
           )}
         </div>
       </section>
@@ -203,7 +203,7 @@ function LeavePick({ game, value, onChange }: { game: GameState; value: LeaveAct
 /** Ce que l'annonce change au quotidien : confort et trajet. */
 function Perks({ l }: { l: HousingListing }) {
   const { t } = useTranslation();
-  const commute = AREAS[l.area].commute;
+  const commute = l.commute;
   return (
     <div className="reqs">
       <Comfort fx={comfortOf(l.typeId, l.area)} />
@@ -228,7 +228,7 @@ function RentDetail({ game, l }: { game: GameState; l: HousingListing }) {
   const q = rentQuote(game, l, chosen);
   const b = rentBreakdown(game, l);
   const pct = (n: number) => `${Math.round(n * 100)} %`;
-  const commute = AREAS[l.area].commute;
+  const commute = l.commute;
   const rows: [string, ReactNode][] = [
     [t('estate.fact.rent'), t('career.perMonth', { amount: formatMoney(l.price, lng) })],
     [t('estate.fact.surface'), t('estate.m2', { n: type.surface })],
@@ -288,7 +288,7 @@ function BuyDetail({ game, l }: { game: GameState; l: HousingListing }) {
   const type = housingTypeById(l.typeId);
   const moves = live === 'live';
   const q = buyQuote(game, l, down, years, moves, leave);
-  const commute = AREAS[l.area].commute;
+  const commute = l.commute;
   const cash = down === 1;
 
   const rows: [string, ReactNode][] = [
@@ -415,7 +415,7 @@ function PropertyDetail({ game, p }: { game: GameState; p: Property }) {
   const free = p.status !== 'rented';
   const moveCost = MOVING_COST - moveCredit(game, leave);
   const canMove = game.money - moveCost >= 0;
-  const commute = AREAS[p.area].commute;
+  const commute = p.commute;
 
   const rows: [string, ReactNode][] = [
     [t('estate.own.fact.status'), t(`estate.own.status.${p.status}`)],

@@ -66,6 +66,8 @@ export interface Home {
   /** Textes : housing.<typeId>. */
   typeId: string;
   area: Area;
+  /** Heures de trajet ajoutées par semaine, tirées à l'annonce dans la fourchette du quartier (voir AREAS). */
+  commute: number;
   tenure: 'rent' | 'own';
   /** Loyer mensuel (0 pour un propriétaire). */
   rent: number;
@@ -92,6 +94,7 @@ export interface Property {
   id: string;
   typeId: string;
   area: Area;
+  commute: number;
   status: PropertyStatus;
   value: number;
   charges: number;
@@ -107,6 +110,7 @@ export interface HousingListing {
   id: string;
   typeId: string;
   area: Area;
+  commute: number;
   tenure: 'rent' | 'buy';
   price: number;
   /** Mois restants avant que l'annonce disparaisse. */

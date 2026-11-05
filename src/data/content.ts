@@ -135,6 +135,8 @@ export interface HousingType {
   price: number | null;
   /** Confort : effet mensuel sur les jauges. */
   comfort: Partial<Record<StatKey, number>>;
+  /** Quartiers où ce bien n'existe pas (jamais proposé en annonce). */
+  notIn?: Area[];
 }
 
 export const HOUSING_TYPES: Record<string, HousingType> = {
@@ -145,17 +147,20 @@ export const HOUSING_TYPES: Record<string, HousingType> = {
   duplex:    { kind: 'apartment', grade: 3, surface: 90,  rent: 1300, price: 290000, comfort: { happiness: 2 } },
   cottage:   { kind: 'house',     grade: 3, surface: 80,  rent: 1000, price: 210000, comfort: { happiness: 2, health: 1 } },
   family:    { kind: 'house',     grade: 3, surface: 120, rent: 1500, price: 340000, comfort: { happiness: 2, health: 1 } },
-  penthouse: { kind: 'apartment', grade: 4, surface: 130, rent: 2800, price: 620000, comfort: { happiness: 3, health: 1 } },
-  villa:     { kind: 'house',     grade: 4, surface: 200, rent: 3200, price: 750000, comfort: { happiness: 3, health: 1 } },
+  penthouse: { kind: 'apartment', grade: 4, surface: 130, rent: 2800, price: 620000, comfort: { happiness: 3, health: 1 }, notIn: ['country'] },
+  bigHouse:  { kind: 'house',     grade: 4, surface: 200, rent: 3200, price: 750000, comfort: { happiness: 3, health: 1 }, notIn: ['center'] },
 };
 
 export const HOUSING_KINDS: HousingKind[] = ['studio', 'apartment', 'house'];
 
-/** Quartiers : multiplicateur de prix, heures de trajet ajoutées par semaine (si l'on travaille), bonheur mensuel. */
-export const AREAS: Record<Area, { price: number; commute: number; happiness: number; weight: number }> = {
-  center:  { price: 1.25, commute: 0, happiness: 0, weight: 3 },
-  suburb:  { price: 1,    commute: 2, happiness: 0, weight: 4 },
-  country: { price: 0.8,  commute: 4, happiness: 1, weight: 3 },
+/**
+ * Quartiers : multiplicateur de prix, fourchette [min, max] d'heures de trajet ajoutées par semaine (si l'on travaille,
+ * tirée à chaque annonce), bonheur mensuel.
+ */
+export const AREAS: Record<Area, { price: number; commute: [number, number]; happiness: number; weight: number }> = {
+  center:  { price: 1.25, commute: [0, 0],  happiness: 0, weight: 3 },
+  suburb:  { price: 1,    commute: [2, 4],  happiness: 0, weight: 4 },
+  country: { price: 0.8,  commute: [6, 10], happiness: 1, weight: 3 },
 };
 export const AREA_IDS = Object.keys(AREAS) as Area[];
 
@@ -165,7 +170,7 @@ export const LISTINGS_MAX = 12;
 export const START_LISTINGS = 6;
 /** Durée de vie d'une annonce, en mois, selon la rareté du bien. */
 export const LISTING_MONTHS: Record<number, number> = { 1: 6, 2: 4, 3: 3, 4: 2 };
-/** Poids du tirage d'un bien selon la rareté : une villa est bien plus rare qu'un studio. */
+/** Poids du tirage d'un bien selon la rareté : une grosse maison est bien plus rare qu'un studio. */
 export const LISTING_WEIGHT: Record<number, number> = { 1: 6, 2: 4, 3: 2, 4: 1 };
 
 /** Location : chance de base d'un dossier accepté selon la rareté du bien (les biens rares attirent plus de candidats). */

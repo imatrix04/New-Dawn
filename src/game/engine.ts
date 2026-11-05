@@ -131,6 +131,17 @@ export function migrateGame(raw: GameState): GameState {
   g.housingTarget ??= null;
   g.housingLeave ??= 'sell';
   g.properties ??= [];
+  // Avant le trajet aléatoire, chaque quartier avait un trajet fixe : on prend le milieu de la fourchette actuelle.
+  const midCommute = (a: Area) => Math.round((AREAS[a].commute[0] + AREAS[a].commute[1]) / 2);
+  g.home.commute ??= midCommute(g.home.area);
+  for (const x of [...g.listings, ...g.properties]) x.commute ??= midCommute(x.area);
+  // L'ancienne « villa » est devenue la grosse maison (identifiant `bigHouse`).
+  const renameVilla = (x: { typeId: string }) => { if (x.typeId === 'villa') x.typeId = 'bigHouse'; };
+  renameVilla(g.home);
+  g.listings.forEach(renameVilla);
+  g.properties.forEach(renameVilla);
+  for (const e of g.log) if (e.params?.homeId === 'villa') e.params.homeId = 'bigHouse';
+  g.listings = g.listings.filter((l) => !housingTypeById(l.typeId).notIn?.includes(l.area));
   if (g.housingTarget && !g.listings.some((l) => l.id === g.housingTarget)) g.housingTarget = null;
   g.schedule.housing ??= 0;
   // Avant les compétences, un seul « savoir » existait : il devient l'intelligence. L'énergie a disparu.
@@ -283,20 +294,27 @@ export const housingTypeById = (id: string): HousingType => HOUSING_TYPES[id] ??
 
 /** Logement de départ : loué au loyer de base en centre-ville, sans caution (le joueur y vit déjà). */
 function starterHome(typeId: string): Home {
-  return { typeId, area: 'center', tenure: 'rent', rent: housingTypeById(typeId).rent ?? 0, deposit: 0, value: 0, charges: 0, loan: null };
+  return { typeId, area: 'center', commute: 0, tenure: 'rent', rent: housingTypeById(typeId).rent ?? 0, deposit: 0, value: 0, charges: 0, loan: null };
 }
+
+/** Trajet hebdomadaire d'un logement : entier tiré dans la fourchette de son quartier. */
+const rollCommute = (area: Area): number => {
+  const [min, max] = AREAS[area].commute;
+  return min + Math.floor(Math.random() * (max - min + 1));
+};
 
 /** Nouvelle annonce pour un type de bien : à louer ou à vendre (50/50 si les deux sont possibles), dans un quartier tiré au sort. */
 function makeListing(typeId: string): HousingListing {
   const type = housingTypeById(typeId);
   const tenure = type.rent === null ? 'buy' : type.price === null || Math.random() < 0.5 ? 'rent' : 'buy';
-  const area = drawWeighted(AREA_IDS, (a) => AREAS[a].weight, 1)[0];
+  const area = drawWeighted(AREA_IDS.filter((a) => !type.notIn?.includes(a)), (a) => AREAS[a].weight, 1)[0];
   const base = (tenure === 'rent' ? type.rent : type.price)!;
   const raw = base * AREAS[area].price * (1 + rollFactor());
   return {
     id: Math.random().toString(36).slice(2, 8),
     typeId,
     area,
+    commute: rollCommute(area),
     tenure,
     price: tenure === 'rent' ? Math.round(raw / 5) * 5 : Math.round(raw / 500) * 500,
     monthsLeft: LISTING_MONTHS[type.grade],
@@ -305,7 +323,7 @@ function makeListing(typeId: string): HousingListing {
 
 /**
  * Tire `count` annonces, chaque type de bien indépendamment des autres (un même type peut revenir dans un autre quartier) :
- * les plus rares (villa) apparaissent bien moins souvent que les communs (studio).
+ * les plus rares (grosse maison) apparaissent bien moins souvent que les communs (studio).
  */
 const drawListings = (count: number): HousingListing[] =>
   Array.from({ length: count }, () => makeListing(
@@ -322,7 +340,7 @@ export const housingEffects = (state: GameState): Record<StatKey, number> => com
 
 /** Heures de trajet ajoutées chaque semaine par l'éloignement du logement (seulement si l'on travaille). */
 export const housingCommute = (state: GameState): number =>
-  state.job || state.gig ? AREAS[state.home.area].commute : 0;
+  state.job || state.gig ? state.home.commute : 0;
 
 /** Revenus mensuels vus par un propriétaire : salaire, boulot rapide et loyers perçus. */
 const rentIncome = (state: GameState): number => {
@@ -485,6 +503,7 @@ function keepAsProperty(s: GameState, home: Home, leave: 'rent' | 'vacant') {
     id: newId(),
     typeId: home.typeId,
     area: home.area,
+    commute: home.commute,
     status: leave === 'rent' ? 'letting' : 'vacant',
     value: home.value,
     charges: home.charges,
@@ -531,14 +550,14 @@ export function buyHome(
   const loan = q.loan > 0 ? { balance: q.loan, monthly: q.monthly, rate: q.rate, monthsLeft: years * 12 } : null;
   if (live) {
     moveInto(s, {
-      typeId: l.typeId, area: l.area, tenure: 'own', rent: 0, deposit: 0, value: l.price, charges: q.charges, loan,
+      typeId: l.typeId, area: l.area, commute: l.commute, tenure: 'own', rent: 0, deposit: 0, value: l.price, charges: q.charges, loan,
     }, l.id, q.upfront, leave);
   } else {
     s.money -= q.upfront;
     s.listings = s.listings.filter((x) => x.id !== l.id);
     if (s.housingTarget === l.id) s.housingTarget = null;
     s.properties.push({
-      id: newId(), typeId: l.typeId, area: l.area, status: 'letting', value: l.price, charges: q.charges, loan,
+      id: newId(), typeId: l.typeId, area: l.area, commute: l.commute, status: 'letting', value: l.price, charges: q.charges, loan,
       rent: marketRent(l.typeId, l.area), ask: l.price,
     });
   }
@@ -607,7 +626,7 @@ export function moveToProperty(state: GameState, id: string, leave: LeaveAction 
   const s = structuredClone(state);
   s.properties = s.properties.filter((x) => x.id !== id);
   moveInto(s, {
-    typeId: p.typeId, area: p.area, tenure: 'own', rent: 0, deposit: 0, value: p.value, charges: p.charges, loan: p.loan,
+    typeId: p.typeId, area: p.area, commute: p.commute, tenure: 'own', rent: 0, deposit: 0, value: p.value, charges: p.charges, loan: p.loan,
   }, null, MOVING_COST, leave);
   addLog(s, 'log.movedIn', { homeId: p.typeId });
   return s;
@@ -627,7 +646,7 @@ function resolveHousingApplication(s: GameState) {
     return;
   }
   if (Math.random() < rentChance(s, l)) {
-    moveInto(s, { typeId: l.typeId, area: l.area, tenure: 'rent', rent: l.price, deposit: quote.deposit, value: 0, charges: 0, loan: null },
+    moveInto(s, { typeId: l.typeId, area: l.area, commute: l.commute, tenure: 'rent', rent: l.price, deposit: quote.deposit, value: 0, charges: 0, loan: null },
       l.id, quote.upfront, s.housingLeave);
     addLog(s, 'log.housingFound', { homeId: l.typeId, rent: l.price }, 'good');
   } else {
@@ -830,16 +849,31 @@ const NO_GAIN = (): Record<SkillId, number> => ({ digital: 0, charisma: 0, stren
  */
 export function skillGains(state: GameState): Record<SkillId, number> {
   const gains = NO_GAIN();
-  const add = (rule: Partial<Record<SkillId, number>> | undefined, factor = 1) => {
-    for (const [id, v] of Object.entries(rule ?? {}) as [SkillId, number][]) gains[id] += v * factor;
-  };
-  add(SKILL_RULES.perStudyHour, state.schedule.study);
-  add(SKILL_RULES.perSportHour, state.schedule.sport);
-  add(SKILL_RULES.perLeisureHour, state.schedule.leisure);
-  const job = jobById(state.job);
-  if (job) add(SKILL_RULES.perJobMonth[job.field]);
-  add(gigById(state.gig)?.skills);
+  const sources = skillGainSources(state);
+  for (const id of Object.keys(gains) as SkillId[]) gains[id] = sources[id].reduce((a, s) => a + s.amount, 0);
   return gains;
+}
+
+/** D'où vient chaque gain mensuel de compétence (détail de `skillGains`, pour l'infobulle du profil). */
+export type SkillGainSource = { kind: 'study' | 'sport' | 'leisure' | 'job' | 'gig'; id?: string; amount: number };
+
+export function skillGainSources(state: GameState): Record<SkillId, SkillGainSource[]> {
+  const out: Record<SkillId, SkillGainSource[]> = { digital: [], charisma: [], strength: [], intelligence: [], logistics: [] };
+  const add = (
+    kind: SkillGainSource['kind'], rule: Partial<Record<SkillId, number>> | undefined, factor = 1, id?: string,
+  ) => {
+    for (const [skill, v] of Object.entries(rule ?? {}) as [SkillId, number][]) {
+      if (v * factor > 0) out[skill].push({ kind, id, amount: v * factor });
+    }
+  };
+  add('study', SKILL_RULES.perStudyHour, state.schedule.study);
+  add('sport', SKILL_RULES.perSportHour, state.schedule.sport);
+  add('leisure', SKILL_RULES.perLeisureHour, state.schedule.leisure);
+  const job = jobById(state.job);
+  if (job) add('job', SKILL_RULES.perJobMonth[job.field], 1, job.id);
+  const gig = gigById(state.gig);
+  if (gig) add('gig', gig.skills, 1, gig.id);
+  return out;
 }
 
 /** Mois d'expérience dans un domaine à partir desquels un poste s'ouvre (0 si aucun poste n'en exige). */
