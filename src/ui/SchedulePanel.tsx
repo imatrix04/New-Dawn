@@ -68,6 +68,9 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'housing': return t(`housing.${l.id}`);
       case 'loan': return t('estate.lines.loan');
       case 'charges': return t('estate.lines.charges');
+      case 'rentals': return t('estate.lines.rentals');
+      case 'propLoan': return t('estate.lines.propLoan');
+      case 'propCharges': return t('estate.lines.propCharges');
       case 'car': return t(`cars.${l.id}`);
       case 'training': return t(`trainings.${l.id}.name`);
       case 'food': return t('schedule.lines.food');

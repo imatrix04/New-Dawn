@@ -302,7 +302,7 @@
   },
   "estate": {
     "current": "Logement actuel",
-    "tabs": { "rent": "À louer", "buy": "À acheter" },
+    "tabs": { "rent": "À louer", "buy": "À acheter", "own": "Mes biens" },
     "kind": { "all": "Tous", "studio": "Studios", "apartment": "Appartements", "house": "Maisons" },
     "area": { "center": "Centre-ville", "suburb": "Banlieue", "country": "Campagne" },
     "tenant": "Locataire • {{amount}}/mois",
@@ -312,7 +312,7 @@
     "noLoan": "Sans prêt",
     "extraCommute": "🚌 +{{hours}} h/sem. de trajet",
     "rentHint": "Dépose un dossier : la réponse tombe à la fin du mois. Le propriétaire regarde tes revenus, ton emploi et ton épargne. Les biens rares attirent plus de candidats. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
-    "buyHint": "Choisis ton apport et la durée du prêt : la banque exige un emploi et au plus 35 % de ton salaire en mensualité. Quand tu déménages, ton bien est vendu automatiquement. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
+    "buyHint": "Choisis ton apport et la durée du prêt : la banque exige un emploi et au plus 35 % de ton salaire en mensualité. Tu peux y habiter ou l'acheter pour le louer. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
     "listingsCount": "Annonces visibles : {{count}} / {{max}}",
     "searchRate_one": "🏠 {{count}} nouvelle annonce par mois",
     "searchRate_other": "🏠 {{count}} nouvelles annonces par mois",
@@ -340,7 +340,35 @@
     "applied": "Dossier déposé",
     "applyNote": "Dossier déposé : réponse à la fin du mois.",
     "tooPoor": "Tu n'as pas de quoi payer l'entrée ({{amount}} manquent).",
-    "saleNote": "Ton bien actuel sera vendu : {{net}} (valeur moins 5 % de frais et le prêt restant).",
+    "live": { "label": "Usage", "live": "J'y habite", "invest": "Investissement locatif" },
+    "investNote": "Le bien est mis en location au loyer du marché dès l'achat, sans déménagement.",
+    "leave": {
+      "label": "Ton bien actuel",
+      "sell": "Le vendre", "rent": "Le louer", "vacant": "Le garder vide",
+      "sellNote": "Vente directe : {{net}} (valeur moins 5 % de frais et le prêt restant).",
+      "rentNote": "Il part en location au loyer du marché ; charges et prêt restent à ta charge.",
+      "vacantNote": "Il reste vide ; charges et prêt restent à ta charge."
+    },
+    "own": {
+      "hint": "Les biens où tu n'habites pas. Mets-les en location pour toucher un loyer (plus il est haut, plus le locataire tarde), ou en vente (plus le prix est haut, plus l'acheteur tarde). Charges et prêt restent dus.",
+      "empty": "Tu ne possèdes aucun autre bien. Achète-en un en investissement, ou garde ton logement en déménageant.",
+      "select": "Sélectionne un de tes biens",
+      "status": { "vacant": "Vide", "letting": "Cherche un locataire", "rented": "Loué", "selling": "En vente" },
+      "fact": {
+        "status": "Statut", "value": "Valeur estimée", "loanLeft": "Prêt restant", "marketRent": "Loyer du marché",
+        "rent": "Loyer demandé", "income": "Loyer perçu", "ask": "Prix demandé", "net": "Net après vente"
+      },
+      "rentLabel": "Loyer demandé", "priceLabel": "Prix de vente", "market": "Marché",
+      "letChance": "Chance de trouver un locataire chaque mois",
+      "sellChance": "Chance de trouver un acheteur chaque mois",
+      "let": "Mettre en location", "updateRent": "Modifier le loyer",
+      "sell": "Mettre en vente", "updateAsk": "Modifier le prix",
+      "withdraw": "Retirer de la location / vente",
+      "moveIn": "Y emménager",
+      "moveInCost": "Déménagement : {{amount}}",
+      "rentedNote": "Un locataire occupe le bien : le loyer rentre chaque mois. Le mettre en vente le fait partir.",
+      "sellingNote": "En vente : le loyer ne rentre plus."
+    },
     "buy": {
       "down": "Apport",
       "term": "Durée du prêt",
@@ -354,7 +382,10 @@
         "cash": "Il te manque {{amount}} pour payer l'apport, les frais de notaire et le déménagement."
       }
     },
-    "lines": { "loan": "Prêt immobilier", "charges": "Charges du logement" }
+    "lines": {
+      "loan": "Prêt immobilier", "charges": "Charges du logement",
+      "rentals": "Loyers perçus", "propLoan": "Prêts de tes biens", "propCharges": "Charges de tes biens"
+    }
   },
   "cars": {
     "small": "Petite voiture"
@@ -456,6 +487,13 @@
     "homeBought": "Tu es propriétaire ! {{home}} acheté {{price, number}} €.",
     "homeSold": "Ton ancien bien ({{home}}) est vendu : {{amount, number}} € nets.",
     "loanRepaid": "Ton prêt immobilier est entièrement remboursé !",
+    "homeLetting": "Ton ancien bien ({{home}}) est mis en location.",
+    "homeVacant": "Ton ancien bien ({{home}}) reste vide ; les charges continuent.",
+    "movedIn": "Tu emménages dans ton bien ({{home}}).",
+    "tenantFound": "Un locataire emménage dans ton bien ({{home}}) : {{rent, number}} €/mois.",
+    "tenantLeft": "Le locataire de ton bien ({{home}}) est parti : tu cherches un nouveau locataire.",
+    "propertySold": "Ton bien ({{home}}) est vendu : {{amount, number}} € nets.",
+    "rentals": "Loyers perçus : {{amount, number}} €.",
     "noOffers": "Plus aucune offre d'emploi visible : il faut chercher pour en trouver de nouvelles.",
     "offerExpired": "L'offre de {{job}} a disparu, ta candidature tombe à l'eau.",
     "experienceReached": "Tu as {{months}} mois d'expérience en {{field}} : de nouveaux postes s'ouvrent.",

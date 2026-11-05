@@ -78,6 +78,30 @@ export interface Home {
   loan: Loan | null;
 }
 
+/** Ce que devient le bien possédé qu'on quitte : vendu sur le champ, mis en location, ou laissé vide. */
+export type LeaveAction = 'sell' | 'rent' | 'vacant';
+
+/**
+ * Statut d'un bien possédé où l'on n'habite pas : vide, en recherche de locataire,
+ * loué (le loyer rentre chaque mois) ou mis en vente.
+ */
+export type PropertyStatus = 'vacant' | 'letting' | 'rented' | 'selling';
+
+/** Bien possédé où l'on n'habite pas : charges et prêt restent dus, le loyer rentre s'il est loué. */
+export interface Property {
+  id: string;
+  typeId: string;
+  area: Area;
+  status: PropertyStatus;
+  value: number;
+  charges: number;
+  loan: Loan | null;
+  /** Loyer demandé (en recherche) ou perçu (loué). */
+  rent: number;
+  /** Prix de vente demandé (en vente). */
+  ask: number;
+}
+
 /** Annonce visible : à louer (`price` = loyer mensuel) ou à vendre (`price` = prix d'achat). */
 export interface HousingListing {
   id: string;
@@ -155,6 +179,10 @@ export interface GameState {
   listings: HousingListing[];
   /** Annonce à louer pour laquelle un dossier est déposé : réponse à la fin du mois. */
   housingTarget: string | null;
+  /** Sort du bien possédé actuel si le dossier de location déposé est accepté. */
+  housingLeave: LeaveAction;
+  /** Biens possédés où l'on n'habite pas. */
+  properties: Property[];
   /** Textes : cars.<id>. */
   car: string | null;
   schedule: Schedule;

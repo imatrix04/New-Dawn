@@ -11,6 +11,7 @@ import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
 import { SchedulePanel } from './SchedulePanel';
 import { StatusCard } from './StatusCard';
+import { DevCheats } from './DevCheats';
 import { TopBar } from './TopBar';
 import { WalletCard } from './WalletCard';
 
@@ -54,6 +55,7 @@ export function GameScreen({ game }: { game: GameState }) {
       </Board>
 
       <TopBar onPause={() => setPaused(true)} />
+      {import.meta.env.DEV && <DevCheats />}
 
       {game.pendingEvent && (
         <div className="overlay">

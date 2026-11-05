@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import {
-  buyHome, closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, migrateGame, openSavings,
-  resolveChoice, setGig, setHousingTarget, setJobTarget, setSchedule, withdrawSavings,
+  buyHome, closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, letProperty, migrateGame, moveToProperty,
+  openSavings, resolveChoice, sellProperty, setGig, setHousingTarget, setJobTarget, setSchedule, withdrawProperty, withdrawSavings,
 } from './game/engine';
-import type { GameState, Profile, SavingsProduct, ScheduleKey } from './game/types';
+import type { GameState, LeaveAction, Profile, SavingsProduct, ScheduleKey } from './game/types';
 
 const SAVE_KEY = 'newdawn-save-v5';
 
@@ -40,14 +40,20 @@ interface Store {
   choose: (index: number) => void;
   setJobTarget: (id: string | null) => void;
   setGig: (id: string | null) => void;
-  setHousingTarget: (id: string | null) => void;
-  buyHome: (id: string, downPct: number, years: number) => void;
+  setHousingTarget: (id: string | null, leave?: LeaveAction) => void;
+  buyHome: (id: string, downPct: number, years: number, live?: boolean, leave?: LeaveAction) => void;
+  letProperty: (id: string, factor: number) => void;
+  sellProperty: (id: string, factor: number) => void;
+  withdrawProperty: (id: string) => void;
+  moveToProperty: (id: string, leave?: LeaveAction) => void;
   enrollTraining: (id: string) => void;
   dropTraining: () => void;
   openSavings: (product: SavingsProduct) => void;
   deposit: (product: SavingsProduct, amount: number) => void;
   withdraw: (product: SavingsProduct, amount: number) => void;
   closePel: () => void;
+  /** Triche de développement : ajoute (ou retire) de l'argent. Sans effet hors mode dev. */
+  devGiveMoney: (amount: number) => void;
   save: () => void;
   /** Retour au menu principal (la partie est déjà sauvegardée à chaque action). */
   quit: () => void;
@@ -77,8 +83,16 @@ export const useStore = create<Store>((set, get) => {
     choose: (index) => { const g = get().game; if (g) update(resolveChoice(g, index)); },
     setJobTarget: (id) => { const g = get().game; if (g) update(setJobTarget(g, id)); },
     setGig: (id) => { const g = get().game; if (g) update(setGig(g, id)); },
-    setHousingTarget: (id) => { const g = get().game; if (g) update(setHousingTarget(g, id)); },
-    buyHome: (id, downPct, years) => { const g = get().game; if (g) update(buyHome(g, id, downPct, years)); },
+    setHousingTarget: (id, leave) => { const g = get().game; if (g) update(setHousingTarget(g, id, leave)); },
+    buyHome: (id, downPct, years, live, leave) => { const g = get().game; if (g) update(buyHome(g, id, downPct, years, live, leave)); },
+    letProperty: (id, factor) => { const g = get().game; if (g) update(letProperty(g, id, factor)); },
+    sellProperty: (id, factor) => { const g = get().game; if (g) update(sellProperty(g, id, factor)); },
+    withdrawProperty: (id) => { const g = get().game; if (g) update(withdrawProperty(g, id)); },
+    devGiveMoney: (amount) => {
+      const g = get().game;
+      if (import.meta.env.DEV && g) update({ ...g, money: g.money + amount });
+    },
+    moveToProperty: (id, leave) => { const g = get().game; if (g) update(moveToProperty(g, id, leave)); },
     enrollTraining: (id) => { const g = get().game; if (g) update(enrollTraining(g, id)); },
     dropTraining: () => { const g = get().game; if (g) update(dropTraining(g)); },
     openSavings: (product) => { const g = get().game; if (g) update(openSavings(g, product)); },

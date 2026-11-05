@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AREAS, HOUSING_KINDS, LISTINGS_MAX, OWNING } from '../data/content';
+import { AREAS, HOUSING_KINDS, LETTING, LISTINGS_MAX, MOVING_COST, OWNING, SELLING } from '../data/content';
 import {
-  buyQuote, comfortOf, housingEffects, housingTypeById, rentBreakdown, rentChance, rentQuote, saleNet, scheduleEffects,
+  buyQuote, comfortOf, housingEffects, housingTypeById, lettingChance, marketRent, moveCredit, propertyProceeds, rentBreakdown,
+  rentChance, rentQuote, saleNet, scheduleEffects, sellingChance,
 } from '../game/engine';
 import type { RentBonus } from '../game/engine';
-import type { GameState, HousingKind, HousingListing, StatKey } from '../game/types';
+import type { GameState, HousingKind, HousingListing, LeaveAction, Property, StatKey } from '../game/types';
 import { formatMoney, formatPercent, formatSigned } from '../i18n/format';
 import { useStore } from '../store';
 import { ChanceBar, DetailHead, Facts, Split, Tile } from './cardKit';
 import type { Rarity } from './cardKit';
 
-type Tab = 'rent' | 'buy';
-const TABS: Tab[] = ['rent', 'buy'];
+type Tab = 'rent' | 'buy' | 'own';
+const TABS: Tab[] = ['rent', 'buy', 'own'];
 type Filter = 'all' | HousingKind;
 const FILTERS: Filter[] = ['all', ...HOUSING_KINDS];
 
@@ -33,7 +34,7 @@ function Comfort({ fx }: { fx: Record<StatKey, number> }) {
 }
 
 /** Choix parmi quelques valeurs (apport, durée du prêt). */
-function Seg<T extends number>({ label, value, options, onChange }: {
+function Seg<T extends number | string>({ label, value, options, onChange }: {
   label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void;
 }) {
   return (
@@ -56,7 +57,7 @@ export function HousingCard({ game }: { game: GameState }) {
   const lng = i18n.language;
   const [tab, setTab] = useState<Tab>('rent');
   const [filter, setFilter] = useState<Filter>('all');
-  const [selection, setSelection] = useState<Record<Tab, string | null>>({ rent: null, buy: null });
+  const [selection, setSelection] = useState<Record<Tab, string | null>>({ rent: null, buy: null, own: null });
   const { home } = game;
   const type = housingTypeById(home.typeId);
 
@@ -94,13 +95,15 @@ export function HousingCard({ game }: { game: GameState }) {
       <nav className="career-nav" style={{ '--tabs': TABS.length } as CSSProperties} aria-label={t('windows.housing')}>
         {TABS.map((id) => (
           <button key={id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>
-            {t(`estate.tabs.${id}`)}
+            {t(`estate.tabs.${id}`)}{id === 'own' && game.properties.length > 0 ? ` (${game.properties.length})` : ''}
           </button>
         ))}
       </nav>
 
       <div className="career-pane" key={tab}>
-        <Market game={game} tab={tab} filter={filter} onFilter={setFilter} selected={selection[tab]} onSelect={select} />
+        {tab === 'own'
+          ? <Properties game={game} selected={selection.own} onSelect={select} />
+          : <Market game={game} tab={tab} filter={filter} onFilter={setFilter} selected={selection[tab]} onSelect={select} />}
       </div>
     </div>
   );
@@ -179,11 +182,22 @@ function Market({ game, tab, filter, onFilter, selected, onSelect }: MarketProps
   );
 }
 
-/** Si le joueur est propriétaire, rappelle que son bien sera vendu en déménageant. */
-function SaleNote({ game }: { game: GameState }) {
+/** Si le joueur est propriétaire de son logement : que devient-il quand il déménage ? (vente directe, location ou vide). */
+function LeavePick({ game, value, onChange }: { game: GameState; value: LeaveAction; onChange: (v: LeaveAction) => void }) {
   const { t, i18n } = useTranslation();
   if (game.home.tenure !== 'own') return null;
-  return <span className="job-meta">{t('estate.saleNote', { net: formatMoney(saleNet(game), i18n.language) })}</span>;
+  const note = value === 'sell' ? t('estate.leave.sellNote', { net: formatMoney(saleNet(game), i18n.language) }) : t(`estate.leave.${value}Note`);
+  return (
+    <div className="chance-box">
+      <Seg
+        label={t('estate.leave.label')}
+        value={value}
+        options={(['sell', 'rent', 'vacant'] as const).map((v) => ({ value: v, label: t(`estate.leave.${v}`) }))}
+        onChange={onChange}
+      />
+      <span className="job-meta">{note}</span>
+    </div>
+  );
 }
 
 /** Ce que l'annonce change au quotidien : confort et trajet. */
@@ -208,9 +222,11 @@ function RentDetail({ game, l }: { game: GameState; l: HousingListing }) {
   const { setHousingTarget } = useStore();
   const lng = i18n.language;
   const type = housingTypeById(l.typeId);
-  const q = rentQuote(game, l);
-  const b = rentBreakdown(game, l);
   const isTarget = l.id === game.housingTarget;
+  const [leave, setLeave] = useState<LeaveAction>(game.housingLeave);
+  const chosen = isTarget ? game.housingLeave : leave;
+  const q = rentQuote(game, l, chosen);
+  const b = rentBreakdown(game, l);
   const pct = (n: number) => `${Math.round(n * 100)} %`;
   const commute = AREAS[l.area].commute;
   const rows: [string, ReactNode][] = [
@@ -246,14 +262,14 @@ function RentDetail({ game, l }: { game: GameState; l: HousingListing }) {
         <ChanceBar chance={b.total} label={t('estate.chance')} big />
       </div>
 
-      <SaleNote game={game} />
+      {!isTarget && <LeavePick game={game} value={leave} onChange={setLeave} />}
       {isTarget ? (
         <>
           <span className="job-meta target-note">{t('estate.applyNote')}</span>
           <button className="big-btn secondary" onClick={() => setHousingTarget(null)}>{t('estate.cancel')}</button>
         </>
       ) : q.affordable ? (
-        <button className="big-btn" onClick={() => setHousingTarget(l.id)}>{t('estate.apply')}</button>
+        <button className="big-btn" onClick={() => setHousingTarget(l.id, chosen)}>{t('estate.apply')}</button>
       ) : (
         <span className="job-meta warn">{t('estate.tooPoor', { amount: formatMoney(q.upfront - game.money - q.credit, lng) })}</span>
       )}
@@ -267,8 +283,11 @@ function BuyDetail({ game, l }: { game: GameState; l: HousingListing }) {
   const lng = i18n.language;
   const [down, setDown] = useState(0.2);
   const [years, setYears] = useState(20);
+  const [live, setLive] = useState<'live' | 'invest'>('live');
+  const [leave, setLeave] = useState<LeaveAction>('sell');
   const type = housingTypeById(l.typeId);
-  const q = buyQuote(game, l, down, years);
+  const moves = live === 'live';
+  const q = buyQuote(game, l, down, years, moves, leave);
   const commute = AREAS[l.area].commute;
   const cash = down === 1;
 
@@ -306,6 +325,13 @@ function BuyDetail({ game, l }: { game: GameState; l: HousingListing }) {
 
       <div className="chance-box">
         <Seg
+          label={t('estate.live.label')}
+          value={live}
+          options={(['live', 'invest'] as const).map((v) => ({ value: v, label: t(`estate.live.${v}`) }))}
+          onChange={setLive}
+        />
+        {!moves && <span className="job-meta">{t('estate.investNote')}</span>}
+        <Seg
           label={t('estate.buy.down')}
           value={down}
           options={OWNING.downChoices.map((v) => ({ value: v, label: v === 1 ? t('estate.buy.cash') : `${Math.round(v * 100)} %` }))}
@@ -322,15 +348,149 @@ function BuyDetail({ game, l }: { game: GameState; l: HousingListing }) {
         <Facts rows={finance} />
       </div>
 
-      <SaleNote game={game} />
+      {moves && <LeavePick game={game} value={leave} onChange={setLeave} />}
       {q.reason && (
         <span className="job-meta warn">
           {t(`estate.buy.reason.${q.reason}`, { amount: formatMoney(q.upfront - game.money - q.credit, lng) })}
         </span>
       )}
-      <button className="big-btn" disabled={q.reason !== null} onClick={() => buyHome(l.id, down, years)}>
+      <button className="big-btn" disabled={q.reason !== null} onClick={() => buyHome(l.id, down, years, moves, leave)}>
         {t('estate.buy.confirm')}
       </button>
+    </div>
+  );
+}
+
+/** « Mes biens » : les biens possédés où l'on n'habite pas, avec leur statut et les actions possibles. */
+function Properties({ game, selected, onSelect }: { game: GameState; selected: string | null; onSelect: (id: string) => void }) {
+  const { t, i18n } = useTranslation();
+  const lng = i18n.language;
+  const picked = game.properties.find((p) => p.id === selected);
+  return (
+    <section>
+      <p className="muted small">{t('estate.own.hint')}</p>
+      {game.properties.length === 0 && <p className="muted small">{t('estate.own.empty')}</p>}
+      <Split
+        title={t('estate.own.select')}
+        detail={picked ? <PropertyDetail key={picked.id} game={game} p={picked} /> : null}
+        list={
+          <div className="card-grid">
+            {game.properties.map((p, i) => {
+              const type = housingTypeById(p.typeId);
+              return (
+                <Tile key={p.id} rarity={type.grade} index={i} selected={selected === p.id} onSelect={() => onSelect(p.id)}>
+                  <span className="ctile-company">📍 {t(`estate.area.${p.area}`)}</span>
+                  <span className="ctile-name">{t(`housing.${p.typeId}`)}</span>
+                  <span className="ctile-meta">{formatMoney(p.value, lng)} • {t('estate.m2', { n: type.surface })}</span>
+                  {p.status === 'selling' && <span className="ctile-meta">{formatMoney(p.ask, lng)}</span>}
+                  {(p.status === 'letting' || p.status === 'rented') && (
+                    <span className="ctile-meta">{t('career.perMonth', { amount: formatMoney(p.rent, lng) })}</span>
+                  )}
+                  <span className={`status-badge${p.status === 'rented' ? ' current' : ''}`}>{t(`estate.own.status.${p.status}`)}</span>
+                </Tile>
+              );
+            })}
+          </div>
+        }
+      />
+    </section>
+  );
+}
+
+function PropertyDetail({ game, p }: { game: GameState; p: Property }) {
+  const { t, i18n } = useTranslation();
+  const { letProperty, sellProperty, withdrawProperty, moveToProperty } = useStore();
+  const lng = i18n.language;
+  const type = housingTypeById(p.typeId);
+  const market = marketRent(p.typeId, p.area);
+  const [rentFactor, setRentFactor] = useState(p.status === 'letting' ? Math.round((p.rent / market) * 10) / 10 : 1);
+  const [priceFactor, setPriceFactor] = useState(1);
+  const [leave, setLeave] = useState<LeaveAction>('sell');
+  const factorLabel = (f: number) => (f === 1 ? t('estate.own.market') : `${f > 1 ? '+' : '−'}${Math.round(Math.abs(f - 1) * 100)} %`);
+
+  const wantedRent = Math.round((market * rentFactor) / 5) * 5;
+  const wantedAsk = Math.round((p.value * priceFactor) / 500) * 500;
+  const letChance = lettingChance({ ...p, rent: wantedRent });
+  const sellChance = sellingChance({ ...p, ask: wantedAsk });
+  const free = p.status !== 'rented';
+  const moveCost = MOVING_COST - moveCredit(game, leave);
+  const canMove = game.money - moveCost >= 0;
+  const commute = AREAS[p.area].commute;
+
+  const rows: [string, ReactNode][] = [
+    [t('estate.own.fact.status'), t(`estate.own.status.${p.status}`)],
+    [t('estate.own.fact.value'), formatMoney(p.value, lng)],
+    [t('estate.own.fact.loanLeft'), p.loan ? formatMoney(p.loan.balance, lng) : t('estate.noLoan')],
+    [t('estate.fact.charges'), t('career.perMonth', { amount: formatMoney(p.charges + (p.loan?.monthly ?? 0), lng) })],
+    [t('estate.own.fact.marketRent'), t('career.perMonth', { amount: formatMoney(market, lng) })],
+  ];
+  if (p.status === 'rented') rows.push([t('estate.own.fact.income'), t('career.perMonth', { amount: formatMoney(p.rent, lng) })]);
+  if (p.status === 'letting') rows.push([t('estate.own.fact.rent'), t('career.perMonth', { amount: formatMoney(p.rent, lng) })]);
+  if (p.status === 'selling') {
+    rows.push(
+      [t('estate.own.fact.ask'), formatMoney(p.ask, lng)],
+      [t('estate.own.fact.net'), formatMoney(propertyProceeds(p), lng)],
+    );
+  }
+
+  return (
+    <div className="detail" data-rarity={type.grade}>
+      <DetailHead rarity={type.grade as Rarity} title={t(`housing.${p.typeId}`)} source={`📍 ${t(`estate.area.${p.area}`)}`} />
+      <Facts rows={rows} />
+      <div className="reqs">
+        <Comfort fx={comfortOf(p.typeId, p.area)} />
+        {commute > 0 && <span className="req no">{t('estate.extraCommute', { hours: commute })}</span>}
+      </div>
+
+      {p.status === 'rented' && <span className="job-meta">{t('estate.own.rentedNote')}</span>}
+      {p.status === 'selling' && <span className="job-meta">{t('estate.own.sellingNote')}</span>}
+
+      {free && (
+        <div className="chance-box">
+          <Seg
+            label={t('estate.own.rentLabel')}
+            value={rentFactor}
+            options={LETTING.rentFactors.map((f) => ({ value: f, label: factorLabel(f) }))}
+            onChange={setRentFactor}
+          />
+          <Facts rows={[[t('estate.own.fact.rent'), t('career.perMonth', { amount: formatMoney(wantedRent, lng) })]]} />
+          <span className="job-meta">{t('estate.own.letChance')}</span>
+          <ChanceBar chance={letChance} label={t('estate.own.letChance')} big />
+          <button className="big-btn" onClick={() => letProperty(p.id, rentFactor)}>
+            {t(p.status === 'letting' ? 'estate.own.updateRent' : 'estate.own.let')}
+          </button>
+        </div>
+      )}
+
+      <div className="chance-box">
+        <Seg
+          label={t('estate.own.priceLabel')}
+          value={priceFactor}
+          options={SELLING.priceFactors.map((f) => ({ value: f, label: factorLabel(f) }))}
+          onChange={setPriceFactor}
+        />
+        <Facts rows={[
+          [t('estate.own.fact.ask'), formatMoney(wantedAsk, lng)],
+          [t('estate.own.fact.net'), formatMoney(propertyProceeds(p, wantedAsk), lng)],
+        ]} />
+        <span className="job-meta">{t('estate.own.sellChance')}</span>
+        <ChanceBar chance={sellChance} label={t('estate.own.sellChance')} big />
+        <button className="big-btn" onClick={() => sellProperty(p.id, priceFactor)}>
+          {t(p.status === 'selling' ? 'estate.own.updateAsk' : 'estate.own.sell')}
+        </button>
+      </div>
+
+      {(p.status === 'letting' || p.status === 'selling') && (
+        <button className="big-btn secondary" onClick={() => withdrawProperty(p.id)}>{t('estate.own.withdraw')}</button>
+      )}
+
+      {free && (
+        <div className="chance-box">
+          <LeavePick game={game} value={leave} onChange={setLeave} />
+          <span className="job-meta">{t('estate.own.moveInCost', { amount: formatMoney(Math.max(0, moveCost), lng) })}</span>
+          <button className="big-btn" disabled={!canMove} onClick={() => moveToProperty(p.id, leave)}>{t('estate.own.moveIn')}</button>
+        </div>
+      )}
     </div>
   );
 }

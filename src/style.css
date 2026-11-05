@@ -728,3 +728,22 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 .seg-wrap { display: flex; flex-direction: column; gap: 5px; }
 .seg-label { font-size: .66rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
 .seg { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* Outils de test (mode dev uniquement) */
+.dev-cheats {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px dashed #e5b14f;
+  border-radius: 8px;
+  background: rgba(20, 20, 28, 0.92);
+  font-size: 12px;
+}
+.dev-cheats strong { color: #e5b14f; letter-spacing: 0.08em; }
+.dev-cheats input { width: 90px; }
+.dev-cheats .dev-toggle { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; }

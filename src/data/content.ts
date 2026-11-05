@@ -175,8 +175,8 @@ export const RENT_CHANCE_MAX = 0.95;
 export const RENT = {
   /** Caution, en mois de loyer, selon la rareté du bien. */
   depositMonths: { 1: 1, 2: 1, 3: 2, 4: 2 } as Record<number, number>,
-  /** Frais d'agence, en mois de loyer. */
-  feeMonths: 0.5,
+  /** Frais d'agence, en € par m² (visite, dossier, bail, état des lieux : plafonnés au m² par la loi). */
+  feePerM2: 15,
   /** Revenus / loyer : paliers qui rassurent (ou inquiètent) le propriétaire, avec le bonus de chance associé. */
   incomeTiers: [
     { ratio: 3, bonus: 0.3 },
@@ -209,6 +209,25 @@ export const OWNING = {
   terms: [15, 20, 25],
   /** Taux annuel du prêt selon la durée en années. */
   rates: { 15: 0.032, 20: 0.034, 25: 0.036 } as Record<number, number>,
+  /** Part des loyers perçus que la banque compte dans les revenus. */
+  rentalWeight: 0.7,
+};
+
+/** Mise en location d'un bien possédé : chance mensuelle de trouver un locataire, selon la rareté. */
+export const LETTING = {
+  chance: { 1: 0.7, 2: 0.55, 3: 0.4, 4: 0.3 } as Record<number, number>,
+  /** Loyers demandés, en multiple du loyer du marché : chaque 10 % de moins ajoute 10 points de chance. */
+  rentFactors: [0.8, 0.9, 1, 1.1, 1.2],
+  /** Chance mensuelle qu'un locataire en place parte. */
+  leaveChance: 0.04,
+};
+
+/** Mise en vente d'un bien possédé : chance mensuelle de trouver un acheteur, selon la rareté. */
+export const SELLING = {
+  chance: { 1: 0.5, 2: 0.4, 3: 0.3, 4: 0.2 } as Record<number, number>,
+  /** Prix demandés, en multiple de la valeur : chaque 10 % de moins ajoute 20 points de chance. */
+  priceFactors: [0.9, 1, 1.1],
+  priceSensitivity: 2,
 };
 
 export const CARS: Record<string, { upkeep: number }> = {

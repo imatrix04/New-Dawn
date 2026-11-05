@@ -302,7 +302,7 @@
   },
   "estate": {
     "current": "Current home",
-    "tabs": { "rent": "For rent", "buy": "For sale" },
+    "tabs": { "rent": "For rent", "buy": "For sale", "own": "My properties" },
     "kind": { "all": "All", "studio": "Studios", "apartment": "Apartments", "house": "Houses" },
     "area": { "center": "City center", "suburb": "Suburbs", "country": "Countryside" },
     "tenant": "Tenant • {{amount}}/mo",
@@ -312,7 +312,7 @@
     "noLoan": "No loan",
     "extraCommute": "🚌 +{{hours}} h/wk commute",
     "rentHint": "Send an application: the answer comes at the end of the month. The landlord looks at your income, your job and your savings. Rare homes attract more applicants. Set your housing search hours in the schedule to see new listings.",
-    "buyHint": "Pick your down payment and loan term: the bank requires a job and a monthly payment of at most 35% of your salary. When you move, your current home is sold automatically. Set your housing search hours in the schedule to see new listings.",
+    "buyHint": "Pick your down payment and loan term: the bank requires a job and a monthly payment of at most 35% of your salary. You can live in it or buy it to rent it out. Set your housing search hours in the schedule to see new listings.",
     "listingsCount": "Visible listings: {{count}} / {{max}}",
     "searchRate_one": "🏠 {{count}} new listing per month",
     "searchRate_other": "🏠 {{count}} new listings per month",
@@ -340,7 +340,35 @@
     "applied": "Application sent",
     "applyNote": "Application sent: answer at the end of the month.",
     "tooPoor": "You can't afford the move-in costs ({{amount}} short).",
-    "saleNote": "Your current home will be sold: {{net}} (value minus 5% fees and the remaining loan).",
+    "live": { "label": "Use", "live": "I'll live there", "invest": "Rental investment" },
+    "investNote": "The property is put up for rent at the market rent right after purchase, with no move.",
+    "leave": {
+      "label": "Your current home",
+      "sell": "Sell it", "rent": "Rent it out", "vacant": "Keep it empty",
+      "sellNote": "Direct sale: {{net}} (value minus 5% fees and the remaining loan).",
+      "rentNote": "It goes up for rent at the market rent; charges and loan stay on you.",
+      "vacantNote": "It stays empty; charges and loan stay on you."
+    },
+    "own": {
+      "hint": "Properties you don't live in. Rent them out for income (the higher the rent, the longer the wait for a tenant), or sell them (the higher the price, the longer the wait for a buyer). Charges and loan are still due.",
+      "empty": "You own no other property. Buy one as an investment, or keep your home when you move.",
+      "select": "Select one of your properties",
+      "status": { "vacant": "Empty", "letting": "Looking for a tenant", "rented": "Rented", "selling": "For sale" },
+      "fact": {
+        "status": "Status", "value": "Estimated value", "loanLeft": "Loan left", "marketRent": "Market rent",
+        "rent": "Asking rent", "income": "Rent received", "ask": "Asking price", "net": "Net after sale"
+      },
+      "rentLabel": "Asking rent", "priceLabel": "Sale price", "market": "Market",
+      "letChance": "Chance of finding a tenant each month",
+      "sellChance": "Chance of finding a buyer each month",
+      "let": "Put up for rent", "updateRent": "Change the rent",
+      "sell": "Put up for sale", "updateAsk": "Change the price",
+      "withdraw": "Withdraw from rent / sale",
+      "moveIn": "Move in",
+      "moveInCost": "Moving: {{amount}}",
+      "rentedNote": "A tenant lives there: rent comes in every month. Selling makes them leave.",
+      "sellingNote": "For sale: no rent comes in."
+    },
     "buy": {
       "down": "Down payment",
       "term": "Loan term",
@@ -354,7 +382,10 @@
         "cash": "You are {{amount}} short for the down payment, notary fees and moving."
       }
     },
-    "lines": { "loan": "Mortgage", "charges": "Home charges" }
+    "lines": {
+      "loan": "Mortgage", "charges": "Home charges",
+      "rentals": "Rent received", "propLoan": "Your properties' loans", "propCharges": "Your properties' charges"
+    }
   },
   "cars": {
     "small": "Small car"
@@ -443,6 +474,13 @@
     "homeBought": "You are a homeowner! {{home}} bought for €{{price, number}}.",
     "homeSold": "Your previous home ({{home}}) is sold: €{{amount, number}} net.",
     "loanRepaid": "Your mortgage is fully repaid!",
+    "homeLetting": "Your former home ({{home}}) is up for rent.",
+    "homeVacant": "Your former home ({{home}}) stays empty; charges keep coming.",
+    "movedIn": "You move into your property ({{home}}).",
+    "tenantFound": "A tenant moves into your property ({{home}}): {{rent, number}} €/month.",
+    "tenantLeft": "The tenant of your property ({{home}}) left: you are looking for a new one.",
+    "propertySold": "Your property ({{home}}) is sold: {{amount, number}} € net.",
+    "rentals": "Rent received: {{amount, number}} €.",
     "newOffers_one": "{{count}} new job offer.",
     "newOffers_other": "{{count}} new job offers.",
     "noOffers": "No job offers left: you need to search to find new ones.",
