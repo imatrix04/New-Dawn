@@ -7,11 +7,11 @@ import { companyById, jobById, salaryAt } from './lookup';
 import { addLog, clamp } from './shared';
 
 /** Promotion possible au poste actuel : assez d'ancienneté, ni formation en cours ni proposition en attente. */
-export function promotionAvailable(state: GameState): { to: Job; training: string } | null {
+export function promotionAvailable(state: GameState): { to: Job; training?: string } | null {
   const job = jobById(state.job);
   const rule = job && PROMOTIONS[job.id];
   const to = rule && jobById(rule.to);
-  if (!job || !rule || !to || state.training || state.promotion || state.jobDecision) return null;
+  if (!job || !rule || !to || (rule.training && state.training) || state.promotion || state.jobDecision) return null;
   return (state.history[job.id] ?? 0) >= rule.months ? { to, training: rule.training } : null;
 }
 
@@ -41,11 +41,17 @@ function proposePromotion(s: GameState, to: Job) {
   addLog(s, 'log.promotionOffer', { jobId: to.id, gender: s.gender }, 'good');
 }
 
-/** Fin de mois : l'employeur propose la promotion dès que le seuil est atteint, puis rarement après un refus. */
+/**
+ * Fin de mois : l'employeur fait sa première proposition dès le seuil atteint (ou au hasard dans la fenêtre
+ * `months` à `latest` si le poste en a une), puis seulement rarement après un refus.
+ */
 export function rollPromotion(s: GameState) {
   const available = promotionAvailable(s);
-  if (!available) return;
-  if (s.promotionSeen && Math.random() >= PROMOTION_CHANCE) return;
+  const rule = PROMOTIONS[s.job ?? ''];
+  if (!available || !rule) return;
+  const monthsLeft = (rule.latest ?? rule.months) - (s.history[s.job!] ?? 0);
+  const chance = s.promotionSeen ? PROMOTION_CHANCE : 1 / Math.max(1, monthsLeft + 1);
+  if (Math.random() >= chance) return;
   proposePromotion(s, available.to);
 }
 
@@ -75,12 +81,12 @@ export function resolvePromotion(state: GameState, accept: boolean): GameState {
   if (!state.promotion || !rule || !to || state.promotion !== to.id) {
     return state.promotion ? { ...state, promotion: null } : state;
   }
-  if (accept && state.training) return state;
+  if (accept && rule.training && state.training && !jobEligibility(state, to).qualified) return state;
   const s = structuredClone(state);
   s.promotion = null;
   if (!accept) {
     addLog(s, 'log.promotionRefused', { jobId: to.id, gender: s.gender });
-  } else if (jobEligibility(s, to).qualified) {
+  } else if (!rule.training || jobEligibility(s, to).qualified) {
     promote(s, to);
   } else {
     s.training = { id: rule.training, monthsDone: 0, blames: 0, tuition: 0, sponsored: true };

@@ -68,9 +68,10 @@ export function migrateGame(raw: GameState): GameState {
   g.applications ??= legacyTarget.jobTarget === 'waiter' ? [{ jobId: 'fastFood', monthsLeft: 1 }] : legacyTarget.jobTarget ? [{ jobId: legacyTarget.jobTarget, monthsLeft: 1 }] : [];
   delete legacyTarget.jobTarget;
   g.jobDecision ??= null;
-  // La formation de manager en restauration rapide s'appelait « fl1 » avant de porter le nom du vrai diplôme.
-  g.diplomas = g.diplomas.map((d) => (d === 'fl1' ? 'tpMum' : d));
-  if (g.training?.id === 'fl1') g.training.id = 'tpMum';
+  // Les anciennes formations de manager en restauration (fl1, titre pro, BP) sont remplacées par le seul BTS MHR.
+  const renamedTrainings = ['fl1', 'tpMum', 'bpService'];
+  g.diplomas = [...new Set(g.diplomas.map((d) => (renamedTrainings.includes(d) ? 'btsMhr' : d)))];
+  if (g.training && renamedTrainings.includes(g.training.id)) g.training.id = 'btsMhr';
   g.promotion ??= null;
   g.promotionSeen ??= false;
   g.promotionRequested ??= null;

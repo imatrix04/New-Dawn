@@ -15,8 +15,8 @@ export function PromotionPanel({ game }: { game: GameState }) {
 
   const name = (id: string) => t(`jobs.${id}`, { context: game.gender });
   const company = companyById(game.jobCompany);
-  const trained = jobEligibility(game, to).qualified;
-  const busy = game.training !== null;
+  const needsTraining = !!rule.training && !jobEligibility(game, to).qualified;
+  const busy = needsTraining && game.training !== null;
 
   return (
     <div className="panel">
@@ -27,9 +27,11 @@ export function PromotionPanel({ game }: { game: GameState }) {
         {' • '}{t('schedule.perWeek', { hours: to.hours })}
       </p>
       <p className="muted small">
-        {trained
-          ? t('promotion.trained')
-          : t('promotion.training', { training: t(`trainings.${rule.training}.name`), count: TRAININGS[rule.training].months })}
+        {!rule.training
+          ? t('promotion.noTraining')
+          : needsTraining
+            ? t('promotion.training', { training: t(`trainings.${rule.training}.name`), count: TRAININGS[rule.training].months })
+            : t('promotion.trained')}
       </p>
       {busy && <p className="muted small">{t('promotion.busy')}</p>}
       <div className="choices">

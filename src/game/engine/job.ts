@@ -33,6 +33,9 @@ export function startJob(s: GameState, job: Job, salary: number, companyId: stri
   s.jobBlames = 0;
   s.jobStart = s.month;
   s.schedule.work = job.hours;
+  // Les promotions se comptent poste par poste : la première proposition du nouveau poste redevient certaine.
+  s.promotionSeen = false;
+  s.promotionRequested = null;
 }
 
 function leaveJob(s: GameState) {

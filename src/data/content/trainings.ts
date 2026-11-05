@@ -35,15 +35,14 @@ export interface TrainingConfig {
 }
 
 export const TRAININGS: Record<string, TrainingConfig> = {
-  hotelSchool: { months: 24, tuition: 758, minStudyHours: 20, monthlySkills: { digital: 5, intelligence: 5, charisma: 20 }, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
+  hotelSchool: { months: 24, tuition: 758, minStudyHours: 20, monthlySkills: { intelligence: 5, charisma: 10 }, weight: 1, drawback: { health: -1.5, happiness: -2.5 } },
   caces: { months: 1, tuition: 350, minStudyHours: 5, quick: true, skills: { logistics: 60 }, hireBonus: { field: 'transport', bonus: 0.15 }, weight: 2, drawback: { health: -1 } },
   permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 30 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
   permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 20, strength: 10 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
   permisC: { months: 3, tuition: 1000, minStudyHours: 6, quick: true, skills: { logistics: 50 }, hireBonus: { field: 'transport', bonus: 0.15 }, requires: ['permisB'], weight: 1, drawback: { health: -1, happiness: -2 } },
   barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 40 }, hireBonus: { field: 'restaurant', bonus: 0.15 }, weight: 4, drawback: { happiness: -1 } },
-  // Formations de manager, une par niveau de restauration (diplômes réels, en alternance de 24 mois ; coûts mensuels estimés).
-  tpMum: { months: 24, tuition: 300, minStudyHours: 8, skills: { charisma: 40, intelligence: 30 }, weight: 3, drawback: { health: -0.5, happiness: -1.5 } },
-  bpService: { months: 24, tuition: 350, minStudyHours: 8, skills: { charisma: 50, intelligence: 30 }, weight: 3, drawback: { health: -0.5, happiness: -1.5 } },
-  btsMhr: { months: 24, tuition: 450, minStudyHours: 12, skills: { charisma: 60, intelligence: 60 }, weight: 2, drawback: { health: -1, happiness: -2 } },
+
+  btsMco: { months: 24, tuition: 350, minStudyHours: 20, skills: { charisma: 25, intelligence: 20 }, weight: 3, drawback: { health: -0.5, happiness: -1.5 } },
+  btsMhr: { months: 24, tuition: 450, minStudyHours: 20, skills: { charisma: 30, intelligence: 30 }, weight: 2, drawback: { health: -1, happiness: -2 } },
   officeSuite: { months: 2, tuition: 400, minStudyHours: 6, quick: true, skills: { digital: 80 }, hireBonus: { field: 'office', bonus: 0.15 }, weight: 3, drawback: { happiness: -1.5 } },
 };

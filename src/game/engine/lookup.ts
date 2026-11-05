@@ -18,6 +18,9 @@ export const companyById = (id: string | null): Company | null => COMPANIES.find
 export const salaryAt = (job: Job, company: Company | null): number =>
   Math.max(Math.round(SMIC_NET * Math.min(1, job.hours / 35)), Math.round(job.salary * (1 + (company?.pay ?? 0))));
 
+/** Trajet hebdomadaire d'un poste chez une entreprise : celui du poste plus l'ajustement de l'entreprise, jamais sous 0. */
+export const jobCommute = (job: Job, company: Company | null): number => Math.max(0, job.commute + (company?.commute ?? 0));
+
 /** Pénibilité d'un poste chez une entreprise : celle du poste plus l'ajustement de l'entreprise, sans jamais devenir un bonus. */
 export function jobDrawback(job: Job, company: Company | null): Drawback {
   const out: Drawback = {};

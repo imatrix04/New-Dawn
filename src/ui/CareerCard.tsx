@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, TRAININGS } from '../data/content';
 import type { Company, Gig, GigRequirement, TrainingConfig } from '../data/content';
 import {
-  blameChance, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobDrawback, jobEligibility,
+  blameChance, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobCommute, jobDrawback, jobEligibility,
   isApplied, probationLeft, promotionAvailable, promotionRequestChance, promotionRequestWait, reviewMonths, scheduleEffects, trainingPrice,
 } from '../game/engine';
 import type { Drawback, GameState, Job, Qualification, SkillId } from '../game/types';
@@ -230,7 +230,7 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
         <Facts rows={[
           [t('career.fact.salary'), t('career.perMonth', { amount: formatMoney(salary, lng) })],
           [t('career.fact.hours'), t('schedule.perWeek', { hours: job.hours })],
-          [t('career.fact.commute'), t('schedule.perWeek', { hours: job.commute })],
+          [t('career.fact.commute'), t('schedule.perWeek', { hours: jobCommute(job, company) })],
           [t('career.fact.expires'), t('career.expiresIn', { count: monthsLeft })],
         ]} />
         <div className="reqs">

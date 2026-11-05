@@ -85,17 +85,13 @@
       "name": "Advanced office skills",
       "desc": "Spreadsheets, word processing and organisation: opens administrative assistant jobs."
     },
-    "tpMum": {
-      "name": "Retail unit manager (professional title)",
-      "desc": "Two-year work-study professional title (bac+2): running a point of sale and its team. Opens fast-food manager jobs."
-    },
-    "bpService": {
-      "name": "Professional certificate in restaurant service and sales",
-      "desc": "Two-year work-study professional certificate (bac level): leading the service and the customers. Opens casual-restaurant manager jobs."
+    "btsMco": {
+      "name": "Commercial operations management BTS (MCO)",
+      "desc": "Two-year bac+2, in school or work-study: leading a team and running a retail unit. Directly opens the store manager job."
     },
     "btsMhr": {
       "name": "Hospitality management BTS (restaurant option)",
-      "desc": "Two-year bac+2 with internship: running a restaurant unit. Opens fine-dining manager jobs."
+      "desc": "Two-year bac+2 with internship: running a restaurant unit. Opens all restaurant manager jobs (fast-food, casual and fine-dining)."
     }
   },
   "promotion": {
@@ -103,6 +99,7 @@
     "text": "After all this time, {{company}} offers you the job of {{job}}.",
     "yourEmployer": "your employer",
     "trained": "You already have the training: you take the job right away.",
+    "noTraining": "No training is needed: you take the job right away.",
     "training": "You first have to complete the \"{{training}}\" training ({{count}} months). Your employer pays for it and it happens during your work hours; at the end, you become a manager.",
     "busy": "You are already in training: finish it or drop it before accepting.",
     "accept": "Accept the promotion",
@@ -466,6 +463,8 @@
     "fineDiningManager": "Fine-dining manager",
     "fineDining": "Fine-dining server",
     "cashier": "Cashier",
+    "retailManager": "Store manager",
+    "storeDirector": "Store director",
     "driver": "Delivery driver",
     "forklift": "Forklift operator",
     "vtc": "Ride-hailing driver",

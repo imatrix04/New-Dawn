@@ -85,17 +85,13 @@
       "name": "Bureautique avancée",
       "desc": "Tableurs, traitement de texte et organisation : ouvre les postes d'assistant administratif."
     },
-    "tpMum": {
-      "name": "Manager d'unité marchande (titre pro)",
-      "desc": "Titre professionnel bac+2 en alternance, 24 mois : gérer un point de vente et son équipe. Ouvre les postes de manager en restauration rapide."
-    },
-    "bpService": {
-      "name": "BP Arts du service et commercialisation en restauration",
-      "desc": "Brevet professionnel de niveau bac en alternance, 24 mois : encadrer le service et la clientèle. Ouvre les postes de manager en restauration basique."
+    "btsMco": {
+      "name": "BTS Management commercial opérationnel (MCO)",
+      "desc": "Bac+2 en 2 ans, en lycée ou en alternance : animer une équipe et gérer une unité commerciale. Ouvre directement le poste de manager de magasin."
     },
     "btsMhr": {
       "name": "BTS Management en hôtellerie-restauration (option A)",
-      "desc": "Bac+2 en 2 ans, avec stage : diriger une unité de restauration. Ouvre les postes de manager en restauration haut de gamme."
+      "desc": "Bac+2 en 2 ans, avec stage : diriger une unité de restauration. Ouvre tous les postes de manager en restauration (rapide, basique et haut de gamme)."
     }
   },
   "promotion": {
@@ -103,6 +99,7 @@
     "text": "Après tout ce temps, {{company}} te propose de devenir {{job}}.",
     "yourEmployer": "ton employeur",
     "trained": "Tu as déjà la formation : tu prends le poste tout de suite.",
+    "noTraining": "Aucune formation n'est nécessaire : tu prends le poste tout de suite.",
     "training": "Tu dois d'abord suivre la formation « {{training}} » ({{count}} mois). Ton employeur la paie et elle se fait pendant tes heures de travail ; à la fin, tu deviens manager.",
     "busy": "Tu suis déjà une formation : termine-la ou abandonne-la avant d'accepter.",
     "accept": "Accepter la promotion",
@@ -470,6 +467,9 @@
     "fineDining_female": "Serveuse en restauration haut de gamme",
     "cashier": "Caissier",
     "cashier_female": "Caissière",
+    "retailManager": "Manager de magasin",
+    "storeDirector": "Directeur de magasin",
+    "storeDirector_female": "Directrice de magasin",
     "driver": "Livreur",
     "driver_female": "Livreuse",
     "forklift": "Cariste",

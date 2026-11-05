@@ -3,7 +3,7 @@ import { ESSENTIALS_PER_WEEK, HOURS_PER_WEEK, SCHEDULE } from '../../data/conten
 import type { GameState, Schedule, ScheduleKey } from '../types';
 import { housingCommute } from './housing';
 import { workedHours } from './job';
-import { gigById, jobById } from './lookup';
+import { companyById, gigById, jobById, jobCommute } from './lookup';
 import { clamp } from './shared';
 
 export const weeklyHours = (schedule: Schedule, key: ScheduleKey) =>
@@ -29,7 +29,7 @@ export function weekBreakdown(state: GameState): WeekBreakdown {
   const planned = {
     sleep: weeklyHours(state.schedule, 'sleep'),
     work: workedHours(state) + (gig?.hours ?? 0),
-    commute: (job?.commute ?? 0) + (gig?.commute ?? 0) + housingCommute(state),
+    commute: (job ? jobCommute(job, companyById(state.jobCompany)) : 0) + (gig?.commute ?? 0) + housingCommute(state),
     essentials: ESSENTIALS_PER_WEEK,
     leisure: weeklyHours(state.schedule, 'leisure'),
     study: weeklyHours(state.schedule, 'study'),

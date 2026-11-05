@@ -1,5 +1,5 @@
 // Moteur du jeu : logique pure, sans React ni textes. Chaque module couvre un sujet.
-export { companyById, currentSalary, gigById, gigPay, gigUnlocked, jobById, jobDrawback, salaryAt, trainingPrice } from './lookup';
+export { companyById, currentSalary, gigById, gigPay, gigUnlocked, jobById, jobCommute, jobDrawback, salaryAt, trainingPrice } from './lookup';
 export { createGame, migrateGame } from './setup';
 export { experienceMonths, hireBreakdown, hireChance, isApplied, jobEligibility, recentFiring, reviewMonths, toggleApplication } from './career';
 export type { Eligibility, HireBonus, HireBreakdown } from './career';
