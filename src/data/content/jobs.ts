@@ -88,7 +88,7 @@ export const JOBS: Job[] = [
     anyOf: [{ type: 'experience', field: 'retail', months: 24 }, { type: 'diploma', id: 'btsMco' }],
   },
   {
-    id: 'storeDirector', grade: 3, drawback: { health: -1, happiness: -2.5 }, field: 'retail', salary: 2500, hours: 42, commute: 4,
+    id: 'storeDirector', grade: 3, drawback: { health: -1, happiness: -2.5 }, field: 'retail', salary: 2800, hours: 42, commute: 4,
     anyOf: [{ type: 'experience', field: 'retail', months: 72 }],
   },
   { id: 'driver', grade: 1, drawback: { health: -1.5, happiness: -0.5 }, field: 'transport', salary: 1650, minSkills: { logistics: 120 }, hours: 40, commute: 2 },
