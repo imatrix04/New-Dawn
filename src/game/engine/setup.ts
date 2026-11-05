@@ -1,12 +1,13 @@
 // Création d'une partie et migration des anciennes sauvegardes.
-import { AREAS, DEFAULT_SCHEDULE, JOBS, SKILL_MAX, START, START_LISTINGS, START_SKILLS, START_STATS, TRAININGS } from '../../data/content';
-import type { Area, GameState, Profile, SkillId } from '../types';
+import { AREAS, DEFAULT_SCHEDULE, JOBS, SKILL_MAX, START, START_LISTINGS, START_SKILLS, START_STATS, TRAININGS, USED_MARKET } from '../../data/content';
+import type { Area, GameState, Profile, SkillId, Vehicle } from '../types';
 import { drawCatalog } from './catalog';
 import { drawListings, housingTypeById, starterHome } from './housing';
 import { jobById } from './lookup';
 import { makeOffer, starterOffers } from './offers';
 import { emptySavings, migrateSavings } from './savings';
-import { addLog, NO_PROBATION } from './shared';
+import { addLog, newId, NO_PROBATION } from './shared';
+import { drawUsedListings, newDriver, starterVehicle } from './vehicle';
 
 export function createGame(profile: Profile): GameState {
   const start = START[profile.path];
@@ -16,7 +17,8 @@ export function createGame(profile: Profile): GameState {
     lastName: profile.lastName,
     gender: profile.gender,
     experience: {},
-    diplomas: [],
+    // Le véhicule de départ suppose d'avoir le permis.
+    diplomas: start.car ? ['permisB'] : [],
     training: null,
     applications: [],
     jobDecision: null,
@@ -42,7 +44,9 @@ export function createGame(profile: Profile): GameState {
     housingTarget: null,
     housingLeave: 'sell',
     properties: [],
-    car: start.car,
+    vehicles: start.car ? [starterVehicle(start.car, 0)] : [],
+    driver: newDriver(),
+    vehicleListings: drawUsedListings(0, USED_MARKET.start),
     schedule: { ...DEFAULT_SCHEDULE, work: jobById(profile.job)?.hours ?? 0 },
     savings: emptySavings(),
     lastEvent: null,
@@ -100,6 +104,18 @@ export function migrateGame(raw: GameState): GameState {
   g.housingTarget ??= null;
   g.housingLeave ??= 'sell';
   g.properties ??= [];
+  // Avant la carte Marché, la voiture n'était qu'un identifiant (petite voiture) à coût fixe : elle devient une citadine d'occasion.
+  const legacyCar = g as unknown as { car?: string | null };
+  // Puis le véhicule unique est devenu un parc limité par les places de parking du logement.
+  const legacyVehicle = g as unknown as { vehicle?: Vehicle | null };
+  g.vehicles ??= legacyVehicle.vehicle ? [legacyVehicle.vehicle] : legacyCar.car ? [starterVehicle('city', g.month)] : [];
+  delete legacyCar.car;
+  delete legacyVehicle.vehicle;
+  for (const v of g.vehicles) v.id ??= newId();
+  if (g.vehicles.length && !g.diplomas.includes('permisB')) g.diplomas.push('permisB');
+  g.driver ??= newDriver();
+  g.driver.vehicleId ??= null;
+  g.vehicleListings ??= drawUsedListings(g.month, USED_MARKET.start);
   // Avant le trajet aléatoire, chaque quartier avait un trajet fixe : on prend le milieu de la fourchette actuelle.
   const midCommute = (a: Area) => Math.round((AREAS[a].commute[0] + AREAS[a].commute[1]) / 2);
   g.home.commute ??= midCommute(g.home.area);
@@ -129,6 +145,7 @@ export function migrateGame(raw: GameState): GameState {
   if (g.job === 'waiter') g.job = 'fastFood'; // l'ancien « serveur » devient serveur en restauration rapide
   g.applications = g.applications.filter((a) => g.offers.some((o) => o.jobId === a.jobId));
   g.schedule.work ??= jobById(g.job)?.hours ?? 0;
+  g.skills.mechanics ??= START_SKILLS.mechanics;
   g.savings = migrateSavings(g.savings);
   return g;
 }

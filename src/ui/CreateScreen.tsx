@@ -157,7 +157,7 @@ export function CreateScreen() {
             <p>{t(`paths.${path}.name`)}</p>
             <p>{t('create.money')} : {formatNumber(START[path].money, i18n.language)} €</p>
             <p>{t('create.housing')} : {t(`housing.${START[path].housing}`)}</p>
-            <p>{t('create.car')} : {START[path].car ? t(`cars.${START[path].car}`) : t('create.none')}</p>
+            <p>{t('create.car')} : {START[path].car ? t(`vehicles.${START[path].car}`) : t('create.none')}</p>
             <p>{t('create.job')} : {job ? jobName(job) : t('create.none')}</p>
           </div>
         </>

@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { HOUSING_KINDS, LETTING, LISTINGS_MAX, MOVING_COST, OWNING, SELLING } from '../data/content';
 import {
   buyQuote, comfortOf, housingEffects, housingTypeById, lettingChance, marketRent, moveCredit, propertyProceeds, rentBreakdown,
-  rentChance, rentQuote, saleNet, scheduleEffects, sellingChance,
+  parkingOf, parkingOverflow, rentChance, rentQuote, saleNet, scheduleEffects, sellingChance,
 } from '../game/engine';
 import type { RentBonus } from '../game/engine';
 import type { GameState, HousingKind, HousingListing, LeaveAction, Property, StatKey } from '../game/types';
 import { formatMoney, formatPercent, formatSigned } from '../i18n/format';
 import { useStore } from '../store';
-import { ChanceBar, DetailHead, Facts, Split, Tile } from './cardKit';
+import { ChanceBar, DetailHead, Facts, Seg, Split, Tile } from './cardKit';
 import type { Rarity } from './cardKit';
 
 type Tab = 'rent' | 'buy' | 'own';
@@ -30,24 +30,6 @@ function Comfort({ fx }: { fx: Record<StatKey, number> }) {
         </span>
       ))}
     </>
-  );
-}
-
-/** Choix parmi quelques valeurs (apport, durée du prêt). */
-function Seg<T extends number | string>({ label, value, options, onChange }: {
-  label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void;
-}) {
-  return (
-    <div className="pick-wrap">
-      <span className="pick-label">{label}</span>
-      <div className="pick" role="group" aria-label={label}>
-        {options.map((o) => (
-          <button key={o.value} className={value === o.value ? 'on' : ''} aria-pressed={value === o.value} onClick={() => onChange(o.value)}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -89,6 +71,7 @@ export function HousingCard({ game }: { game: GameState }) {
           {home.commute > 0 && (
             <span className="req no">{t('estate.extraCommute', { hours: home.commute })}</span>
           )}
+          <span className="req">{t('estate.parkingUsed', { used: game.vehicles.length, count: parkingOf(home.typeId, home.area) })}</span>
         </div>
       </section>
 
@@ -200,14 +183,27 @@ function LeavePick({ game, value, onChange }: { game: GameState; value: LeaveAct
   );
 }
 
-/** Ce que l'annonce change au quotidien : confort et trajet. */
-function Perks({ l }: { l: HousingListing }) {
+/** Places de parking d'un bien, et avertissement si les véhicules du joueur n'y tiendraient pas tous. */
+function Parking({ game, typeId, area }: { game: GameState; typeId: string; area: HousingListing['area'] }) {
+  const { t } = useTranslation();
+  const overflow = parkingOverflow(game, typeId, area);
+  return (
+    <>
+      <span className="req">{t('estate.parking', { count: parkingOf(typeId, area) })}</span>
+      {overflow > 0 && <span className="req no">{t('estate.parkingOverflow', { count: overflow })}</span>}
+    </>
+  );
+}
+
+/** Ce que l'annonce change au quotidien : confort, trajet et parking. */
+function Perks({ game, l }: { game: GameState; l: HousingListing }) {
   const { t } = useTranslation();
   const commute = l.commute;
   return (
     <div className="reqs">
       <Comfort fx={comfortOf(l.typeId, l.area)} />
       {commute > 0 && <span className="req no">{t('estate.extraCommute', { hours: commute })}</span>}
+      <Parking game={game} typeId={l.typeId} area={l.area} />
     </div>
   );
 }
@@ -245,7 +241,7 @@ function RentDetail({ game, l }: { game: GameState; l: HousingListing }) {
     <div className="detail" data-rarity={type.grade}>
       <DetailHead rarity={type.grade as Rarity} title={t(`housing.${l.typeId}`)} source={`📍 ${t(`estate.area.${l.area}`)}`} />
       <Facts rows={rows} />
-      <Perks l={l} />
+      <Perks game={game} l={l} />
 
       <div className="chance-box">
         <h4>{t('estate.chanceDetail.title')}</h4>
@@ -321,7 +317,7 @@ function BuyDetail({ game, l }: { game: GameState; l: HousingListing }) {
     <div className="detail" data-rarity={type.grade}>
       <DetailHead rarity={type.grade as Rarity} title={t(`housing.${l.typeId}`)} source={`📍 ${t(`estate.area.${l.area}`)}`} />
       <Facts rows={rows} />
-      <Perks l={l} />
+      <Perks game={game} l={l} />
 
       <div className="chance-box">
         <Seg
@@ -440,6 +436,7 @@ function PropertyDetail({ game, p }: { game: GameState; p: Property }) {
       <div className="reqs">
         <Comfort fx={comfortOf(p.typeId, p.area)} />
         {commute > 0 && <span className="req no">{t('estate.extraCommute', { hours: commute })}</span>}
+        <Parking game={game} typeId={p.typeId} area={p.area} />
       </div>
 
       {p.status === 'rented' && <span className="job-meta">{t('estate.own.rentedNote')}</span>}

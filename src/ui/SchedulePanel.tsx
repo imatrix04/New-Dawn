@@ -15,7 +15,7 @@ import { WeekDonut } from './WeekDonut';
 const HOLD_MS = 1000;
 
 const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'work', 'sport', 'search', 'housing'];
-const FIXED = ['work', 'commute', 'essentials'] as const;
+const FIXED = ['work', 'commute', 'essentials', 'repair'] as const;
 const cat = (id: string) => TIME_CATS.find((c) => c.id === id)!;
 
 /** Infobulle au survol d'une pastille : une ligne par poste. */
@@ -72,6 +72,8 @@ export function SchedulePanel({ game }: { game: GameState }) {
     }
   };
 
+  const vehicleName = (id?: string) => t(`vehicles.${game.vehicles.find((v) => v.id === id)?.modelId ?? 'city'}`);
+
   const lineLabel = (l: MoneyLine): string => {
     switch (l.kind) {
       case 'job': return t(`jobs.${l.id}`, { context: game.gender });
@@ -82,7 +84,8 @@ export function SchedulePanel({ game }: { game: GameState }) {
       case 'rentals': return t('estate.lines.rentals');
       case 'propLoan': return t('estate.lines.propLoan');
       case 'propCharges': return t('estate.lines.propCharges');
-      case 'car': return t(`cars.${l.id}`);
+      case 'fuel': return t('market.lines.fuel', { vehicle: vehicleName(l.id) });
+      case 'insurance': return t('market.lines.insurance', { vehicle: vehicleName(l.id) });
       case 'training': return t(`trainings.${l.id}.name`);
       case 'food': return t('schedule.lines.food');
       case 'leisure': return t('schedule.lines.leisure');
@@ -96,7 +99,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
         <div className="sched-side">
           <p className="muted small">{t('schedule.subtitle', { total: HOURS_PER_WEEK })}</p>
           <div className="chips">
-            {FIXED.map((key) => (
+            {FIXED.filter((key) => key !== 'repair' || week.repair > 0).map((key) => (
               <div className="chip" key={key} style={{ '--c': cat(key).color } as CSSProperties} title={t(`schedule.cats.${key}.hint`)}>
                 <span>{cat(key).icon} {t(`schedule.cats.${key}.label`)}</span>
                 <b>{t('schedule.perWeek', { hours: week[key] })}</b>

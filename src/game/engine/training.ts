@@ -4,12 +4,15 @@ import type { GameState, SkillId } from '../types';
 import { jobById, trainingPrice } from './lookup';
 import { promote } from './promotion';
 import { addLog, clamp } from './shared';
+import { banMonthsLeft } from './vehicle';
 
 export const trainingTuition = (state: GameState): number => state.training?.tuition ?? 0;
 
 export function enrollTraining(state: GameState, id: string): GameState {
   if (!TRAININGS[id] || state.training || state.diplomas.includes(id)) return state;
   if (TRAININGS[id].requires?.some((r) => !state.diplomas.includes(r))) return state;
+  // Permis retiré : il faut attendre la fin du délai avant de le repasser.
+  if (id === 'permisB' && banMonthsLeft(state) > 0) return state;
   if (!state.catalog[TRAININGS[id].quick ? 'quick' : 'training'].includes(id)) return state;
   const s = structuredClone(state);
   s.training = { id, monthsDone: 0, blames: 0, tuition: trainingPrice(state, id) };

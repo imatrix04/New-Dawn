@@ -21,6 +21,7 @@
     "profile": "Profile",
     "career": "Career",
     "housing": "Housing",
+    "market": "Market",
     "journal": "Journal"
   },
   "skills": {
@@ -28,12 +29,13 @@
     "charisma": { "name": "Charisma", "how": "Leisure, restaurants and retail" },
     "strength": { "name": "Strength", "how": "Exercise and delivery" },
     "intelligence": { "name": "Intelligence", "how": "Study, accounting and engineering" },
-    "logistics": { "name": "Logistics", "how": "Delivery, retail and restaurants" }
+    "logistics": { "name": "Logistics", "how": "Delivery, retail and restaurants" },
+    "mechanics": { "name": "Mechanics", "how": "Repairing your own vehicle and mechanics training" }
   },
   "profile": {
     "money": "Money",
     "perMonth": "mo",
-    "sources": { "study": "Studies", "training": "Training: {{name}}","sport": "Sport", "leisure": "Leisure", "job": "Job: {{name}}", "gig": "Side gig: {{name}}" },
+    "sources": { "study": "Studies", "training": "Training: {{name}}","sport": "Sport", "leisure": "Leisure", "job": "Job: {{name}}", "gig": "Side gig: {{name}}", "repair": "Vehicle repair" },
     "tabs": { "skills": "Skills", "experience": "Experience" },
     "diplomas": "Diplomas",
     "noDiplomas": "No diploma yet",
@@ -72,6 +74,10 @@
     "permisC": {
       "name": "Truck licence (C)",
       "desc": "Licence C plus mandatory training (FIMO): about 3 months and €3,000. Requires the B licence."
+    },
+    "mecaAuto": {
+      "name": "Intro to car mechanics",
+      "desc": "Diagnosis, servicing and small repairs: you will be able to repair your own vehicle for the price of the parts."
     },
     "caces": {
       "name": "Forklift licence",
@@ -330,7 +336,8 @@
     "charisma": "charisma",
     "strength": "strength",
     "intelligence": "intelligence",
-    "logistics": "logistics"
+    "logistics": "logistics",
+    "mechanics": "mechanics"
   },
   "paths": {
     "comfort": {
@@ -375,6 +382,12 @@
     "ownerCharges": "Charges: {{amount}}/mo",
     "loanLine": "Loan: {{monthly}}/mo • {{balance}} left ({{months}} mo)",
     "noLoan": "No loan",
+    "parking_one": "🅿️ {{count}} parking space",
+    "parking_other": "🅿️ {{count}} parking spaces",
+    "parkingUsed_one": "🅿️ {{used}} / {{count}} space used",
+    "parkingUsed_other": "🅿️ {{used}} / {{count}} spaces used",
+    "parkingOverflow_one": "⚠️ {{count}} vehicle to sell",
+    "parkingOverflow_other": "⚠️ {{count}} vehicles to sell",
     "extraCommute": "🚌 +{{hours}} h/wk commute",
     "rentHint": "Send an application: the answer comes at the end of the month. The landlord looks at your income, your job and your savings. Rare homes attract more applicants. Set your housing search hours in the schedule to see new listings.",
     "buyHint": "Pick your down payment and loan term: the bank requires a job or rental income, and a monthly payment of at most 35% of your income. You can live in it or buy it to rent it out. Set your housing search hours in the schedule to see new listings.",
@@ -452,8 +465,178 @@
       "rentals": "Rent received", "propLoan": "Your properties' loans", "propCharges": "Your properties' charges"
     }
   },
-  "cars": {
-    "small": "Small car"
+  "vehicles": {
+    "city": "City car",
+    "compact": "Compact",
+    "family": "Estate car",
+    "suv": "SUV",
+    "sedan": "Saloon",
+    "luxury": "Luxury saloon",
+    "sports": "Sports car"
+  },
+  "market": {
+    "sections": { "vehicles": "🚗 Vehicles" },
+    "tabs": { "mine": "My vehicle", "new": "New", "used": "Used" },
+    "fuel": { "petrol": "Petrol", "diesel": "Diesel" },
+    "vehicle": {
+      "current": "Current vehicle",
+      "none": "No vehicle",
+      "noneHint": "On foot or by public transport, your trips are long. A vehicle shortens them, but it costs money to buy, insure, fuel and maintain.",
+      "condition": "Condition {{now}}% • maximum {{max}}%",
+      "conditionHint": "The marker shows the highest condition still reachable: wear and repairs lower it for good.",
+      "commuteSaved": "🚗 Commute: {{from}} h → {{to}} h/wk",
+      "repairing_one": "🔧 {{kind}}: {{count}} month left",
+      "repairing_other": "🔧 {{kind}}: {{count}} months left",
+      "scrap": "Written off",
+      "inService": "In service (commute)",
+      "parked": "Parked",
+      "use": "Use for my commute"
+    },
+    "block": {
+      "license": "🚫 No licence: the vehicle stays parked",
+      "banned_one": "🚫 Licence suspended: {{count}} month left",
+      "banned_other": "🚫 Licence suspended: {{count}} months left",
+      "immobilised": "🚫 Immobilised: you are back on public transport"
+    },
+    "issue": { "minor": "Minor breakdown", "major": "Major breakdown", "broken": "Vehicle broken down" },
+    "accident": { "minor": "minor", "major": "serious", "broken": "severe" },
+    "mine": {
+      "empty": "You have no vehicle. Have a look at the New and Used tabs (a B licence is required).",
+      "hint": "Fuel: {{price}} per litre of petrol, {{diesel}} per litre of diesel. Kilometres follow your commute hours; wear, consumption and risks follow your driving style."
+    },
+    "driver": {
+      "title": "Driver",
+      "license": "Licence",
+      "points": "{{points}} / {{max}} points",
+      "noLicense": "No B licence",
+      "crm": "Insurance bonus-malus",
+      "ban": "Suspension",
+      "banMonths_one": "{{count}} month left",
+      "banMonths_other": "{{count}} months left",
+      "recovery_one": "All your points come back in {{count}} month without an offence.",
+      "recovery_other": "All your points come back in {{count}} months without an offence."
+    },
+    "style": {
+      "title": "Driving style",
+      "label": "Style",
+      "commute": "Commute",
+      "fuel": "Fuel",
+      "wear": "Wear",
+      "accident": "Crash/yr",
+      "fines": "Fine/yr",
+      "note": "Speeding costs up to {{max}} in fines and licence points, and can lead to suspension or loss of the licence.",
+      "eco": { "name": "Eco", "desc": "Smooth driving: commute divided by 1.5, minimal wear, lower fuel use." },
+      "normal": { "name": "Normal", "desc": "Normal driving: commute divided by 2, normal wear, little accident risk." },
+      "fast": { "name": "Fast", "desc": "Commute divided by 2.5, but high wear, accident risk, fines and lost points." },
+      "reckless": { "name": "Reckless", "desc": "Commute divided by 3.5, but very high wear, big accident risk, heavy fines, suspension or loss of the licence." }
+    },
+    "fact": {
+      "value": "Estimated value",
+      "consumption": "Consumption",
+      "l100": "{{n}} L/100 km",
+      "kmMonth": "Kilometres this month",
+      "fuelMonth": "Fuel",
+      "insurance": "Insurance",
+      "service": "Next service",
+      "serviceIn": "in {{km}} km",
+      "serviceLate": "overdue (faster wear)",
+      "inspection": "Roadworthiness test",
+      "price": "Price",
+      "fees": "Registration and delivery fees",
+      "registration": "Registration ({{hp}} fiscal HP)",
+      "registrationOld": "Registration ({{hp}} fiscal HP, −50%: over 10 years old)",
+      "malusCo2": "Eco penalty ({{co2}} g/km)",
+      "malusWeight": "Weight penalty ({{kg}} kg)",
+      "none": "None",
+      "total": "Total to pay",
+      "km": "Mileage",
+      "age": "Age",
+      "power": "Fiscal power",
+      "hp": "{{hp}} fiscal HP",
+      "hpShort": "{{hp}} HP",
+      "weight": "Weight",
+      "co2": "Emissions",
+      "commute": "Commute",
+      "commuteLine": "{{from}} h → {{to}} h/wk (normal driving)",
+      "specs": "Specs and budget"
+    },
+    "repair": {
+      "title": "Servicing and repairs",
+      "kind": {
+        "service": "Routine service",
+        "minor": "Minor mechanical problem",
+        "major": "Major mechanical problem",
+        "broken": "Broken down but repairable"
+      },
+      "desc": {
+        "service": "Oil change, brakes, tyres: due every 15,000 km. Without it, wear speeds up.",
+        "minor": "The vehicle still runs, but wears faster and can get worse.",
+        "major": "The vehicle is immobilised until it is repaired.",
+        "broken": "Nothing works: a big repair, but it can get back on the road."
+      },
+      "effect": "Restores {{restore}} condition points, but lowers the maximum condition by {{loss}} (it will be {{after}}% afterwards).",
+      "garage": "At the garage • {{amount}}",
+      "diy": "Myself • {{amount}} (parts)",
+      "instant": "Done on the spot.",
+      "garageTime_one": "Vehicle immobilised for {{count}} month.",
+      "garageTime_other": "Vehicle immobilised for {{count}} months.",
+      "diyTime_one": "{{count}} month of work, {{hours}} h/wk in your schedule.",
+      "diyTime_other": "{{count}} months of work, {{hours}} h/wk in your schedule.",
+      "blocked": {
+        "skill": "Mechanics {{need}} required (you have {{have}}).",
+        "cash": "You are {{amount}} short.",
+        "scrap": "Beyond repair: the vehicle would be written off."
+      },
+      "freeHours": "Free up {{hours}} h in your schedule to be able to end the month.",
+      "progressDiy_one": "{{kind}}: you are still working on it for {{count}} month.",
+      "progressDiy_other": "{{kind}}: you are still working on it for {{count}} months.",
+      "progressGarage_one": "{{kind}}: the garage needs {{count}} more month.",
+      "progressGarage_other": "{{kind}}: the garage needs {{count}} more months.",
+      "immobilised": "The vehicle is immobilised during the work.",
+      "scrap": "This vehicle is written off: no repair is worth it any more. Sell it for scrap."
+    },
+    "inspection": {
+      "title": "Roadworthiness test",
+      "hint": "Compulsory from 4 years old, then every 2 years, or you risk a fine. A test under 6 months old also helps resale. It is refused if the condition is too poor or after a major breakdown.",
+      "exempt": "Not required yet",
+      "valid": "Up to date",
+      "overdue": "Due",
+      "passed": "passed",
+      "failed": "failed",
+      "last": "Last test",
+      "lastLine_one": "{{count}} month ago: {{result}}",
+      "lastLine_other": "{{count}} months ago: {{result}}",
+      "never": "Never",
+      "take": "Take the test • {{amount}}"
+    },
+    "sell": {
+      "title": "Sell",
+      "price": "Trade-in price",
+      "noInspection": "Without a roadworthiness test under 6 months old, the vehicle is bought at a discount.",
+      "scrapNote": "Written off: it is only worth the scrap price.",
+      "confirm": "Sell • {{amount}}",
+      "scrap": "Send to the scrapyard • {{amount}}"
+    },
+    "select": { "new": "Select a new vehicle", "used": "Select a used vehicle" },
+    "newHint": "New: list price, registration and delivery fees, registration tax by fiscal horsepower, and an eco penalty based on CO₂ emissions and weight. Diesel costs more to buy but uses less fuel.",
+    "usedHint": "Used: no eco penalty, and registration halved after 10 years. The condition shows the wear: the marker is the maximum that repairs will no longer restore.",
+    "usedCount": "Listings: {{count}} / {{max}} (renewed every month)",
+    "noUsed": "No listings at the moment.",
+    "allIn": "all in",
+    "newBy": "New • delivered with its registration fees",
+    "usedBy": "Used • recent roadworthiness test provided",
+    "parking": {
+      "count": "🅿️ {{used}} / {{total}} spaces",
+      "pick": "Choose a vehicle",
+      "hint": "Your home has {{spots}} parking space(s): you cannot own more vehicles than that. Only one drives for your commute; the others stay parked (insured, but no wear or fuel). If you move to a home with fewer spaces, the extra vehicles are sold."
+    },
+    "reason": {
+      "license": "You need the B licence (\"Car licence\" training in the Career card).",
+      "parking": "No parking space left: your home has {{spots}}. Sell a vehicle or move.",
+      "cash": "You are {{amount}} short of the full price."
+    },
+    "buy": "Buy this vehicle",
+    "lines": { "fuel": "Fuel ({{vehicle}})", "insurance": "Insurance ({{vehicle}})" }
   },
   "jobs": {
     "fastFood": "Fast-food server",
@@ -515,6 +698,7 @@
       "sport": { "label": "Exercise", "hint": "Health and strength" },
       "search": { "label": "Job search", "hint": "1 h/wk = 1 new job offer per month (0 h: none)" },
       "housing": { "label": "Housing search", "hint": "1 h/wk = 1 new housing listing per month (0 h: none)" },
+      "repair": { "label": "Repairs", "hint": "You repair your own vehicle (set by the work in progress)" },
       "free": { "label": "Free time", "hint": "" }
     }
   },
@@ -576,6 +760,27 @@
     "trainingLost": "You lose your job: the training paid for by your employer stops ({{training}}).",
     "jobBlamed": "Skipped hours noticed ({{job}}): warning {{n}}/{{max}}, {{lost, number}} € withheld from your pay.",
     "jobFired": "Third warning: you are fired ({{job}}), {{lost, number}} € withheld. This will weigh on your applications for 6 months.",
+    "vehicleBought": "You buy: {{vehicle}} ({{amount, number}} € all in).",
+    "vehicleSold": "You sell your vehicle ({{vehicle}}): {{amount, number}} €.",
+    "vehicleScrapped": "Your vehicle ({{vehicle}}) goes to the scrapyard: {{amount, number}} €.",
+    "vehicleDead": "Your vehicle ({{vehicle}}) is written off: wear got the better of it.",
+    "breakdown": "{{vehicle}}: {{severity}}.",
+    "breakdownWorse": "Your vehicle's breakdown ({{vehicle}}) gets worse: it is now major.",
+    "accident": "{{accidentLevel}} accident: {{amount, number}} € excess, health -{{health}}. Your insurance bonus-malus gets worse.",
+    "speeding_one": "Speeding: {{amount, number}} € fine and -{{count}} licence point.",
+    "speeding_other": "Speeding: {{amount, number}} € fine and -{{count}} licence points.",
+    "licenseSuspended": "Excessive speeding: your licence is suspended for {{count}} months.",
+    "licenseLost": "No points left: your licence is cancelled. You must wait {{count}} months, then retake it.",
+    "licenseBack": "Your licence is valid again.",
+    "pointsBack": "Two years without an offence: you get your {{points}} licence points back.",
+    "inspectionPassed": "Roadworthiness test passed ({{amount, number}} €).",
+    "inspectionFailed": "Roadworthiness test failed ({{amount, number}} €): get it repaired, then retake the re-test.",
+    "inspectionFine": "Roadside check without a valid roadworthiness test: {{amount, number}} € fine.",
+    "repairStarted_garage": "Garage work ({{repairKind}}): {{vehicle}} is dropped off for {{amount, number}} €.",
+    "repairStarted_diy": "Doing it yourself ({{repairKind}}): you start on {{vehicle}} (parts {{amount, number}} €).",
+    "repairDone_garage": "Work finished ({{repairKind}}): {{vehicle}} leaves the garage.",
+    "repairDone_diy": "Work finished ({{repairKind}}): you got {{vehicle}} back in shape yourself.",
+    "vehicleNoParking": "Not enough parking spaces in your new home: {{vehicle}} is sold ({{amount, number}} €).",
     "eventLine": "{{title}}: {{text}}",
     "eventLineFx": "{{title}}: {{text}} ({{fx}})"
   },

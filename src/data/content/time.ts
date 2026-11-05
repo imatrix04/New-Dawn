@@ -31,6 +31,7 @@ export const TIME_CATS = [
   { id: 'sport',      color: '#5bd48a', icon: '🏃' },
   { id: 'search',     color: '#5bb4f5', icon: '🔎' },
   { id: 'housing',    color: '#e58bd4', icon: '🏠' },
+  { id: 'repair',     color: '#e0b04a', icon: '🔧' },
   { id: 'free',       color: '#2e3450', icon: '⏳' },
 ] as const;
 export type TimeCat = (typeof TIME_CATS)[number]['id'];

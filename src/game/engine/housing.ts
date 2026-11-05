@@ -7,6 +7,7 @@ import { currentSalary, gigById, gigPay } from './lookup';
 import { ageProperty, hasStableIncome, keepAsProperty, lettingIncome } from './property';
 import { totalSavings } from './savings';
 import { addLog, drawWeighted, rollFactor } from './shared';
+import { enforceParking } from './vehicle';
 
 export const housingTypeById = (id: string): HousingType => HOUSING_TYPES[id] ?? HOUSING_TYPES.studio;
 
@@ -14,6 +15,9 @@ export const housingTypeById = (id: string): HousingType => HOUSING_TYPES[id] ??
 export function starterHome(typeId: string): Home {
   return { typeId, area: 'center', commute: 0, tenure: 'rent', rent: housingTypeById(typeId).rent ?? 0, deposit: 0, value: 0, charges: 0, loan: null };
 }
+
+/** Places de parking d'un logement : celles du bien plus celles du quartier, au moins une. */
+export const parkingOf = (typeId: string, area: Area): number => Math.max(1, housingTypeById(typeId).parking + AREAS[area].parking);
 
 /** Trajet hebdomadaire d'un logement : entier tiré dans la fourchette de son quartier. */
 const rollCommute = (area: Area): number => {
@@ -163,6 +167,7 @@ export function moveInto(s: GameState, home: Home, listingId: string | null, cos
   s.home = home;
   if (listingId) s.listings = s.listings.filter((l) => l.id !== listingId);
   s.housingTarget = null;
+  enforceParking(s);
 }
 
 /** Tirage de l'acceptation du dossier : il reste ouvert tant que l'annonce existe, mais il faut pouvoir payer l'entrée. */

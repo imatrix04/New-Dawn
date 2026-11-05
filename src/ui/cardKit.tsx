@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HIRE_CHANCE_MAX } from '../data/content';
 
-// Briques communes aux cartes à liste de tuiles et détail (Carrière, Logement).
+// Briques communes aux cartes à liste de tuiles et détail (Carrière, Logement, Marché).
 
 /** Rareté de 1 (commun) à 4 (très rare). */
 export type Rarity = 1 | 2 | 3 | 4;
@@ -112,5 +112,23 @@ export function Facts({ rows }: { rows: [string, ReactNode][] }) {
         <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
       ))}
     </dl>
+  );
+}
+
+/** Choix parmi quelques valeurs (apport, durée du prêt). */
+export function Seg<T extends number | string>({ label, value, options, onChange }: {
+  label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void;
+}) {
+  return (
+    <div className="pick-wrap">
+      <span className="pick-label">{label}</span>
+      <div className="pick" role="group" aria-label={label}>
+        {options.map((o) => (
+          <button key={o.value} className={value === o.value ? 'on' : ''} aria-pressed={value === o.value} onClick={() => onChange(o.value)}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

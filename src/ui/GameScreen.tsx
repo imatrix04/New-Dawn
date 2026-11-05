@@ -9,6 +9,7 @@ import { HousingCard } from './HousingCard';
 import { JobDecisionPanel } from './JobDecisionPanel';
 import { PromotionPanel } from './PromotionPanel';
 import { LogPanel } from './LogPanel';
+import { MarketCard } from './MarketCard';
 import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
 import { SchedulePanel } from './SchedulePanel';
@@ -70,6 +71,9 @@ export function GameScreen({ game }: { game: GameState }) {
         </BoardWindow>
         <BoardWindow id="housing" title={t('windows.housing')}>
           <HousingCard game={game} />
+        </BoardWindow>
+        <BoardWindow id="market" title={t('windows.market')}>
+          <MarketCard game={game} />
         </BoardWindow>
         <BoardWindow id="journal" title={t('windows.journal')}>
           <LogPanel log={game.log} />

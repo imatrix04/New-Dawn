@@ -21,6 +21,7 @@
     "profile": "Profil",
     "career": "Carrière",
     "housing": "Logement",
+    "market": "Marché",
     "journal": "Journal"
   },
   "skills": {
@@ -28,12 +29,13 @@
     "charisma": { "name": "Charisme", "how": "Loisirs, restauration et vente" },
     "strength": { "name": "Force", "how": "Sport et livraison" },
     "intelligence": { "name": "Intelligence", "how": "Études, comptabilité et ingénierie" },
-    "logistics": { "name": "Logistique", "how": "Livraison, vente et restauration" }
+    "logistics": { "name": "Logistique", "how": "Livraison, vente et restauration" },
+    "mechanics": { "name": "Mécanique", "how": "Réparer ton véhicule toi-même et formation en mécanique" }
   },
   "profile": {
     "money": "Argent",
     "perMonth": "mois",
-    "sources": { "study": "Études", "training": "Formation : {{name}}","sport": "Sport", "leisure": "Loisirs", "job": "Métier : {{name}}", "gig": "Petit boulot : {{name}}" },
+    "sources": { "study": "Études", "training": "Formation : {{name}}","sport": "Sport", "leisure": "Loisirs", "job": "Métier : {{name}}", "gig": "Petit boulot : {{name}}", "repair": "Réparation de ton véhicule" },
     "tabs": { "skills": "Compétences", "experience": "Expérience" },
     "diplomas": "Diplômes",
     "noDiplomas": "Aucun diplôme pour l'instant",
@@ -72,6 +74,10 @@
     "permisC": {
       "name": "Permis poids lourd (C)",
       "desc": "Permis C et formation obligatoire (FIMO) : environ 3 mois et 3 000 €. Suppose d'avoir le permis B."
+    },
+    "mecaAuto": {
+      "name": "Initiation à la mécanique auto",
+      "desc": "Diagnostic, entretien et petites réparations : tu pourras réparer ton véhicule toi-même, pour le prix des pièces."
     },
     "caces": {
       "name": "CACES cariste",
@@ -330,7 +336,8 @@
     "charisma": "charisme",
     "strength": "force",
     "intelligence": "intelligence",
-    "logistics": "logistique"
+    "logistics": "logistique",
+    "mechanics": "mécanique"
   },
   "paths": {
     "comfort": {
@@ -376,6 +383,12 @@
     "loanLine": "Prêt : {{monthly}}/mois • reste {{balance}} ({{months}} mois)",
     "noLoan": "Sans prêt",
     "extraCommute": "🚌 +{{hours}} h/sem. de trajet",
+    "parking_one": "🅿️ {{count}} place de parking",
+    "parking_other": "🅿️ {{count}} places de parking",
+    "parkingUsed_one": "🅿️ {{used}} / {{count}} place occupée",
+    "parkingUsed_other": "🅿️ {{used}} / {{count}} places occupées",
+    "parkingOverflow_one": "⚠️ {{count}} véhicule à revendre",
+    "parkingOverflow_other": "⚠️ {{count}} véhicules à revendre",
     "rentHint": "Dépose un dossier : la réponse tombe à la fin du mois. Le propriétaire regarde tes revenus, ton emploi et ton épargne. Les biens rares attirent plus de candidats. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
     "buyHint": "Choisis ton apport et la durée du prêt : la banque exige un emploi ou des loyers perçus, et au plus 35 % de tes revenus en mensualité. Tu peux y habiter ou l'acheter pour le louer. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
     "listingsCount": "Annonces visibles : {{count}} / {{max}}",
@@ -452,8 +465,178 @@
       "rentals": "Loyers perçus", "propLoan": "Prêts de tes biens", "propCharges": "Charges de tes biens"
     }
   },
-  "cars": {
-    "small": "Petite voiture"
+  "vehicles": {
+    "city": "Citadine",
+    "compact": "Compacte",
+    "family": "Familiale",
+    "suv": "SUV",
+    "sedan": "Berline",
+    "luxury": "Berline de luxe",
+    "sports": "Sportive"
+  },
+  "market": {
+    "sections": { "vehicles": "🚗 Véhicules" },
+    "tabs": { "mine": "Mon véhicule", "new": "Neuf", "used": "Occasion" },
+    "fuel": { "petrol": "Essence", "diesel": "Diesel" },
+    "vehicle": {
+      "current": "Véhicule actuel",
+      "none": "Aucun véhicule",
+      "noneHint": "À pied ou en transports, tes trajets sont longs. Un véhicule les raccourcit, mais il coûte à l'achat, à l'assurance, au carburant et à l'entretien.",
+      "condition": "État {{now}} % • maximum {{max}} %",
+      "conditionHint": "Le trait marque l'état maximal atteignable : l'usure et les réparations le font baisser pour de bon.",
+      "commuteSaved": "🚗 Trajets : {{from}} h → {{to}} h/sem.",
+      "repairing_one": "🔧 {{kind}} : encore {{count}} mois",
+      "repairing_other": "🔧 {{kind}} : encore {{count}} mois",
+      "scrap": "Hors d'usage",
+      "inService": "En service (trajets)",
+      "parked": "Garé",
+      "use": "Utiliser pour mes trajets"
+    },
+    "block": {
+      "license": "🚫 Pas de permis : le véhicule ne roule pas",
+      "banned_one": "🚫 Permis suspendu : encore {{count}} mois",
+      "banned_other": "🚫 Permis suspendu : encore {{count}} mois",
+      "immobilised": "🚫 Immobilisé : tes trajets repassent en transports"
+    },
+    "issue": { "minor": "Panne mineure", "major": "Panne majeure", "broken": "Véhicule cassé" },
+    "accident": { "minor": "léger", "major": "sérieux", "broken": "grave" },
+    "mine": {
+      "empty": "Tu n'as pas de véhicule. Regarde les onglets Neuf et Occasion (le permis B est nécessaire).",
+      "hint": "Carburant : {{price}} le litre d'essence, {{diesel}} le litre de diesel. Les kilomètres suivent tes heures de trajet ; l'usure, la consommation et les risques suivent ton style de conduite."
+    },
+    "driver": {
+      "title": "Conducteur",
+      "license": "Permis",
+      "points": "{{points}} / {{max}} points",
+      "noLicense": "Pas de permis B",
+      "crm": "Bonus-malus d'assurance",
+      "ban": "Suspension",
+      "banMonths_one": "encore {{count}} mois",
+      "banMonths_other": "encore {{count}} mois",
+      "recovery_one": "Tous tes points reviennent dans {{count}} mois sans infraction.",
+      "recovery_other": "Tous tes points reviennent dans {{count}} mois sans infraction."
+    },
+    "style": {
+      "title": "Style de conduite",
+      "label": "Style",
+      "commute": "Trajet",
+      "fuel": "Conso",
+      "wear": "Usure",
+      "accident": "Accident/an",
+      "fines": "Amende/an",
+      "note": "Un excès de vitesse coûte jusqu'à {{max}} d'amende, des points de permis, et peut mener à la suspension ou à la perte du permis.",
+      "eco": { "name": "Éco", "desc": "Conduite souple : trajets divisés par 1,5, usure minime, consommation réduite." },
+      "normal": { "name": "Normal", "desc": "Conduite normale : trajets divisés par 2, usure normale, peu de risque d'accident." },
+      "fast": { "name": "Rapide", "desc": "Trajets divisés par 2,5, mais usure élevée, risque d'accident, amendes et perte de points." },
+      "reckless": { "name": "Très rapide", "desc": "Trajets divisés par 3,5, mais usure très élevée, gros risque d'accident, grosses amendes, suspension ou perte du permis." }
+    },
+    "fact": {
+      "value": "Valeur estimée",
+      "consumption": "Consommation",
+      "l100": "{{n}} L/100 km",
+      "kmMonth": "Kilomètres ce mois-ci",
+      "fuelMonth": "Carburant",
+      "insurance": "Assurance",
+      "service": "Prochain entretien",
+      "serviceIn": "dans {{km}} km",
+      "serviceLate": "en retard (usure accélérée)",
+      "inspection": "Contrôle technique",
+      "price": "Prix",
+      "fees": "Frais de mise en circulation",
+      "registration": "Carte grise ({{hp}} CV fiscaux)",
+      "registrationOld": "Carte grise ({{hp}} CV, −50 % : plus de 10 ans)",
+      "malusCo2": "Malus écologique ({{co2}} g/km)",
+      "malusWeight": "Malus au poids ({{kg}} kg)",
+      "none": "Aucun",
+      "total": "Total à payer",
+      "km": "Kilométrage",
+      "age": "Âge",
+      "power": "Puissance fiscale",
+      "hp": "{{hp}} CV",
+      "hpShort": "{{hp}} CV",
+      "weight": "Poids",
+      "co2": "Émissions",
+      "commute": "Trajets",
+      "commuteLine": "{{from}} h → {{to}} h/sem. (conduite normale)",
+      "specs": "Caractéristiques et budget"
+    },
+    "repair": {
+      "title": "Entretien et réparations",
+      "kind": {
+        "service": "Entretien habituel",
+        "minor": "Panne mécanique mineure",
+        "major": "Panne mécanique majeure",
+        "broken": "Véhicule cassé mais réparable"
+      },
+      "desc": {
+        "service": "Vidange, freins, pneus : à faire tous les 15 000 km. Sans entretien, l'usure s'accélère.",
+        "minor": "Le véhicule roule encore, mais s'use plus vite et peut empirer.",
+        "major": "Le véhicule est immobilisé tant qu'il n'est pas réparé.",
+        "broken": "Plus rien ne fonctionne : grosse réparation, mais il peut repartir."
+      },
+      "effect": "Rend {{restore}} points d'état, mais abaisse l'état maximal de {{loss}} (il sera de {{after}} % ensuite).",
+      "garage": "Au garage • {{amount}}",
+      "diy": "Moi-même • {{amount}} (pièces)",
+      "instant": "Fait sur le champ.",
+      "garageTime_one": "Véhicule immobilisé {{count}} mois.",
+      "garageTime_other": "Véhicule immobilisé {{count}} mois.",
+      "diyTime_one": "{{count}} mois de travail, {{hours}} h/sem. dans ton emploi du temps.",
+      "diyTime_other": "{{count}} mois de travail, {{hours}} h/sem. dans ton emploi du temps.",
+      "blocked": {
+        "skill": "Mécanique {{need}} requise (tu as {{have}}).",
+        "cash": "Il te manque {{amount}}.",
+        "scrap": "Irréparable : le véhicule serait hors d'usage."
+      },
+      "freeHours": "Libère {{hours}} h dans ton emploi du temps pour pouvoir passer le mois.",
+      "progressDiy_one": "{{kind}} : tu y travailles encore {{count}} mois.",
+      "progressDiy_other": "{{kind}} : tu y travailles encore {{count}} mois.",
+      "progressGarage_one": "{{kind}} : le garage a encore besoin de {{count}} mois.",
+      "progressGarage_other": "{{kind}} : le garage a encore besoin de {{count}} mois.",
+      "immobilised": "Le véhicule est immobilisé pendant l'intervention.",
+      "scrap": "Ce véhicule est hors d'usage : aucune réparation ne vaut plus le coup. Vends-le à la casse."
+    },
+    "inspection": {
+      "title": "Contrôle technique",
+      "hint": "Obligatoire dès 4 ans, puis tous les 2 ans, sous peine d'amende. Un contrôle de moins de 6 mois permet aussi de mieux revendre. Il est refusé si l'état est trop dégradé ou en cas de panne majeure.",
+      "exempt": "Pas encore obligatoire",
+      "valid": "À jour",
+      "overdue": "À passer",
+      "passed": "réussi",
+      "failed": "refusé",
+      "last": "Dernier passage",
+      "lastLine_one": "il y a {{count}} mois : {{result}}",
+      "lastLine_other": "il y a {{count}} mois : {{result}}",
+      "never": "Jamais",
+      "take": "Passer le contrôle • {{amount}}"
+    },
+    "sell": {
+      "title": "Revendre",
+      "price": "Prix de reprise",
+      "noInspection": "Sans contrôle technique de moins de 6 mois, le véhicule est repris à un prix décoté.",
+      "scrapNote": "Hors d'usage : il ne vaut que le prix de la casse.",
+      "confirm": "Vendre • {{amount}}",
+      "scrap": "Envoyer à la casse • {{amount}}"
+    },
+    "select": { "new": "Sélectionne un véhicule neuf", "used": "Sélectionne un véhicule d'occasion" },
+    "newHint": "Neuf : prix catalogue, frais de mise en circulation, carte grise selon les chevaux fiscaux et malus écologique selon les émissions de CO₂ et le poids. Le diesel coûte plus cher à l'achat mais consomme moins.",
+    "usedHint": "Occasion : pas de malus, et une carte grise réduite de moitié après 10 ans. L'état affiché montre l'usure : le trait marque le maximum que les réparations ne rendront plus.",
+    "usedCount": "Annonces visibles : {{count}} / {{max}} (renouvelées chaque mois)",
+    "noUsed": "Aucune annonce pour le moment.",
+    "allIn": "tout compris",
+    "newBy": "Neuf • livré avec ses frais de mise en circulation",
+    "usedBy": "Occasion • contrôle technique récent fourni",
+    "parking": {
+      "count": "🅿️ {{used}} / {{total}} places",
+      "pick": "Choisir un véhicule",
+      "hint": "Ton logement a {{spots}} place(s) de parking : tu ne peux pas posséder plus de véhicules. Un seul roule pour tes trajets ; les autres restent garés (assurés, mais sans usure ni carburant). Si tu déménages dans un logement avec moins de places, les véhicules en trop sont revendus."
+    },
+    "reason": {
+      "license": "Il te faut le permis B (formation « Permis voiture » dans la carte Carrière).",
+      "parking": "Plus de place de parking : ton logement en a {{spots}}. Revends un véhicule ou déménage.",
+      "cash": "Il te manque {{amount}} pour tout payer."
+    },
+    "buy": "Acheter ce véhicule",
+    "lines": { "fuel": "Carburant ({{vehicle}})", "insurance": "Assurance ({{vehicle}})" }
   },
   "jobs": {
     "fastFood": "Serveur en restauration rapide",
@@ -527,6 +710,7 @@
       "sport": { "label": "Sport", "hint": "Santé et force" },
       "search": { "label": "Recherche d'emploi", "hint": "1 h/sem. = 1 nouvelle offre d'emploi par mois (0 h : aucune)" },
       "housing": { "label": "Recherche de logement", "hint": "1 h/sem. = 1 nouvelle annonce de logement par mois (0 h : aucune)" },
+      "repair": { "label": "Réparation", "hint": "Tu répares ton véhicule toi-même (fixé par l'intervention en cours)" },
       "free": { "label": "Temps libre", "hint": "" }
     }
   },
@@ -588,6 +772,27 @@
     "trainingLost": "Tu perds ton poste : la formation payée par ton employeur s'arrête ({{training}}).",
     "jobBlamed": "Heures sautées repérées ({{job}}) : blâme {{n}}/{{max}}, {{lost, number}} € retenus sur ta paie.",
     "jobFired": "Troisième blâme : tu es renvoyé ({{job}}), {{lost, number}} € retenus. Ce renvoi pèsera sur tes candidatures pendant 6 mois.",
+    "vehicleBought": "Tu achètes : {{vehicle}} ({{amount, number}} € tout compris).",
+    "vehicleSold": "Tu revends ton véhicule ({{vehicle}}) : {{amount, number}} €.",
+    "vehicleScrapped": "Ton véhicule ({{vehicle}}) part à la casse : {{amount, number}} €.",
+    "vehicleDead": "Ton véhicule ({{vehicle}}) est hors d'usage : l'usure a eu raison de lui.",
+    "breakdown": "{{vehicle}} : {{severity}}.",
+    "breakdownWorse": "La panne de ton véhicule ({{vehicle}}) s'aggrave : elle devient majeure.",
+    "accident": "Accident {{accidentLevel}} : franchise de {{amount, number}} €, santé -{{health}}. Ton bonus-malus d'assurance se dégrade.",
+    "speeding_one": "Excès de vitesse : amende de {{amount, number}} € et -{{count}} point de permis.",
+    "speeding_other": "Excès de vitesse : amende de {{amount, number}} € et -{{count}} points de permis.",
+    "licenseSuspended": "Grand excès de vitesse : ton permis est suspendu {{count}} mois.",
+    "licenseLost": "Plus aucun point : ton permis est invalidé. Il faudra attendre {{count}} mois, puis le repasser.",
+    "licenseBack": "Ton permis est de nouveau valable.",
+    "pointsBack": "Deux ans sans infraction : tu retrouves tes {{points}} points de permis.",
+    "inspectionPassed": "Contrôle technique réussi ({{amount, number}} €).",
+    "inspectionFailed": "Contrôle technique refusé ({{amount, number}} €) : fais réparer, puis repasse la contre-visite.",
+    "inspectionFine": "Contrôle routier sans contrôle technique valable : amende de {{amount, number}} €.",
+    "repairStarted_garage": "Intervention au garage ({{repairKind}}) : {{vehicle}} est confié pour {{amount, number}} €.",
+    "repairStarted_diy": "Intervention à la main ({{repairKind}}) : tu t'y mets sur {{vehicle}} (pièces {{amount, number}} €).",
+    "repairDone_garage": "Intervention terminée ({{repairKind}}) : {{vehicle}} repart du garage.",
+    "repairDone_diy": "Intervention terminée ({{repairKind}}) : tu as remis {{vehicle}} en état toi-même.",
+    "vehicleNoParking": "Plus assez de places de parking dans ton nouveau logement : {{vehicle}} est revendu ({{amount, number}} €).",
     "eventLine": "{{title}} : {{text}}",
     "eventLineFx": "{{title}} : {{text}} ({{fx}})"
   },

@@ -771,3 +771,23 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 .dev-cheats strong { color: #e5b14f; letter-spacing: 0.08em; }
 .dev-cheats input { width: 90px; }
 .dev-cheats .dev-toggle { background: none; border: 0; padding: 0; cursor: pointer; color: inherit; font: inherit; }
+
+/* ---------- Marché : véhicules ---------- */
+.vmine { display: flex; flex-direction: column; gap: 12px; }
+.vcond { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.vmeter { position: relative; }
+.vmeter .meter { height: 7px; }
+/* Repère de l'état maximal : ce que les réparations ne rendront plus. */
+.vmeter > i { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--text, #e8eaf2); opacity: .85; }
+.vstyles { width: 100%; border-collapse: collapse; font-size: .74rem; }
+.vstyles th { padding: 3px 6px; text-align: left; font-size: .62rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.vstyles td { padding: 5px 6px; border-top: 1px solid #1d2234; }
+.vstyles tr.on td { color: var(--accent); background: rgba(245, 166, 91, .08); }
+.repair { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid #1d2234; }
+.repair:last-child { padding-bottom: 0; border-bottom: 0; }
+.repair-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.repair-opts > div { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+@container win (max-width: 520px) {
+  .repair-opts { grid-template-columns: 1fr; }
+  .vstyles { font-size: .68rem; }
+}

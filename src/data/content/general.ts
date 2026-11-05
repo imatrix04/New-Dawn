@@ -10,16 +10,12 @@ export const LEISURE_COST_PER_WEEKLY_HOUR = 3;
 
 // ---------- Dépenses et départ ----------
 
-/** Dépenses mensuelles = nourriture + loyer du logement + entretien de la voiture + loisirs. */
+/** Dépenses mensuelles = nourriture + loyer du logement + carburant et assurance du véhicule + loisirs. */
 export const FOOD_COST = 250;
 
-export const CARS: Record<string, { upkeep: number }> = {
-  small: { upkeep: 60 },
-};
-
-/** Ce que chaque parcours de départ donne au personnage. */
+/** Ce que chaque parcours de départ donne au personnage (`car` : modèle de véhicule d'occasion, voir VEHICLE_MODELS). */
 export const START: Record<StartPath, { money: number; housing: string; car: string | null }> = {
-  comfort: { money: 3000, housing: 'studio', car: 'small' },
+  comfort: { money: 3000, housing: 'studio', car: 'city' },
   tight: { money: 300, housing: 'shared', car: null },
 };
 

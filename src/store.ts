@@ -3,8 +3,10 @@ import {
   buyHome, closePel, createGame, depositSavings, dropTraining, endTurn, enrollTraining, letProperty, migrateGame, moveToProperty,
   openSavings, quitJob, requestPromotion, resolveChoice, resolveJobDecision, resolvePromotion, sellProperty, setGig, setHousingTarget, setSchedule, toggleApplication,
   withdrawProperty, withdrawSavings,
+  buyVehicle, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection,
 } from './game/engine';
-import type { GameState, LeaveAction, Profile, SavingsProduct, ScheduleKey } from './game/types';
+import type { VehicleSource } from './game/engine';
+import type { DrivingStyle, GameState, LeaveAction, Profile, RepairKind, SavingsProduct, ScheduleKey } from './game/types';
 
 const SAVE_KEY = 'newdawn-save-v5';
 
@@ -53,6 +55,12 @@ interface Store {
   moveToProperty: (id: string, leave?: LeaveAction) => void;
   enrollTraining: (id: string) => void;
   dropTraining: () => void;
+  buyVehicle: (source: VehicleSource) => void;
+  sellVehicle: (id: string) => void;
+  setDrivingStyle: (style: DrivingStyle) => void;
+  setDrivingVehicle: (id: string) => void;
+  startRepair: (id: string, kind: RepairKind, diy: boolean) => void;
+  takeInspection: (id: string) => void;
   openSavings: (product: SavingsProduct) => void;
   deposit: (product: SavingsProduct, amount: number) => void;
   withdraw: (product: SavingsProduct, amount: number) => void;
@@ -104,6 +112,12 @@ export const useStore = create<Store>((set, get) => {
     moveToProperty: (id, leave) => { const g = get().game; if (g) update(moveToProperty(g, id, leave)); },
     enrollTraining: (id) => { const g = get().game; if (g) update(enrollTraining(g, id)); },
     dropTraining: () => { const g = get().game; if (g) update(dropTraining(g)); },
+    buyVehicle: (source) => { const g = get().game; if (g) update(buyVehicle(g, source)); },
+    sellVehicle: (id) => { const g = get().game; if (g) update(sellVehicle(g, id)); },
+    setDrivingStyle: (style) => { const g = get().game; if (g) update(setDrivingStyle(g, style)); },
+    setDrivingVehicle: (id) => { const g = get().game; if (g) update(setDrivingVehicle(g, id)); },
+    startRepair: (id, kind, diy) => { const g = get().game; if (g) update(startRepair(g, id, kind, diy)); },
+    takeInspection: (id) => { const g = get().game; if (g) update(takeInspection(g, id)); },
     openSavings: (product) => { const g = get().game; if (g) update(openSavings(g, product)); },
     deposit: (product, amount) => { const g = get().game; if (g) update(depositSavings(g, product, amount)); },
     withdraw: (product, amount) => { const g = get().game; if (g) update(withdrawSavings(g, product, amount)); },

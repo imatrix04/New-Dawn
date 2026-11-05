@@ -40,6 +40,7 @@ export const TRAININGS: Record<string, TrainingConfig> = {
   permisB: { months: 3, tuition: 600, minStudyHours: 4, quick: true, skills: { logistics: 30 }, hireBonus: { field: 'transport', bonus: 0.1 }, weight: 4, drawback: { happiness: -1.5 } },
   permisA: { months: 2, tuition: 500, minStudyHours: 3, quick: true, skills: { logistics: 20, strength: 10 }, hireBonus: { field: 'transport', bonus: 0.05 }, weight: 2, drawback: { health: -0.5, happiness: -1 } },
   permisC: { months: 3, tuition: 1000, minStudyHours: 6, quick: true, skills: { logistics: 50 }, hireBonus: { field: 'transport', bonus: 0.15 }, requires: ['permisB'], weight: 1, drawback: { health: -1, happiness: -2 } },
+  mecaAuto: { months: 2, tuition: 450, minStudyHours: 5, quick: true, skills: { mechanics: 120 }, weight: 3, drawback: { happiness: -1 } },
   barista: { months: 1, tuition: 250, minStudyHours: 4, quick: true, skills: { charisma: 40 }, hireBonus: { field: 'restaurant', bonus: 0.15 }, weight: 4, drawback: { happiness: -1 } },
 
   btsMco: { months: 24, tuition: 350, minStudyHours: 20, skills: { charisma: 25, intelligence: 20 }, weight: 4, drawback: { health: -0.5, happiness: -1.5 } },

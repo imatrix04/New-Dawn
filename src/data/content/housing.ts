@@ -8,6 +8,8 @@ export interface HousingType {
   /** Rareté de 1 (commun) à 4 (très rare) : durée de l'annonce, fréquence d'apparition et chance de dossier en dépendent. */
   grade: 1 | 2 | 3 | 4;
   surface: number;
+  /** Places de parking du bien (au moins 1 : voir parkingOf). */
+  parking: number;
   rent: number | null;
   price: number | null;
   /** Confort : effet mensuel sur les jauges. */
@@ -17,27 +19,27 @@ export interface HousingType {
 }
 
 export const HOUSING_TYPES: Record<string, HousingType> = {
-  shared:    { kind: 'studio',    grade: 1, surface: 14,  rent: 300,  price: null,   comfort: { happiness: -1 } },
-  studio:    { kind: 'studio',    grade: 1, surface: 20,  rent: 450,  price: 70000,  comfort: {} },
-  t2:        { kind: 'apartment', grade: 2, surface: 40,  rent: 650,  price: 130000, comfort: { happiness: 1 } },
-  t3:        { kind: 'apartment', grade: 2, surface: 65,  rent: 850,  price: 185000, comfort: { happiness: 1 } },
-  duplex:    { kind: 'apartment', grade: 3, surface: 90,  rent: 1300, price: 290000, comfort: { happiness: 2 } },
-  cottage:   { kind: 'house',     grade: 3, surface: 80,  rent: 1000, price: 210000, comfort: { happiness: 2, health: 1 } },
-  family:    { kind: 'house',     grade: 3, surface: 120, rent: 1500, price: 340000, comfort: { happiness: 2, health: 1 } },
-  penthouse: { kind: 'apartment', grade: 4, surface: 130, rent: 2800, price: 620000, comfort: { happiness: 3, health: 1 }, notIn: ['country'] },
-  bigHouse:  { kind: 'house',     grade: 4, surface: 200, rent: 3200, price: 750000, comfort: { happiness: 3, health: 1 }, notIn: ['center'] },
+  shared:    { kind: 'studio',    grade: 1, surface: 14,  parking: 1, rent: 300,  price: null,   comfort: { happiness: -1 } },
+  studio:    { kind: 'studio',    grade: 1, surface: 20,  parking: 1, rent: 450,  price: 70000,  comfort: {} },
+  t2:        { kind: 'apartment', grade: 2, surface: 40,  parking: 1, rent: 650,  price: 130000, comfort: { happiness: 1 } },
+  t3:        { kind: 'apartment', grade: 2, surface: 65,  parking: 1, rent: 850,  price: 185000, comfort: { happiness: 1 } },
+  duplex:    { kind: 'apartment', grade: 3, surface: 90,  parking: 2, rent: 1300, price: 290000, comfort: { happiness: 2 } },
+  cottage:   { kind: 'house',     grade: 3, surface: 80,  parking: 2, rent: 1000, price: 210000, comfort: { happiness: 2, health: 1 } },
+  family:    { kind: 'house',     grade: 3, surface: 120, parking: 3, rent: 1500, price: 340000, comfort: { happiness: 2, health: 1 } },
+  penthouse: { kind: 'apartment', grade: 4, surface: 130, parking: 2, rent: 2800, price: 620000, comfort: { happiness: 3, health: 1 }, notIn: ['country'] },
+  bigHouse:  { kind: 'house',     grade: 4, surface: 200, parking: 4, rent: 3200, price: 750000, comfort: { happiness: 3, health: 1 }, notIn: ['center'] },
 };
 
 export const HOUSING_KINDS: HousingKind[] = ['studio', 'apartment', 'house'];
 
 /**
  * Quartiers : multiplicateur de prix, fourchette [min, max] d'heures de trajet ajoutées par semaine (si l'on travaille,
- * tirée à chaque annonce), bonheur mensuel.
+ * tirée à chaque annonce), bonheur mensuel, places de parking en plus (plus de terrain à la campagne).
  */
-export const AREAS: Record<Area, { price: number; commute: [number, number]; happiness: number; weight: number }> = {
-  center:  { price: 1.25, commute: [0, 0],  happiness: 0, weight: 3 },
-  suburb:  { price: 1,    commute: [2, 4],  happiness: 0, weight: 4 },
-  country: { price: 0.8,  commute: [6, 10], happiness: 1, weight: 3 },
+export const AREAS: Record<Area, { price: number; commute: [number, number]; happiness: number; weight: number; parking: number }> = {
+  center:  { price: 1.25, commute: [0, 0],  happiness: 0, weight: 3, parking: 0 },
+  suburb:  { price: 1,    commute: [2, 4],  happiness: 0, weight: 4, parking: 0 },
+  country: { price: 0.8,  commute: [6, 10], happiness: 1, weight: 3, parking: 1 },
 };
 export const AREA_IDS = Object.keys(AREAS) as Area[];
 

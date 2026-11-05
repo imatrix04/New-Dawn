@@ -7,7 +7,7 @@ export { jobBlameChance, probationLeft, probationMonths, quitJob, resolveJobDeci
 export { drawCatalog } from './catalog';
 export { blameChance, dropTraining, enrollTraining, trainingTuition } from './training';
 export { promotionAvailable, promotionRequestChance, promotionRequestWait, requestPromotion, resolvePromotion } from './promotion';
-export { comfortOf, housingCommute, housingEffects, housingTypeById, marketRent, moveCredit, rentBreakdown, rentChance, rentQuote, saleNet, saleProceeds, setHousingTarget } from './housing';
+export { comfortOf, parkingOf, housingCommute, housingEffects, housingTypeById, marketRent, moveCredit, rentBreakdown, rentChance, rentQuote, saleNet, saleProceeds, setHousingTarget } from './housing';
 export type { RentBonus, RentBreakdown, RentQuote } from './housing';
 export { buyHome, buyQuote, letProperty, lettingChance, lettingIncome, moveToProperty, propertyProceeds, sellingChance, sellProperty, withdrawProperty } from './property';
 export type { BuyQuote } from './property';
@@ -17,4 +17,6 @@ export { experienceGoal, monthlyDrawbacks, monthlyExpenseLines, monthlyExpenses,
 export type { MoneyLine, SkillGainSource } from './effects';
 export { ageYears, canOpen, checkDeposit, checkWithdraw, closePel, depositSavings, emptySavings, isOpen, livretJeuneEligible, migrateSavings, openSavings, pelClosePreview, SAVINGS_PRODUCTS, savingsBalance, savingsRoom, totalSavings, withdrawSavings } from './savings';
 export type { PelClosePreview, TransferCheck } from './savings';
+export { availableRepairs, banMonthsLeft, baseCommute, buyVehicle, canDrive, commuteAt, commuteHours, driveBlock, estimatedKm, fuelCost, fuelSpec, hasLicense, inspectionPrice, inspectionStatus, insuranceCost, insuranceFor, insuranceOf, drivingVehicle, isImmobilised, isScrap, malusCo2, malusWeight, marketValue, monthlyKm, parkingOverflow, parkingSpots, registrationFee, repairHours, repairQuote, saleReady, salePrice, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection, vehicleAgeMonths, vehicleAgeYears, vehicleById, vehicleModel, vehicleQuote, vehicleValue } from './vehicle';
+export type { DriveBlock, InspectionStatus, RepairQuote, VehicleQuote, VehicleSource } from './vehicle';
 export { endTurn, resolveChoice } from './turn';

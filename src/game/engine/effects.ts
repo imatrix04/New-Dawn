@@ -1,5 +1,5 @@
 // Effets mensuels : revenus, dépenses, jauges, compétences et pénibilité.
-import { CARS, DEBT_HAPPINESS_LOSS, FOOD_COST, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, SKILL_RULES, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, TRAININGS } from '../../data/content';
+import { DEBT_HAPPINESS_LOSS, FOOD_COST, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, REPAIRS, SKILL_RULES, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, TRAININGS } from '../../data/content';
 import type { Drawback, GameState, Schedule, SkillId, StatKey } from '../types';
 import { housingEffects } from './housing';
 import { companyById, currentSalary, gigById, gigPay, jobById, jobDrawback } from './lookup';
@@ -7,10 +7,11 @@ import { lettingIncome } from './property';
 import { weeklyHours } from './schedule';
 import { clamp } from './shared';
 import { trainingTuition } from './training';
+import { drivingVehicle, fuelCost, insuranceOf } from './vehicle';
 
 /** Une ligne du détail mensuel : `id` sert à retrouver le libellé traduit selon `kind`. */
 export interface MoneyLine {
-  kind: 'job' | 'gig' | 'rentals' | 'food' | 'housing' | 'loan' | 'charges' | 'propLoan' | 'propCharges' | 'car' | 'leisure' | 'training';
+  kind: 'job' | 'gig' | 'rentals' | 'food' | 'housing' | 'loan' | 'charges' | 'propLoan' | 'propCharges' | 'fuel' | 'insurance' | 'leisure' | 'training';
   id?: string;
   amount: number;
 }
@@ -26,7 +27,7 @@ export function monthlyIncomeLines(state: GameState): MoneyLine[] {
   return lines;
 }
 
-/** Nourriture + loyer (ou mensualité du prêt et charges) + entretien de la voiture + coût des loisirs + frais de formation. */
+/** Nourriture + loyer (ou mensualité du prêt et charges) + carburant et assurance du véhicule + coût des loisirs + frais de formation. */
 export function monthlyExpenseLines(state: GameState): MoneyLine[] {
   const { home } = state;
   const lines: MoneyLine[] = [{ kind: 'food', amount: FOOD_COST }];
@@ -40,7 +41,11 @@ export function monthlyExpenseLines(state: GameState): MoneyLine[] {
   const propCharges = state.properties.reduce((sum, p) => sum + p.charges, 0);
   if (propLoans > 0) lines.push({ kind: 'propLoan', amount: propLoans });
   if (propCharges > 0) lines.push({ kind: 'propCharges', amount: propCharges });
-  if (state.car) lines.push({ kind: 'car', id: state.car, amount: CARS[state.car]?.upkeep ?? 0 });
+  // `id` = identifiant du véhicule : une ligne d'assurance par véhicule, le carburant pour celui qui roule.
+  for (const v of state.vehicles) lines.push({ kind: 'insurance', id: v.id, amount: insuranceOf(state, v) });
+  const fuel = fuelCost(state);
+  const driving = drivingVehicle(state);
+  if (fuel > 0 && driving) lines.push({ kind: 'fuel', id: driving.id, amount: fuel });
   lines.push({ kind: 'leisure', amount: Math.round(weeklyHours(state.schedule, 'leisure') * LEISURE_COST_PER_WEEKLY_HOUR) });
   if (state.training && trainingTuition(state) > 0) lines.push({ kind: 'training', id: state.training.id, amount: trainingTuition(state) });
   return lines;
@@ -82,7 +87,7 @@ export function projectNextStats(state: GameState): Record<StatKey, number> {
   };
 }
 
-const NO_GAIN = (): Record<SkillId, number> => ({ digital: 0, charisma: 0, strength: 0, intelligence: 0, logistics: 0 });
+const NO_GAIN = (): Record<SkillId, number> => ({ digital: 0, charisma: 0, strength: 0, intelligence: 0, logistics: 0, mechanics: 0 });
 
 /**
  * Compétences gagnées chaque mois : études (intelligence, numérique), sport (force), loisirs (charisme)
@@ -96,10 +101,10 @@ export function skillGains(state: GameState): Record<SkillId, number> {
 }
 
 /** D'où vient chaque gain mensuel de compétence (détail de `skillGains`, pour l'infobulle du profil). */
-export type SkillGainSource = { kind: 'study' | 'training' | 'sport' | 'leisure' | 'job' | 'gig'; id?: string; amount: number };
+export type SkillGainSource = { kind: 'study' | 'training' | 'sport' | 'leisure' | 'job' | 'gig' | 'repair'; id?: string; amount: number };
 
 export function skillGainSources(state: GameState): Record<SkillId, SkillGainSource[]> {
-  const out: Record<SkillId, SkillGainSource[]> = { digital: [], charisma: [], strength: [], intelligence: [], logistics: [] };
+  const out: Record<SkillId, SkillGainSource[]> = { digital: [], charisma: [], strength: [], intelligence: [], logistics: [], mechanics: [] };
   const add = (
     kind: SkillGainSource['kind'], rule: Partial<Record<SkillId, number>> | undefined, factor = 1, id?: string,
   ) => {
@@ -117,6 +122,10 @@ export function skillGainSources(state: GameState): Record<SkillId, SkillGainSou
   if (job) add('job', SKILL_RULES.perJobMonth[job.field], 1, job.id);
   const gig = gigById(state.gig);
   if (gig) add('gig', gig.skills, 1, gig.id);
+  // Réparer soi-même fait progresser la mécanique, mois après mois.
+  for (const v of state.vehicles) {
+    if (v.repair?.diy) add('repair', { mechanics: REPAIRS[v.repair.kind].skillGain }, 1, v.repair.kind);
+  }
   return out;
 }
 

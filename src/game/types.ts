@@ -2,7 +2,7 @@
 export type StatKey = 'health' | 'happiness';
 
 /** Compétences (0 à 100) : chaque type de connaissance a sa propre valeur. Ajouter une compétence = une entrée ici + dans SKILLS. */
-export type SkillId = 'digital' | 'charisma' | 'strength' | 'intelligence' | 'logistics';
+export type SkillId = 'digital' | 'charisma' | 'strength' | 'intelligence' | 'logistics' | 'mechanics';
 
 /** Variation appliquée à l'état : argent et/ou jauges. */
 export type Fx = Partial<Record<StatKey | SkillId | 'money', number>>;
@@ -152,6 +152,77 @@ export interface Training {
   sponsored?: boolean;
 }
 
+export type FuelType = 'petrol' | 'diesel';
+
+/** Style de conduite : règle le gain de temps sur les trajets, la consommation, l'usure et les risques (voir DRIVING_STYLES). */
+export type DrivingStyle = 'eco' | 'normal' | 'fast' | 'reckless';
+
+/** Intervention mécanique : entretien habituel, panne mineure, panne majeure, véhicule cassé mais réparable. */
+export type RepairKind = 'service' | 'minor' | 'major' | 'broken';
+/** Pannes qui peuvent frapper le véhicule (tout sauf l'entretien, qui est préventif). */
+export type Breakdown = Exclude<RepairKind, 'service'>;
+
+/** Réparation en cours : à soi-même (heures dans le planning) ou au garage (véhicule immobilisé). */
+export interface RepairJob {
+  kind: RepairKind;
+  diy: boolean;
+  monthsLeft: number;
+}
+
+/** Dernier contrôle technique passé au garage (validé ou non). */
+export interface Inspection {
+  month: number;
+  passed: boolean;
+}
+
+/** Véhicule possédé. Textes : vehicles.<modelId>. */
+export interface Vehicle {
+  id: string;
+  modelId: string;
+  fuel: FuelType;
+  km: number;
+  /** Mois de la partie de la première mise en circulation (négatif : véhicule déjà ancien à l'achat). */
+  registeredMonth: number;
+  /** État actuel, de 0 (mort) à 100 : baisse avec les kilomètres et le style de conduite. */
+  condition: number;
+  /** État maximal atteignable : il baisse avec l'usure et à chaque réparation, jusqu'à la casse. */
+  ceiling: number;
+  /** Kilométrage du dernier entretien. */
+  lastServiceKm: number;
+  inspection: Inspection | null;
+  /** Panne non réparée, ou null. */
+  issue: Breakdown | null;
+  repair: RepairJob | null;
+}
+
+/** Véhicule d'occasion à vendre. */
+export interface VehicleListing {
+  id: string;
+  modelId: string;
+  fuel: FuelType;
+  km: number;
+  registeredMonth: number;
+  condition: number;
+  ceiling: number;
+  price: number;
+  /** Mois restants avant que l'annonce disparaisse. */
+  monthsLeft: number;
+}
+
+/** Le conducteur : permis à points, bonus-malus d'assurance et style de conduite. */
+export interface Driver {
+  /** Véhicule choisi pour les trajets (il ne roule que s'il est en état ; sinon le premier qui peut rouler le remplace). */
+  vehicleId: string | null;
+  points: number;
+  /** Coefficient de réduction-majoration (bonus-malus) de l'assurance : 1 = neutre, moins = bonus. */
+  crm: number;
+  /** Mois jusqu'auquel le permis est suspendu, ou null. */
+  banUntil: number | null;
+  /** Mois de la dernière infraction : les points reviennent après 2 ans sans infraction. */
+  lastOffense: number | null;
+  style: DrivingStyle;
+}
+
 export interface GameState {
   firstName: string;
   lastName: string;
@@ -205,8 +276,12 @@ export interface GameState {
   housingLeave: LeaveAction;
   /** Biens possédés où l'on n'habite pas. */
   properties: Property[];
-  /** Textes : cars.<id>. */
-  car: string | null;
+  /** Véhicules possédés : au plus autant que de places de parking du logement. */
+  vehicles: Vehicle[];
+  /** Permis, assurance et style de conduite. */
+  driver: Driver;
+  /** Véhicules d'occasion visibles : ils expirent et se renouvellent chaque mois. */
+  vehicleListings: VehicleListing[];
   schedule: Schedule;
   /** `money` est le compte courant ; l'épargne est placée ici. */
   savings: Savings;

@@ -9,3 +9,4 @@ export * from './savings';
 export * from './skills';
 export * from './time';
 export * from './trainings';
+export * from './vehicles';

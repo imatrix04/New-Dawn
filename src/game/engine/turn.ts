@@ -14,6 +14,7 @@ import { accrueSavings, closeExpiredSavings } from './savings';
 import { isOverbooked } from './schedule';
 import { addLog, applyFx, checkOver, clamp } from './shared';
 import { progressTraining } from './training';
+import { progressVehicle, refreshVehicleListings } from './vehicle';
 
 function rollEvent(s: GameState) {
   s.pendingEvent = null;
@@ -64,6 +65,7 @@ export function endTurn(state: GameState): GameState {
   addLog(s, 'log.expenses', { amount: expenses });
   progressHome(s);
   progressProperties(s);
+  progressVehicle(s);
   accrueSavings(s);
 
   progressTraining(s);
@@ -73,6 +75,7 @@ export function endTurn(state: GameState): GameState {
   resolveHousingApplication(s);
   refreshOffers(s);
   refreshListings(s);
+  refreshVehicleListings(s);
 
   if (s.stats.happiness < 20) addLog(s, 'log.lowMood', {}, 'bad');
   if (s.money < 0) addLog(s, 'log.overdraft', {}, 'bad');

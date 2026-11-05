@@ -8,13 +8,14 @@ export const SKILLS: { id: SkillId; icon: string; color: string }[] = [
   { id: 'strength', icon: '💪', color: '#ff7a95' },
   { id: 'intelligence', icon: '🧠', color: '#a77bf5' },
   { id: 'logistics', icon: '📦', color: '#5bd48a' },
+  { id: 'mechanics', icon: '🔧', color: '#e0b04a' },
 ];
 
 /** Valeur maximale d'une compétence (échelle de 0 à 1000). */
 export const SKILL_MAX = 1000;
 
 export const START_SKILLS: Record<SkillId, number> = {
-  digital: 10, charisma: 10, strength: 10, intelligence: 10, logistics: 10,
+  digital: 10, charisma: 10, strength: 10, intelligence: 10, logistics: 10, mechanics: 10,
 };
 
 /** Gains de compétences par mois (une valeur par heure de planning, ou par mois travaillé dans le domaine). */
