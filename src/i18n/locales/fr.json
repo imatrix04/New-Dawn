@@ -312,7 +312,7 @@
     "noLoan": "Sans prêt",
     "extraCommute": "🚌 +{{hours}} h/sem. de trajet",
     "rentHint": "Dépose un dossier : la réponse tombe à la fin du mois. Le propriétaire regarde tes revenus, ton emploi et ton épargne. Les biens rares attirent plus de candidats. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
-    "buyHint": "Choisis ton apport et la durée du prêt : la banque exige un emploi et au plus 35 % de ton salaire en mensualité. Tu peux y habiter ou l'acheter pour le louer. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
+    "buyHint": "Choisis ton apport et la durée du prêt : la banque exige un emploi ou des loyers perçus, et au plus 35 % de tes revenus en mensualité. Tu peux y habiter ou l'acheter pour le louer. Règle tes heures de recherche de logement dans l'emploi du temps pour voir de nouvelles annonces.",
     "listingsCount": "Annonces visibles : {{count}} / {{max}}",
     "searchRate_one": "🏠 {{count}} nouvelle annonce par mois",
     "searchRate_other": "🏠 {{count}} nouvelles annonces par mois",
@@ -332,7 +332,7 @@
       "title": "D'où vient ta chance",
       "base": "Chance de base (bien de rareté {{grade}})",
       "income": "Revenus : {{ratio}} fois le loyer",
-      "job": "Tu as un emploi",
+      "job": "Revenus stables (emploi ou loyers)",
       "savings": "Épargne : 6 mois de loyer d'avance"
     },
     "apply": "Déposer un dossier",
@@ -377,8 +377,8 @@
       "confirm": "Acheter ce bien",
       "reason": {
         "invalid": "Choix de financement invalide.",
-        "job": "La banque refuse : il te faut un emploi pour emprunter.",
-        "debt": "La banque refuse : la mensualité dépasse 35 % de ton salaire.",
+        "job": "La banque refuse : il te faut un emploi ou des loyers perçus pour emprunter.",
+        "debt": "La banque refuse : la mensualité dépasse 35 % de tes revenus (salaire et 70 % des loyers).",
         "cash": "Il te manque {{amount}} pour payer l'apport, les frais de notaire et le déménagement."
       }
     },

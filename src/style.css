@@ -718,16 +718,16 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 .chance-list .minus b { color: var(--bad); }
 .facts .bad { color: var(--bad); }
 .kind-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; }
-.kind-filter button, .seg button {
+.kind-filter button, .pick button {
   all: unset; box-sizing: border-box; padding: 3px 11px; border-radius: 999px; font-size: .72rem; font-weight: 600;
   color: var(--muted); background: #151826; cursor: pointer; transition: color .2s, background .2s, transform .15s;
 }
-.kind-filter button:hover, .seg button:hover { color: var(--text); transform: translateY(-1px); }
-.kind-filter button.on, .seg button.on { color: #1a1a1a; background: var(--accent); }
-.kind-filter button:focus-visible, .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.seg-wrap { display: flex; flex-direction: column; gap: 5px; }
-.seg-label { font-size: .66rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-.seg { display: flex; flex-wrap: wrap; gap: 5px; }
+.kind-filter button:hover, .pick button:hover { color: var(--text); transform: translateY(-1px); }
+.kind-filter button.on, .pick button.on { color: #1a1a1a; background: var(--accent); }
+.kind-filter button:focus-visible, .pick button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick-wrap { display: flex; flex-direction: column; gap: 5px; }
+.pick-label { font-size: .66rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.pick { display: flex; flex-wrap: wrap; gap: 5px; }
 
 /* Outils de test (mode dev uniquement) */
 .dev-cheats {

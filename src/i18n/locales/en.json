@@ -312,7 +312,7 @@
     "noLoan": "No loan",
     "extraCommute": "🚌 +{{hours}} h/wk commute",
     "rentHint": "Send an application: the answer comes at the end of the month. The landlord looks at your income, your job and your savings. Rare homes attract more applicants. Set your housing search hours in the schedule to see new listings.",
-    "buyHint": "Pick your down payment and loan term: the bank requires a job and a monthly payment of at most 35% of your salary. You can live in it or buy it to rent it out. Set your housing search hours in the schedule to see new listings.",
+    "buyHint": "Pick your down payment and loan term: the bank requires a job or rental income, and a monthly payment of at most 35% of your income. You can live in it or buy it to rent it out. Set your housing search hours in the schedule to see new listings.",
     "listingsCount": "Visible listings: {{count}} / {{max}}",
     "searchRate_one": "🏠 {{count}} new listing per month",
     "searchRate_other": "🏠 {{count}} new listings per month",
@@ -332,7 +332,7 @@
       "title": "Where your chance comes from",
       "base": "Base chance (rarity {{grade}} home)",
       "income": "Income: {{ratio}} times the rent",
-      "job": "You have a job",
+      "job": "Steady income (job or rents)",
       "savings": "Savings: 6 months of rent in reserve"
     },
     "apply": "Send an application",
@@ -377,8 +377,8 @@
       "confirm": "Buy this home",
       "reason": {
         "invalid": "Invalid financing choice.",
-        "job": "The bank refuses: you need a job to borrow.",
-        "debt": "The bank refuses: the payment exceeds 35% of your salary.",
+        "job": "The bank refuses: you need a job or rental income to borrow.",
+        "debt": "The bank refuses: the payment exceeds 35% of your income (salary and 70% of rents).",
         "cash": "You are {{amount}} short for the down payment, notary fees and moving."
       }
     },

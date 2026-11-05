@@ -38,9 +38,9 @@ function Seg<T extends number | string>({ label, value, options, onChange }: {
   label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void;
 }) {
   return (
-    <div className="seg-wrap">
-      <span className="seg-label">{label}</span>
-      <div className="seg" role="group" aria-label={label}>
+    <div className="pick-wrap">
+      <span className="pick-label">{label}</span>
+      <div className="pick" role="group" aria-label={label}>
         {options.map((o) => (
           <button key={o.value} className={value === o.value ? 'on' : ''} aria-pressed={value === o.value} onClick={() => onChange(o.value)}>
             {o.label}

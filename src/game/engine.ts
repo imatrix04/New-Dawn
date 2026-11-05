@@ -324,10 +324,10 @@ export const housingEffects = (state: GameState): Record<StatKey, number> => com
 export const housingCommute = (state: GameState): number =>
   state.job || state.gig ? AREAS[state.home.area].commute : 0;
 
-/** Revenus mensuels vus par un propriétaire ou une banque : salaire et boulot rapide. */
+/** Revenus mensuels vus par un propriétaire : salaire, boulot rapide et loyers perçus. */
 const rentIncome = (state: GameState): number => {
   const gig = gigById(state.gig);
-  return currentSalary(state) + (gig ? gigPay(state, gig) : 0);
+  return currentSalary(state) + (gig ? gigPay(state, gig) : 0) + lettingIncome(state);
 };
 
 /** Produit d'une vente au prix `price` : moins les frais de revente et le prêt restant dû. */
@@ -389,7 +389,7 @@ export function rentBreakdown(state: GameState, l: HousingListing): RentBreakdow
   const ratio = rentIncome(state) / l.price;
   const tier = RENT.incomeTiers.find((x) => ratio >= x.ratio)!;
   if (tier.bonus) bonuses.push({ type: 'income', value: tier.bonus, ratio });
-  if (state.job) bonuses.push({ type: 'job', value: RENT.jobBonus });
+  if (hasStableIncome(state)) bonuses.push({ type: 'job', value: RENT.jobBonus });
   if (state.money + totalSavings(state) >= l.price * RENT.cushionMonths) bonuses.push({ type: 'savings', value: RENT.cushionBonus });
   const total = Math.min(RENT_CHANCE_MAX, Math.max(RENT_CHANCE_MIN, base + bonuses.reduce((sum, b) => sum + b.value, 0)));
   return { base, bonuses, total };
@@ -429,6 +429,9 @@ function existingLoans(state: GameState, keepsHome: boolean): number {
   return home + state.properties.reduce((sum, p) => sum + (p.loan?.monthly ?? 0), 0);
 }
 
+/** Revenus réguliers : un emploi ou des loyers perçus (ce que demandent propriétaires et banques). */
+const hasStableIncome = (state: GameState): boolean => !!state.job || lettingIncome(state) > 0;
+
 /** Revenus vus par la banque : salaire, plus une part des loyers perçus. */
 const bankIncome = (state: GameState): number =>
   currentSalary(state) + OWNING.rentalWeight * state.properties.reduce((sum, p) => sum + (p.status === 'rented' ? p.rent : 0), 0);
@@ -452,7 +455,7 @@ export function buyQuote(
   const debtRatio = income > 0 ? load / income : load > 0 ? Infinity : 0;
   let reason: BuyQuote['reason'] = null;
   if (!OWNING.downChoices.includes(downPct) || !OWNING.terms.includes(years)) reason = 'invalid';
-  else if (loan > 0 && !state.job) reason = 'job';
+  else if (loan > 0 && !hasStableIncome(state)) reason = 'job';
   else if (loan > 0 && debtRatio > OWNING.debtCap) reason = 'debt';
   else if (state.money + credit < upfront) reason = 'cash';
   return {
