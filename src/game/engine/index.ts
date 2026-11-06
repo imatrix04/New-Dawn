@@ -6,7 +6,7 @@ export type { Eligibility, HireBonus, HireBreakdown } from './career';
 export { jobBlameChance, probationLeft, probationMonths, quitJob, resolveJobDecision, setGig, workedHours } from './job';
 export { drawCatalog } from './catalog';
 export { blameChance, dropTraining, enrollTraining, trainingTuition } from './training';
-export { promotionAvailable, promotionRequestChance, promotionRequestWait, requestPromotion, resolvePromotion } from './promotion';
+export { careerPath, promotionAvailable, promotionRequestChance, promotionRequestWait, requestPromotion, resolvePromotion } from './promotion';
 export { comfortOf, parkingOf, housingCommute, housingEffects, housingTypeById, marketRent, moveCredit, rentBreakdown, rentChance, rentQuote, saleNet, saleProceeds, setHousingTarget } from './housing';
 export type { RentBonus, RentBreakdown, RentQuote } from './housing';
 export { buyHome, buyQuote, letProperty, lettingChance, lettingIncome, moveToProperty, propertyProceeds, sellingChance, sellProperty, withdrawProperty } from './property';

@@ -61,15 +61,15 @@
   "trainings": {
     "hotelSchool": {
       "name": "Hotel school",
-      "desc": "Table service and etiquette: opens the doors of fine-dining restaurants."
+      "desc": "Table service and etiquette."
     },
     "permisB": {
       "name": "Car licence (B)",
-      "desc": "Theory and driving: about 3 months and €1,800 at a driving school. Opens ride-hailing driver jobs."
+      "desc": "Theory and driving: about 3 months and €1,800 at a driving school."
     },
     "permisA": {
       "name": "Motorbike licence (A2)",
-      "desc": "Track and road training: about 2 months and €1,000. Opens motorbike courier jobs."
+      "desc": "Track and road training: about 2 months and €1,000."
     },
     "permisC": {
       "name": "Truck licence (C)",
@@ -81,7 +81,7 @@
     },
     "caces": {
       "name": "Forklift licence",
-      "desc": "Forklift operator certificate: opens forklift operator jobs."
+      "desc": "Forklift operator certificate."
     },
     "barista": {
       "name": "Barista basics",
@@ -89,15 +89,15 @@
     },
     "officeSuite": {
       "name": "Advanced office skills",
-      "desc": "Spreadsheets, word processing and organisation: opens administrative assistant jobs."
+      "desc": "Spreadsheets, word processing and organisation."
     },
     "btsMco": {
       "name": "Commercial operations management BTS (MCO)",
-      "desc": "Two-year bac+2, in school or work-study: leading a team and running a retail unit. Directly opens the store manager job."
+      "desc": "Two-year bac+2, in school or work-study: leading a team and running a retail unit."
     },
     "btsMhr": {
       "name": "Hospitality management BTS (restaurant option)",
-      "desc": "Two-year bac+2 with internship: running a restaurant unit. Opens all restaurant manager jobs (fast-food, casual and fine-dining)."
+      "desc": "Two-year bac+2 with internship: running a restaurant unit."
     }
   },
   "promotion": {
@@ -171,6 +171,14 @@
       "pay": "Pay", "salary": "Salary", "hours": "Work", "commute": "Commute",
       "expires": "Offer lasts", "duration": "Duration", "tuition": "Cost", "study": "Reserved hours"
     },
+    "prospects": {
+      "title": "Career prospects",
+      "progress": "Seniority towards “{{job}}”",
+      "none": "No promotion planned in this job.",
+      "after_one": "after {{count}} month",
+      "after_other": "after {{count}} months",
+      "between": "between {{from}} and {{to}} months"
+    },
     "chanceLabel": "Chance of being hired each month",
     "applied": "Applied",
     "close": "Close",
@@ -179,6 +187,7 @@
       "title": "Where your chance comes from",
       "base": "Base chance (grade {{grade}} job)",
       "training": "Training: {{name}}",
+      "rank": "Held a higher post: {{job}}",
       "experience": "Experience in {{field}} ({{months}} months)",
       "fired_one": "Fired {{count}} month ago",
       "fired_other": "Fired {{count}} months ago"
@@ -198,7 +207,6 @@
     "quickHint": "Short non-diploma courses: they give skills, open certain jobs and raise your odds of being hired, but they weigh on health and mood. One training or study at a time.",
     "trainingHint": "Long studies lead to a diploma and weigh on health and mood. One training or study at a time.",
     "hireBonus": "+{{pct}}% hiring chance in {{field}}",
-    "unlocks": "Unlocks: {{job}}",
     "certified": "Certified",
     "requires": "Requires: {{names}}",
     "status": { "current": "Employed", "locked": "Locked", "active": "Active" },

@@ -32,6 +32,8 @@ export const PROBATION_MONTHS: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 6
 /** Après un renvoi, la chance d'embauche baisse de ce montant pendant ce nombre de mois. */
 export const FIRED_HIRE_PENALTY = 0.15;
 export const FIRED_MEMORY_MONTHS = 6;
+/** Bonus d'embauche quand on a déjà occupé, dans le même domaine, un poste de grade supérieur (on redescend, mais on a le niveau). */
+export const HIGHER_RANK_HIRE_BONUS = 0.15;
 
 // ---------- Prix variables ----------
 
@@ -82,7 +84,7 @@ export const JOBS: Job[] = [
     id: 'fineDiningManager', grade: 4, drawback: { health: -2, happiness: -3 }, field: 'restaurant', salary: 2600, hours: 42, commute: 6,
     anyOf: [{ type: 'diploma', id: 'btsMhr' }],
   },
-  { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, minSkills: { charisma: 50 }, hours: 35, commute: 4 },
+  { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, hours: 35, commute: 4 },
   {
     id: 'retailManager', grade: 2, drawback: { health: -0.5, happiness: -2 }, field: 'retail', salary: 1850, hours: 39, commute: 4,
     anyOf: [{ type: 'experience', field: 'retail', months: 24 }, { type: 'diploma', id: 'btsMco' }],

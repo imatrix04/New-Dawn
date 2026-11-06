@@ -5,6 +5,7 @@ import { Board } from './board/Board';
 import { BoardWindow } from './board/BoardWindow';
 import { CareerCard } from './CareerCard';
 import { EventPanel } from './EventPanel';
+import { Hud } from './Hud';
 import { HousingCard } from './HousingCard';
 import { JobDecisionPanel } from './JobDecisionPanel';
 import { PromotionPanel } from './PromotionPanel';
@@ -53,6 +54,7 @@ export function GameScreen({ game }: { game: GameState }) {
       className={`screen wide game-screen${scene ? ' has-scene' : ''}`}
       style={scene ? { '--scene': `url("${scene}")` } as CSSProperties : undefined}
     >
+      <Hud game={game} onPause={() => setPaused(true)} />
       <Board>
         <BoardWindow id="schedule" title={t('windows.schedule')}>
           <SchedulePanel game={game} />
@@ -80,7 +82,7 @@ export function GameScreen({ game }: { game: GameState }) {
         </BoardWindow>
       </Board>
 
-      <TopBar onPause={() => setPaused(true)} />
+      <TopBar />
       {import.meta.env.DEV && <DevCheats />}
 
       {/* Les réponses aux candidatures passent avant l'évènement du mois. */}

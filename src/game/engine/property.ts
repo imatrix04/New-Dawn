@@ -121,6 +121,8 @@ export function buyHome(
   return s;
 }
 
+const inRange = (n: number, [min, max]: readonly [number, number]) => Number.isFinite(n) && n >= min - 1e-9 && n <= max + 1e-9;
+
 const propertyOf = (state: GameState, id: string): Property | undefined => state.properties.find((p) => p.id === id);
 
 /** Chance mensuelle de trouver un locataire : base selon la rareté, plus ou moins selon l'écart au loyer du marché. */
@@ -145,7 +147,7 @@ export const lettingIncome = (state: GameState): number =>
 /** Met un bien (vide, en recherche de locataire ou en vente) en location au loyer du marché multiplié par `factor`. */
 export function letProperty(state: GameState, id: string, factor: number): GameState {
   const p = propertyOf(state, id);
-  if (!p || p.status === 'rented' || !LETTING.rentFactors.includes(factor)) return state;
+  if (!p || p.status === 'rented' || !inRange(factor, LETTING.rentRange)) return state;
   const s = structuredClone(state);
   const q = propertyOf(s, id)!;
   q.status = 'letting';
@@ -156,7 +158,7 @@ export function letProperty(state: GameState, id: string, factor: number): GameS
 /** Met un bien en vente au prix de sa valeur multiplié par `factor` (un locataire en place doit partir). */
 export function sellProperty(state: GameState, id: string, factor: number): GameState {
   const p = propertyOf(state, id);
-  if (!p || !SELLING.priceFactors.includes(factor)) return state;
+  if (!p || !inRange(factor, SELLING.priceRange)) return state;
   const s = structuredClone(state);
   const q = propertyOf(s, id)!;
   q.status = 'selling';

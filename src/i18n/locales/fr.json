@@ -61,15 +61,15 @@
   "trainings": {
     "hotelSchool": {
       "name": "École hôtelière",
-      "desc": "Service en salle et savoir-être : ouvre les portes des restaurants haut de gamme."
+      "desc": "Service en salle et savoir-être."
     },
     "permisB": {
       "name": "Permis voiture (B)",
-      "desc": "Code et conduite : environ 3 mois et 1 800 € en auto-école. Ouvre les postes de chauffeur VTC."
+      "desc": "Code et conduite : environ 3 mois et 1 800 € en auto-école."
     },
     "permisA": {
       "name": "Permis moto (A2)",
-      "desc": "Plateau et circulation : environ 2 mois et 1 000 €. Ouvre les postes de coursier moto."
+      "desc": "Plateau et circulation : environ 2 mois et 1 000 €."
     },
     "permisC": {
       "name": "Permis poids lourd (C)",
@@ -81,7 +81,7 @@
     },
     "caces": {
       "name": "CACES cariste",
-      "desc": "Certificat de conduite de chariots élévateurs : ouvre les postes de cariste."
+      "desc": "Certificat de conduite de chariots élévateurs."
     },
     "barista": {
       "name": "Initiation barista",
@@ -89,15 +89,15 @@
     },
     "officeSuite": {
       "name": "Bureautique avancée",
-      "desc": "Tableurs, traitement de texte et organisation : ouvre les postes d'assistant administratif."
+      "desc": "Tableurs, traitement de texte et organisation."
     },
     "btsMco": {
       "name": "BTS Management commercial opérationnel (MCO)",
-      "desc": "Bac+2 en 2 ans, en lycée ou en alternance : animer une équipe et gérer une unité commerciale. Ouvre directement le poste de manager de magasin."
+      "desc": "Bac+2 en 2 ans, en lycée ou en alternance : animer une équipe et gérer une unité commerciale."
     },
     "btsMhr": {
       "name": "BTS Management en hôtellerie-restauration (option A)",
-      "desc": "Bac+2 en 2 ans, avec stage : diriger une unité de restauration. Ouvre tous les postes de manager en restauration (rapide, basique et haut de gamme)."
+      "desc": "Bac+2 en 2 ans, avec stage : diriger une unité de restauration."
     }
   },
   "promotion": {
@@ -171,6 +171,14 @@
       "pay": "Paie", "salary": "Salaire", "hours": "Travail", "commute": "Trajets",
       "expires": "Offre valable", "duration": "Durée", "tuition": "Coût", "study": "Heures réservées"
     },
+    "prospects": {
+      "title": "Perspectives de carrière",
+      "progress": "Ancienneté avant « {{job}} »",
+      "none": "Pas de promotion prévue à ce poste.",
+      "after_one": "après {{count}} mois",
+      "after_other": "après {{count}} mois",
+      "between": "entre {{from}} et {{to}} mois"
+    },
     "chanceLabel": "Chance d'être pris chaque mois",
     "applied": "Candidature envoyée",
     "close": "Fermer",
@@ -179,6 +187,7 @@
       "title": "D'où vient ta chance",
       "base": "Chance de base (poste de grade {{grade}})",
       "training": "Formation : {{name}}",
+      "rank": "Ancien poste plus élevé : {{job}}",
       "experience": "Expérience en {{field}} ({{months}} mois)",
       "fired_one": "Renvoyé il y a {{count}} mois",
       "fired_other": "Renvoyé il y a {{count}} mois"
@@ -198,7 +207,6 @@
     "quickHint": "De courtes formations hors diplôme : elles donnent des compétences, ouvrent certains métiers et augmentent tes chances d'être embauché, mais elles pèsent sur la santé et le moral. Une seule formation ou étude à la fois.",
     "trainingHint": "Les études longues mènent à un diplôme et pèsent sur la santé et le moral. Une seule formation ou étude à la fois.",
     "hireBonus": "+{{pct}} % de chance d'embauche en {{field}}",
-    "unlocks": "Ouvre : {{job}}",
     "certified": "Certifié",
     "requires": "Nécessite : {{names}}",
     "status": { "current": "En poste", "locked": "Verrouillé", "active": "En cours" },

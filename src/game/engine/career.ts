@@ -1,5 +1,5 @@
 // Candidatures : conditions d'accès, chance d'être embauché, postuler.
-import { EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FIRED_HIRE_PENALTY, FIRED_MEMORY_MONTHS, HIRE_CHANCE, HIRE_CHANCE_MAX, HIRE_CHANCE_MIN, MAX_APPLICATIONS, REVIEW_MONTHS, TRAININGS } from '../../data/content';
+import { EXPERIENCE_BONUS_MAX, EXPERIENCE_BONUS_PER_YEAR, FIRED_HIRE_PENALTY, FIRED_MEMORY_MONTHS, HIGHER_RANK_HIRE_BONUS, HIRE_CHANCE, HIRE_CHANCE_MAX, HIRE_CHANCE_MIN, MAX_APPLICATIONS, REVIEW_MONTHS, JOBS, TRAININGS } from '../../data/content';
 import type { GameState, Job, SkillId } from '../types';
 import { jobById } from './lookup';
 import { clamp } from './shared';
@@ -24,6 +24,8 @@ export function jobEligibility(state: GameState, job: Job): Eligibility {
 export type HireBonus =
   | { type: 'training'; id: string; value: number }
   | { type: 'experience'; field: string; months: number; value: number }
+  /** Poste de grade supérieur déjà occupé dans le même domaine. */
+  | { type: 'rank'; jobId: string; value: number }
   /** Malus (valeur négative) d'un renvoi récent. */
   | { type: 'fired'; months: number; value: number };
 
@@ -43,7 +45,7 @@ export interface HireBreakdown {
 
 /**
  * Chance d'être embauché chaque mois sur ce poste, détaillée : base du grade, bonus des formations suivies
- * dans le même domaine, et bonus d'expérience dans le domaine.
+ * dans le même domaine, bonus d'expérience dans le domaine, et bonus d'un poste plus élevé déjà occupé.
  */
 export function hireBreakdown(state: GameState, job: Job): HireBreakdown {
   const bonuses: HireBonus[] = [];
@@ -54,6 +56,8 @@ export function hireBreakdown(state: GameState, job: Job): HireBreakdown {
   const months = experienceMonths(state, job.field);
   const value = Math.min(EXPERIENCE_BONUS_MAX, Math.floor(months / 12) * EXPERIENCE_BONUS_PER_YEAR);
   if (value > 0) bonuses.push({ type: 'experience', field: job.field, months, value });
+  const higher = JOBS.filter((j) => j.field === job.field && j.grade > job.grade && (state.history[j.id] ?? 0) > 0).sort((a, b) => b.grade - a.grade)[0];
+  if (higher) bonuses.push({ type: 'rank', jobId: higher.id, value: HIGHER_RANK_HIRE_BONUS });
   const firedAgo = recentFiring(state);
   if (firedAgo !== null) bonuses.push({ type: 'fired', months: firedAgo, value: -FIRED_HIRE_PENALTY });
   const base = HIRE_CHANCE[job.grade];

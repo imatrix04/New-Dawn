@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, TRAININGS } from '../data/content';
 import type { Company, Gig, GigRequirement, TrainingConfig } from '../data/content';
 import {
-  blameChance, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobCommute, jobDrawback, jobEligibility,
+  blameChance, careerPath, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobCommute, jobDrawback, jobEligibility,
   isApplied, probationLeft, promotionAvailable, promotionRequestChance, promotionRequestWait, reviewMonths, scheduleEffects, trainingPrice,
 } from '../game/engine';
 import type { Drawback, GameState, Job, Qualification, SkillId } from '../game/types';
@@ -49,17 +49,11 @@ interface OfferView {
 
 // ---------- Carte ----------
 
-/** Contenu de la carte « Carrière » : poste actuel, puis boulots rapides, offres, formations rapides et études. */
+/** Contenu de la carte « Carrière » : boulots rapides, offres (le poste actuel en tête), formations rapides et études. */
 export function CareerCard({ game }: { game: GameState }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('offers');
   const [selection, setSelection] = useState<Record<Tab, string | null>>({ gigs: null, offers: null, quick: null, training: null });
-  const { quitJob, requestPromotion } = useStore();
-  const [confirmQuit, setConfirmQuit] = useState(false);
-  const current = jobById(game.job);
-  const promotion = promotionAvailable(game);
-  const promotionWait = promotionRequestWait(game);
-  const probation = probationLeft(game);
   const jobName = (id: string) => t(`jobs.${id}`, { context: game.gender });
 
   const select = (id: string) => setSelection((s) => ({ ...s, [tab]: s[tab] === id ? null : id }));
@@ -67,40 +61,6 @@ export function CareerCard({ game }: { game: GameState }) {
 
   return (
     <div className="career">
-      <section className="cur-job">
-        <small>{t('career.current')}</small>
-        {current ? (
-          <>
-            <strong>{jobName(current.id)}</strong>
-            {companyById(game.jobCompany) && <span className="muted small">🏢 {companyById(game.jobCompany)!.name}</span>}
-            <span className="muted small">{t('career.perMonth', { amount: formatMoney(currentSalary(game), i18n.language) })}</span>
-            <div className="reqs"><Drawbacks fx={jobDrawback(current, companyById(game.jobCompany))} /></div>
-            <div className="reqs">
-              <span className="req ok">⏱ {t('schedule.perWeek', { hours: current.hours })}</span>
-              {probation > 0 && <span className="req no">{t('career.probation', { count: probation })}</span>}
-              <span className={game.jobBlames > 0 ? 'req no' : 'req ok'}>{t('career.blames')} {Math.min(game.jobBlames, MAX_BLAMES)} / {MAX_BLAMES}</span>
-            </div>
-            {promotion && (
-              <>
-                <span className="job-meta">{t('career.promotion.chance', { job: jobName(promotion.to.id), pct: Math.round(promotionRequestChance(game) * 100) })}</span>
-                {promotionWait > 0 && <span className="job-meta warn">{t('career.promotion.wait', { count: promotionWait })}</span>}
-                <button className="big-btn" disabled={promotionWait > 0} onClick={requestPromotion}>{t('career.promotion.ask')}</button>
-              </>
-            )}
-            {confirmQuit ? (
-              <div className="reqs">
-                <button className="big-btn secondary" onClick={() => { quitJob(); setConfirmQuit(false); }}>{t('career.quitConfirm')}</button>
-                <button className="big-btn secondary" onClick={() => setConfirmQuit(false)}>{t('career.cancel')}</button>
-              </div>
-            ) : (
-              <button className="big-btn secondary" onClick={() => setConfirmQuit(true)}>{t('career.quit')}</button>
-            )}
-          </>
-        ) : (
-          <span className="muted">{t('game.noJob')}</span>
-        )}
-      </section>
-
       <nav className="career-nav" aria-label={t('windows.career')}>
         {TABS.map((id) => (
           <button key={id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>
@@ -201,6 +161,88 @@ function Gigs({ game, selected, onSelect }: PaneProps) {
 
 // ---------- Offres d'emploi ----------
 
+/** Perspectives d'un poste : promotions possibles et délai, sans chiffres de salaire (au joueur de juger). */
+function Prospects({ job, jobName }: { job: Job; jobName: (id: string) => string }) {
+  const { t } = useTranslation();
+  const steps = careerPath(job);
+  if (steps.length === 0) return <p className="muted small">{t('career.prospects.none')}</p>;
+  return (
+    <div className="chance-box">
+      <h4>{t('career.prospects.title')}</h4>
+      <ol className="path-list">
+        {steps.map((s) => (
+          <li key={s.job.id}>
+            <strong>{jobName(s.job.id)}</strong>
+            <span className="path-meta">
+              <span>⏳ {s.latest ? t('career.prospects.between', { from: s.months, to: s.latest }) : t('career.prospects.after', { count: s.months })}</span>
+              {s.training && <span>🎓 {t(`trainings.${s.training}.name`)}</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+// ---------- Poste actuel ----------
+
+const CURRENT_JOB = '__current';
+
+/** Détail du poste occupé : toujours en tête des offres, sans expiration. */
+function CurrentJobDetail({ game, jobName }: { game: GameState; jobName: (id: string) => string }) {
+  const { t, i18n } = useTranslation();
+  const { quitJob, requestPromotion } = useStore();
+  const [confirmQuit, setConfirmQuit] = useState(false);
+  const job = jobById(game.job);
+  if (!job) return null;
+  const company = companyById(game.jobCompany);
+  const promotion = promotionAvailable(game);
+  const promotionWait = promotionRequestWait(game);
+  const probation = probationLeft(game);
+  const next = careerPath(job)[0];
+  const served = game.history[job.id] ?? 0;
+  return (
+    <div className="detail" data-rarity={rarityOfJob(job)}>
+      <DetailHead rarity={rarityOfJob(job)} title={jobName(job.id)} source={company ? `🏢 ${company.name}` : undefined} />
+      <Facts rows={[
+        [t('career.fact.salary'), t('career.perMonth', { amount: formatMoney(currentSalary(game), i18n.language) })],
+        [t('career.fact.hours'), t('schedule.perWeek', { hours: job.hours })],
+        [t('career.fact.commute'), t('schedule.perWeek', { hours: jobCommute(job, company) })],
+      ]} />
+      <div className="reqs">
+        <Drawbacks fx={jobDrawback(job, company)} />
+        {probation > 0 && <span className="req no">{t('career.probation', { count: probation })}</span>}
+        <span className={game.jobBlames > 0 ? 'req no' : 'req ok'}>{t('career.blames')} {Math.min(game.jobBlames, MAX_BLAMES)} / {MAX_BLAMES}</span>
+      </div>
+      {next && (
+        <div className="progress-box">
+          <div className="xp-head">
+            <span>{t('career.prospects.progress', { job: jobName(next.job.id) })}</span>
+            <span className="muted">{t('career.monthsOf', { done: Math.min(served, next.months), total: next.months })}</span>
+          </div>
+          <div className="meter"><div style={{ width: `${Math.min(1, served / next.months) * 100}%` }} /></div>
+        </div>
+      )}
+      <Prospects job={job} jobName={jobName} />
+      {promotion && (
+        <>
+          <span className="job-meta">{t('career.promotion.chance', { job: jobName(promotion.to.id), pct: Math.round(promotionRequestChance(game) * 100) })}</span>
+          {promotionWait > 0 && <span className="job-meta warn">{t('career.promotion.wait', { count: promotionWait })}</span>}
+          <button className="big-btn" disabled={promotionWait > 0} onClick={requestPromotion}>{t('career.promotion.ask')}</button>
+        </>
+      )}
+      {confirmQuit ? (
+        <div className="reqs">
+          <button className="big-btn secondary" onClick={() => { quitJob(); setConfirmQuit(false); }}>{t('career.quitConfirm')}</button>
+          <button className="big-btn secondary" onClick={() => setConfirmQuit(false)}>{t('career.cancel')}</button>
+        </div>
+      ) : (
+        <button className="big-btn secondary" onClick={() => setConfirmQuit(true)}>{t('career.quit')}</button>
+      )}
+    </div>
+  );
+}
+
 function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (id: string) => string }) {
   const { t, i18n } = useTranslation();
   const { toggleApplication } = useStore();
@@ -211,8 +253,9 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
     const job = JOBS.find((j) => j.id === o.jobId);
     return job ? [{ job, monthsLeft: o.monthsLeft, salary: o.salary, company: companyById(o.companyId) }] : [];
   });
+  const currentJob = jobById(game.job);
   const picked = offers.find((o) => o.job.id === selected);
-  const pct = (n: number) => `${Math.round(n * 100)} %`;
+  const pct = (n: number) => `${Math.round(n * 100)} %`;
 
   const qualText = (q: Qualification) =>
     q.type === 'experience'
@@ -252,19 +295,23 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
           )}
         </div>
 
+        <Prospects job={job} jobName={jobName} />
+
         {elig.ok && (
           <div className="chance-box">
             <h4>{t('career.detail.title')}</h4>
             <ul className="chance-list">
               <li><span>{t('career.detail.base', { grade: job.grade })}</span><b>{pct(breakdown.base)}</b></li>
               {breakdown.bonuses.map((b) => (
-                <li className={b.value < 0 ? 'minus' : 'plus'} key={b.type === 'training' ? b.id : b.type}>
+                <li className={b.value < 0 ? 'minus' : 'plus'} key={b.type === 'training' ? b.id : b.type === 'rank' ? b.jobId : b.type}>
                   <span>
                     {b.type === 'training'
                       ? t('career.detail.training', { name: t(`trainings.${b.id}.name`) })
                       : b.type === 'fired'
                         ? t('career.detail.fired', { count: b.months })
-                        : t('career.detail.experience', { months: b.months, field: t(`fields.${b.field}`) })}
+                        : b.type === 'rank'
+                          ? t('career.detail.rank', { job: jobName(b.jobId) })
+                          : t('career.detail.experience', { months: b.months, field: t(`fields.${b.field}`) })}
                   </span>
                   <b>{b.value < 0 ? '−' : '+'}{pct(Math.abs(b.value))}</b>
                 </li>
@@ -304,15 +351,23 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
       {offers.length === 0 && <p className="muted small">{t('career.noOffers')}</p>}
       <Split
         title={t('career.select.offers')}
-        detail={picked ? detail(picked) : null}
+        detail={selected === CURRENT_JOB && currentJob ? <CurrentJobDetail game={game} jobName={jobName} /> : picked ? detail(picked) : null}
         list={
           <div className="card-grid">
+            {currentJob && (
+              <Tile key={CURRENT_JOB} rarity={rarityOfJob(currentJob)} index={0} selected={selected === CURRENT_JOB} state="current" onSelect={() => onSelect(CURRENT_JOB)}>
+                {companyById(game.jobCompany) && <span className="ctile-company">🏢 {companyById(game.jobCompany)!.name}</span>}
+                <span className="ctile-name">{jobName(currentJob.id)}</span>
+                <span className="ctile-meta">{t('career.perMonth', { amount: formatMoney(currentSalary(game), lng) })}</span>
+                <span className="status-badge current">{t('career.status.current')}</span>
+              </Tile>
+            )}
             {offers.map((offer, i) => {
               const { job, monthsLeft, salary, company } = offer;
               const elig = jobEligibility(game, job);
               const isTarget = isApplied(game, job.id);
               return (
-                <Tile key={job.id} rarity={rarityOfJob(job)} index={i} selected={selected === job.id} state={isTarget ? 'target' : elig.ok ? undefined : 'locked'} onSelect={() => onSelect(job.id)}>
+                <Tile key={job.id} rarity={rarityOfJob(job)} index={i + (currentJob ? 1 : 0)} selected={selected === job.id} state={isTarget ? 'target' : elig.ok ? undefined : 'locked'} onSelect={() => onSelect(job.id)}>
                   {company && <span className="ctile-company">🏢 {company.name}</span>}
                   <span className="ctile-name">{jobName(job.id)}</span>
                   <span className="ctile-meta">{t('career.perMonth', { amount: formatMoney(salary, lng) })}</span>
@@ -347,7 +402,6 @@ function Trainings({ game, selected, onSelect, quick }: PaneProps & { quick: boo
     const sponsored = !!active?.sponsored;
     const lowStudy = active && !sponsored && game.schedule.study < cfg.minStudyHours;
     const missing = (cfg.requires ?? []).filter((r) => !game.diplomas.includes(r));
-    const unlocks = JOBS.filter((j) => j.anyOf?.some((q) => q.type === 'diploma' && q.id === id));
     const gains = Object.entries(cfg.skills ?? {}) as [SkillId, number][];
     return (
       <div className="detail" key={id} data-rarity={rarityOfWeight(cfg.weight)}>
@@ -365,9 +419,6 @@ function Trainings({ game, selected, onSelect, quick }: PaneProps & { quick: boo
               {t('career.hireBonus', { pct: Math.round(cfg.hireBonus.bonus * 100), field: t(`fields.${cfg.hireBonus.field}`) })}
             </span>
           )}
-          {unlocks.map((j) => (
-            <span className="req ok" key={j.id}>{t('career.unlocks', { job: t(`jobs.${j.id}`, { context: game.gender }) })}</span>
-          ))}
         </div>
 
         {active && (

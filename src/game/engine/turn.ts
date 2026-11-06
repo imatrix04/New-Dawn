@@ -1,5 +1,5 @@
 // Passage au mois suivant, évènements aléatoires et leurs choix.
-import { CATALOG_REFRESH_MONTHS, EVENT_CHANCE, SKILL_MAX, SKILLS } from '../../data/content';
+import { CATALOG_REFRESH_MONTHS, EVENT_CHANCE, EVENTS_ENABLED, SKILL_MAX, SKILLS } from '../../data/content';
 import { eventById, EVENTS } from '../../data/events';
 import type { GameState } from '../types';
 import { drawCatalog } from './catalog';
@@ -18,7 +18,7 @@ import { progressVehicle, refreshVehicleListings } from './vehicle';
 
 function rollEvent(s: GameState) {
   s.pendingEvent = null;
-  if (Math.random() > EVENT_CHANCE) return;
+  if (!EVENTS_ENABLED || Math.random() > EVENT_CHANCE) return;
   const pool = EVENTS.filter((e) => e.id !== s.lastEvent && (!e.when || e.when(s)));
   if (!pool.length) return;
   const event = pool[Math.floor(Math.random() * pool.length)];

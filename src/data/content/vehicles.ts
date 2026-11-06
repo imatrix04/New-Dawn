@@ -36,19 +36,19 @@ export interface VehicleModel {
   price: number;
   /** Assurance mensuelle de base, avant bonus-malus. */
   insurance: number;
-  /** Coût des pièces et de la main-d'œuvre, en multiple du tarif de référence des réparations. */
+  /** Coût des pièces et de la main-d'œuvre, en multiple du tarif de référence des réparations (une citadine ×0,6, une sportive ×7). */
   parts: number;
   fuels: Partial<Record<FuelType, FuelSpec>>;
 }
 
 export const VEHICLE_MODELS: Record<string, VehicleModel> = {
-  city:    { grade: 1, icon: '🚗', hp: 3,  weight: 980,  price: 16500, insurance: 45,  parts: 0.8, fuels: { petrol: { extra: 0, l100: 5.4, co2: 122 } } },
+  city:    { grade: 1, icon: '🚗', hp: 3,  weight: 980,  price: 16500, insurance: 45,  parts: 0.6, fuels: { petrol: { extra: 0, l100: 5.4, co2: 122 } } },
   compact: { grade: 1, icon: '🚙', hp: 5,  weight: 1250, price: 23000, insurance: 55,  parts: 1,   fuels: { petrol: { extra: 0, l100: 6.1, co2: 138 }, diesel: { extra: 2000, l100: 4.9, co2: 128 } } },
-  family:  { grade: 2, icon: '🚐', hp: 7,  weight: 1500, price: 33000, insurance: 70,  parts: 1.2, fuels: { petrol: { extra: 0, l100: 7.0, co2: 158 }, diesel: { extra: 2500, l100: 5.6, co2: 147 } } },
-  suv:     { grade: 2, icon: '🚙', hp: 8,  weight: 1650, price: 38000, insurance: 85,  parts: 1.4, fuels: { petrol: { extra: 0, l100: 8.0, co2: 182 }, diesel: { extra: 3000, l100: 6.4, co2: 168 } } },
-  sedan:   { grade: 3, icon: '🚘', hp: 9,  weight: 1700, price: 48000, insurance: 100, parts: 1.6, fuels: { petrol: { extra: 0, l100: 8.3, co2: 190 }, diesel: { extra: 3000, l100: 6.6, co2: 175 } } },
-  luxury:  { grade: 4, icon: '🚘', hp: 12, weight: 2350, price: 95000, insurance: 190, parts: 2.2, fuels: { petrol: { extra: 0, l100: 10.5, co2: 238 }, diesel: { extra: 4000, l100: 8.5, co2: 222 } } },
-  sports:  { grade: 4, icon: '🏎️', hp: 14, weight: 1600, price: 78000, insurance: 220, parts: 2.5, fuels: { petrol: { extra: 0, l100: 11.5, co2: 262 } } },
+  family:  { grade: 2, icon: '🚐', hp: 7,  weight: 1500, price: 33000, insurance: 70,  parts: 1.3, fuels: { petrol: { extra: 0, l100: 7.0, co2: 158 }, diesel: { extra: 2500, l100: 5.6, co2: 147 } } },
+  suv:     { grade: 2, icon: '🚙', hp: 8,  weight: 1650, price: 38000, insurance: 85,  parts: 1.7, fuels: { petrol: { extra: 0, l100: 8.0, co2: 182 }, diesel: { extra: 3000, l100: 6.4, co2: 168 } } },
+  sedan:   { grade: 3, icon: '🚘', hp: 9,  weight: 1700, price: 48000, insurance: 100, parts: 2.5, fuels: { petrol: { extra: 0, l100: 8.3, co2: 190 }, diesel: { extra: 3000, l100: 6.6, co2: 175 } } },
+  luxury:  { grade: 4, icon: '🚘', hp: 12, weight: 2350, price: 95000, insurance: 190, parts: 5,   fuels: { petrol: { extra: 0, l100: 10.5, co2: 238 }, diesel: { extra: 4000, l100: 8.5, co2: 222 } } },
+  sports:  { grade: 4, icon: '🏎️', hp: 14, weight: 1600, price: 78000, insurance: 220, parts: 7,   fuels: { petrol: { extra: 0, l100: 11.5, co2: 262 } } },
 };
 export const VEHICLE_IDS = Object.keys(VEHICLE_MODELS);
 

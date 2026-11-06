@@ -15,6 +15,30 @@ export function promotionAvailable(state: GameState): { to: Job; training?: stri
   return (state.history[job.id] ?? 0) >= rule.months ? { to, training: rule.training } : null;
 }
 
+export interface CareerStep {
+  job: Job;
+  /** Ancienneté totale (en mois, depuis l'embauche au poste de départ) à partir de laquelle ce poste est proposé. */
+  months: number;
+  /** Fin de la fenêtre de première proposition, si le poste en a une. */
+  latest?: number;
+  training?: string;
+}
+
+/** Les promotions qui suivent un poste, de proche en proche, avec le délai cumulé et le salaire moyen de chaque étape. */
+export function careerPath(job: Job): CareerStep[] {
+  const steps: CareerStep[] = [];
+  let months = 0;
+  let latest = 0;
+  for (let rule = PROMOTIONS[job.id]; rule; rule = PROMOTIONS[rule.to]) {
+    const to = jobById(rule.to);
+    if (!to) break;
+    months += rule.months;
+    latest += rule.latest ?? rule.months;
+    steps.push({ job: to, months, latest: latest > months ? latest : undefined, training: rule.training });
+  }
+  return steps;
+}
+
 /** Chance que l'employeur accepte la demande de promotion : l'ancienneté aide, les blâmes pèsent. */
 export function promotionRequestChance(state: GameState): number {
   const rule = PROMOTIONS[state.job ?? ''];

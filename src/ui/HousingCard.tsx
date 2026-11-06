@@ -10,7 +10,7 @@ import type { RentBonus } from '../game/engine';
 import type { GameState, HousingKind, HousingListing, LeaveAction, Property, StatKey } from '../game/types';
 import { formatMoney, formatPercent, formatSigned } from '../i18n/format';
 import { useStore } from '../store';
-import { ChanceBar, DetailHead, Facts, Seg, Split, Tile } from './cardKit';
+import { ChanceBar, DetailHead, Facts, PercentPick, Seg, Split, Tile } from './cardKit';
 import type { Rarity } from './cardKit';
 
 type Tab = 'rent' | 'buy' | 'own';
@@ -399,10 +399,9 @@ function PropertyDetail({ game, p }: { game: GameState; p: Property }) {
   const lng = i18n.language;
   const type = housingTypeById(p.typeId);
   const market = marketRent(p.typeId, p.area);
-  const [rentFactor, setRentFactor] = useState(p.status === 'letting' ? Math.round((p.rent / market) * 10) / 10 : 1);
+  const [rentFactor, setRentFactor] = useState(p.status === 'letting' ? Math.round((p.rent / market) * 100) / 100 : 1);
   const [priceFactor, setPriceFactor] = useState(1);
   const [leave, setLeave] = useState<LeaveAction>('sell');
-  const factorLabel = (f: number) => (f === 1 ? t('estate.own.market') : `${f > 1 ? '+' : '−'}${Math.round(Math.abs(f - 1) * 100)} %`);
 
   const wantedRent = Math.round((market * rentFactor) / 5) * 5;
   const wantedAsk = Math.round((p.value * priceFactor) / 500) * 500;
@@ -444,12 +443,7 @@ function PropertyDetail({ game, p }: { game: GameState; p: Property }) {
 
       {free && (
         <div className="chance-box">
-          <Seg
-            label={t('estate.own.rentLabel')}
-            value={rentFactor}
-            options={LETTING.rentFactors.map((f) => ({ value: f, label: factorLabel(f) }))}
-            onChange={setRentFactor}
-          />
+          <PercentPick label={t('estate.own.rentLabel')} value={rentFactor} min={LETTING.rentRange[0]} max={LETTING.rentRange[1]} onChange={setRentFactor} />
           <Facts rows={[[t('estate.own.fact.rent'), t('career.perMonth', { amount: formatMoney(wantedRent, lng) })]]} />
           <span className="job-meta">{t('estate.own.letChance')}</span>
           <ChanceBar chance={letChance} label={t('estate.own.letChance')} big />
@@ -460,12 +454,7 @@ function PropertyDetail({ game, p }: { game: GameState; p: Property }) {
       )}
 
       <div className="chance-box">
-        <Seg
-          label={t('estate.own.priceLabel')}
-          value={priceFactor}
-          options={SELLING.priceFactors.map((f) => ({ value: f, label: factorLabel(f) }))}
-          onChange={setPriceFactor}
-        />
+        <PercentPick label={t('estate.own.priceLabel')} value={priceFactor} min={SELLING.priceRange[0]} max={SELLING.priceRange[1]} onChange={setPriceFactor} />
         <Facts rows={[
           [t('estate.own.fact.ask'), formatMoney(wantedAsk, lng)],
           [t('estate.own.fact.net'), formatMoney(propertyProceeds(p, wantedAsk), lng)],

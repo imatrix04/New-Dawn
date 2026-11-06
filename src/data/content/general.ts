@@ -1,6 +1,8 @@
 import type { StartPath, StatDef } from '../../game/types';
 
 export const EVENT_CHANCE = 0.55;
+/** Interrupteur général des évènements aléatoires (désactivés pour le moment : trop répétitifs). */
+export const EVENTS_ENABLED = false;
 export const DEBT_LIMIT = -2000;
 
 /** Savoir gagné par heure d'étude hebdomadaire et par mois. */

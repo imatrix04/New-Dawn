@@ -100,8 +100,8 @@ export const OWNING = {
 /** Mise en location d'un bien possédé : chance mensuelle de trouver un locataire, selon la rareté. */
 export const LETTING = {
   chance: { 1: 0.7, 2: 0.55, 3: 0.4, 4: 0.3 } as Record<number, number>,
-  /** Loyers demandés, en multiple du loyer du marché : chaque 10 % de moins ajoute 10 points de chance. */
-  rentFactors: [0.8, 0.9, 1, 1.1, 1.2],
+  /** Loyer demandé, en multiple du loyer du marché, au choix du joueur dans cette plage : chaque 10 % de moins ajoute 10 points de chance. */
+  rentRange: [0.5, 1.5] as const,
   /** Chance mensuelle qu'un locataire en place parte. */
   leaveChance: 0.04,
 };
@@ -109,7 +109,7 @@ export const LETTING = {
 /** Mise en vente d'un bien possédé : chance mensuelle de trouver un acheteur, selon la rareté. */
 export const SELLING = {
   chance: { 1: 0.5, 2: 0.4, 3: 0.3, 4: 0.2 } as Record<number, number>,
-  /** Prix demandés, en multiple de la valeur : chaque 10 % de moins ajoute 20 points de chance. */
-  priceFactors: [0.9, 1, 1.1],
+  /** Prix demandé, en multiple de la valeur, au choix du joueur dans cette plage : chaque 10 % de moins ajoute 20 points de chance. */
+  priceRange: [0.5, 1.5] as const,
   priceSensitivity: 2,
 };

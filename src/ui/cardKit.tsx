@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HIRE_CHANCE_MAX } from '../data/content';
@@ -128,6 +129,56 @@ export function Seg<T extends number | string>({ label, value, options, onChange
             {o.label}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Pourcentage au choix : un curseur et une saisie au clavier. `value` est un multiple (1 = 100 %) et reste dans [min, max].
+ * Pendant la frappe le texte est libre ; il est validé et ramené dans la plage à la sortie du champ.
+ */
+export function PercentPick({ label, value, min, max, onChange }: {
+  label: string; value: number; min: number; max: number; onChange: (v: number) => void;
+}) {
+  const pct = Math.round(value * 100);
+  const [draft, setDraft] = useState<string | null>(null);
+  const lo = Math.round(min * 100);
+  const hi = Math.round(max * 100);
+  const clampPct = (n: number) => Math.min(hi, Math.max(lo, Math.round(n)));
+  const commit = () => {
+    const n = Number(draft?.replace(',', '.'));
+    if (draft !== null && draft.trim() !== '' && Number.isFinite(n)) onChange(clampPct(n) / 100);
+    setDraft(null);
+  };
+  return (
+    <div className="pick-wrap">
+      <span className="pick-label">{label}</span>
+      <div className="pct-pick">
+        <input
+          className="tile-slider"
+          style={{ '--c': 'var(--accent)', '--fill': `${((pct - lo) / (hi - lo)) * 100}%` } as CSSProperties}
+          type="range"
+          min={lo}
+          max={hi}
+          step={1}
+          value={pct}
+          onChange={(e) => onChange(Number(e.target.value) / 100)}
+          aria-label={label}
+        />
+        <label className="pct-field">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={draft ?? String(pct)}
+            onFocus={(e) => e.currentTarget.select()}
+            onChange={(e) => setDraft(e.target.value.replace(/[^\d.,]/g, '').slice(0, 4))}
+            onBlur={commit}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+            aria-label={label}
+          />
+          <span>%</span>
+        </label>
       </div>
     </div>
   );
