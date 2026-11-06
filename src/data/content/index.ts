@@ -11,3 +11,4 @@ export * from './skills';
 export * from './time';
 export * from './trainings';
 export * from './vehicles';
+export * from './work';

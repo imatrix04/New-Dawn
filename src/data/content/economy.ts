@@ -75,8 +75,7 @@ export const RAISE = {
   declinedWait: 3,
   /** Une contre-proposition vaut au plus ce multiple de ce que le supérieur accorde ; au-delà, c'est un refus. */
   counterRange: 2,
-  /** Bonus de l'ancienneté (par année au poste, plafonné) et malus par blâme sur l'augmentation accordée. */
-  perYear: 0.004,
-  maxSeniority: 0.02,
+  /** Bonus d'efficacité (de -efficiencyBonus à +efficiencyBonus autour de 50) et malus par blâme sur l'augmentation accordée. */
+  efficiencyBonus: 0.03,
   perBlame: 0.015,
 };

@@ -22,4 +22,6 @@ export type { DriveBlock, InspectionStatus, RepairQuote, VehicleQuote, VehicleSo
 export { endTurn, resolveChoice } from './turn';
 export { calendarOf, dismissReport, seasonOf, smicFloor } from './economy';
 export type { Season } from './economy';
+export { efficiencyDelta, efficiencyLines, isStrained, setWorkStyle, workActive } from './work';
+export type { EfficiencyLine } from './work';
 export { announceRaise, answerRaiseOffer, raiseStatus, requestRaise } from './raise';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, RAISE, TRAININGS } from '../data/content';
+import { CATALOG_REFRESH_MONTHS, EFFICIENCY, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, RAISE, TRAININGS } from '../data/content';
 import type { Company, Gig, GigRequirement, TrainingConfig } from '../data/content';
 import {
   blameChance, careerPath, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobCommute, jobDrawback, jobEligibility,
@@ -174,7 +174,7 @@ function Prospects({ job, jobName }: { job: Job; jobName: (id: string) => string
           <li key={s.job.id}>
             <strong>{jobName(s.job.id)}</strong>
             <span className="path-meta">
-              <span>⏳ {s.latest ? t('career.prospects.between', { from: s.months, to: s.latest }) : t('career.prospects.after', { count: s.months })}</span>
+              <span>⚡ {t('career.prospects.efficiency', { n: EFFICIENCY.promoteAt })}</span>
               {s.training && <span>🎓 {t(`trainings.${s.training}.name`)}</span>}
             </span>
           </li>
@@ -244,7 +244,7 @@ function CurrentJobDetail({ game, jobName }: { game: GameState; jobName: (id: st
   const promotionWait = promotionRequestWait(game);
   const probation = probationLeft(game);
   const next = careerPath(job)[0];
-  const served = game.history[job.id] ?? 0;
+  const tenure = game.history[job.id] ?? 0;
   return (
     <div className="detail" data-rarity={rarityOfJob(job)}>
       <DetailHead rarity={rarityOfJob(job)} title={jobName(job.id)} source={company ? `🏢 ${company.name}` : undefined} />
@@ -262,9 +262,10 @@ function CurrentJobDetail({ game, jobName }: { game: GameState; jobName: (id: st
         <div className="progress-box">
           <div className="xp-head">
             <span>{t('career.prospects.progress', { job: jobName(next.job.id) })}</span>
-            <span className="muted">{t('career.monthsOf', { done: Math.min(served, next.months), total: next.months })}</span>
+            <span className="muted">{t('career.pointsOf', { done: Math.round(game.efficiency), total: EFFICIENCY.promoteAt })}</span>
           </div>
-          <div className="meter"><div style={{ width: `${Math.min(1, served / next.months) * 100}%` }} /></div>
+          <div className="meter"><div style={{ width: `${Math.min(1, game.efficiency / EFFICIENCY.promoteAt) * 100}%` }} /></div>
+          {tenure < EFFICIENCY.minMonths && <span className="job-meta">{t('career.prospects.minMonths', { count: EFFICIENCY.minMonths - tenure })}</span>}
         </div>
       )}
       <Prospects job={job} jobName={jobName} />

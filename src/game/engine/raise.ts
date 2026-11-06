@@ -35,7 +35,7 @@ function grant(s: GameState, pct: number) {
 }
 
 /**
- * Le joueur demande `pct` d'augmentation. Le supérieur accorde ce qu'il juge raisonnable (selon son type, l'ancienneté et
+ * Le joueur demande `pct` d'augmentation. Le supérieur accorde ce qu'il juge raisonnable (selon son type, ton efficacité et
  * les blâmes, avec un peu de hasard) : en dessous, c'est oui ; un peu au-dessus, une contre-proposition (ou un refus s'il
  * est têtu) ; bien au-dessus, un refus, qui peut coûter un blâme avec un supérieur méchant.
  */
@@ -47,8 +47,8 @@ export function requestRaise(state: GameState, pct: number): GameState {
   const ask = clamp(pct, RAISE.minAsk, RAISE.maxAsk);
   const boss = s.boss!;
   const cfg = BOSSES[boss.type];
-  const years = (s.history[job.id] ?? 0) / 12;
-  const merit = clamp(Math.min(RAISE.maxSeniority, years * RAISE.perYear) - s.jobBlames * RAISE.perBlame, -0.03, RAISE.maxSeniority);
+  // Plus on est efficace, plus le supérieur accorde ; sous 50, il rechigne.
+  const merit = clamp(((s.efficiency - 50) / 50) * RAISE.efficiencyBonus - s.jobBlames * RAISE.perBlame, -0.03, RAISE.efficiencyBonus);
   const cap = Math.max(0.005, (cfg.cap + merit) * (0.85 + Math.random() * 0.3));
 
   if (ask <= cap) {

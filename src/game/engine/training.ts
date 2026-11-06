@@ -1,5 +1,5 @@
 // Formations et études : inscription, abandon, blâmes, progression.
-import { MAX_BLAMES, PROMOTIONS, SKILL_MAX, TRAININGS } from '../../data/content';
+import { EFFICIENCY, MAX_BLAMES, PROMOTIONS, SKILL_MAX, TRAININGS } from '../../data/content';
 import type { GameState, SkillId } from '../types';
 import { jobById, trainingPrice } from './lookup';
 import { promote } from './promotion';
@@ -35,7 +35,8 @@ export function dropTraining(state: GameState): GameState {
 export function blameChance(state: GameState): number {
   if (!state.training || state.training.sponsored) return 0;
   const min = TRAININGS[state.training.id].minStudyHours;
-  return clamp(1 - state.schedule.study / min, 0, 1);
+  const slack = Math.max(0, EFFICIENCY.lowBelow - state.efficiency) * EFFICIENCY.lowBlameRate;
+  return clamp(1 - state.schedule.study / min + slack, 0, 1);
 }
 
 /**

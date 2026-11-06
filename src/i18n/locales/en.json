@@ -172,12 +172,13 @@
     },
     "prospects": {
       "title": "Career prospects",
-      "progress": "Seniority towards “{{job}}”",
+      "progress": "Efficiency towards “{{job}}”",
       "none": "No promotion planned in this job.",
-      "after_one": "after {{count}} month",
-      "after_other": "after {{count}} months",
-      "between": "between {{from}} and {{to}} months"
+      "efficiency": "efficiency {{n}}",
+      "minMonths_one": "{{count}} more month in the job before you can be promoted.",
+      "minMonths_other": "{{count}} more months in the job before you can be promoted."
     },
+    "pointsOf": "{{done}} / {{total}}",
     "chanceLabel": "Chance of being hired each month",
     "applied": "Applied",
     "close": "Close",
@@ -294,6 +295,8 @@
     "report": "Economic report {{year}} available"
   },
   "statLines": {
+    "style": "Work style",
+    "rest": "Rest (sick leave)",
     "sleep": "Sleep",
     "sport": "Sport",
     "leisure": "Leisure",
@@ -301,6 +304,40 @@
     "home": "Home",
     "total": "Change this month",
     "none": "Nothing changes this month."
+  },
+  "work": {
+    "efficiency": "Efficiency",
+    "styleLabel": "Work style",
+    "styles": {
+      "hard": {
+        "name": "All out",
+        "desc": "You give everything: you progress fast, but it costs health and mood. Too long and you burn out."
+      },
+      "normal": {
+        "name": "Normal",
+        "desc": "You do your job seriously, without wearing yourself out."
+      },
+      "easy": {
+        "name": "Laid back",
+        "desc": "You do the bare minimum: your reputation slowly erodes, but you stay in shape."
+      }
+    },
+    "chip": {
+      "efficiency": "{{delta}} efficiency/month",
+      "health": "{{delta}} health/month",
+      "happiness": "{{delta}} happiness/month"
+    },
+    "lines": {
+      "style": "Style: {{style}}",
+      "hours": "Skipped hours",
+      "fatigue": "Fatigue",
+      "strain": "Strain: you are pushing too hard",
+      "slack": "Slacking"
+    },
+    "sick": "Sick leave: {{count}} more months. Half pay, you recover.",
+    "zeroWarning": "Efficiency at zero: one more month like this and you are fired.",
+    "sickShort": "Sick leave",
+    "promotionAt": "A promotion becomes possible at {{n}} efficiency."
   },
   "wallet": {
     "checking": "Checking account",
@@ -787,6 +824,13 @@
     "monthMark": "— {{date}} —",
     "economyReport": "Economic report {{year}}: prices, rates and the minimum wage have changed.",
     "raiseEligible": "It has been a year: you can ask your supervisor for a raise.",
+    "strain": "You are pushing too hard: worn out, you are less efficient. Slow down before burning out.",
+    "zeroWarning": "Your efficiency has dropped to zero: one more month like this and you will be fired.",
+    "firedSlacking": "Efficiency at zero for too long: you are fired ({{job}}). This will weigh on your applications for 6 months.",
+    "expelledSlacking": "Efficiency at zero for too long: you are expelled from your training ({{training}}).",
+    "burnout": "Burnout: {{count}} months of sick leave.",
+    "sickBack": "You are back at work, in normal style.",
+    "paySick": "Sick leave: {{job}}: +{{amount}} € (half pay).",
     "expenses": "Monthly expenses: -€{{amount, number}}.",
     "lowMood": "Your low mood is affecting your health.",
     "overdraft": "You're overdrawn: stress.",

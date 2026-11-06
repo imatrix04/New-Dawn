@@ -1,5 +1,5 @@
 // Poste actuel : heures travaillées, blâmes, période d'essai, démission, réponse aux candidatures, boulot rapide.
-import { BOSSES, JOBS, MAX_BLAMES, PROBATION_MONTHS } from '../../data/content';
+import { BOSSES, EFFICIENCY, JOBS, MAX_BLAMES, PROBATION_MONTHS } from '../../data/content';
 import type { GameState, Job } from '../types';
 import { rollBoss } from './boss';
 import { experienceMonths } from './career';
@@ -17,7 +17,10 @@ export function jobBlameChance(state: GameState): number {
   const job = jobById(state.job);
   // Un supérieur strict ou méchant remarque plus souvent les heures sautées.
   const strictness = state.boss ? BOSSES[state.boss.type].blame : 1;
-  return job ? clamp((1 - workedHours(state) / job.hours) * strictness, 0, 1) : 0;
+  if (!job || state.sickLeave > 0) return 0;
+  // Une efficacité très basse attire aussi l'attention du supérieur.
+  const slack = Math.max(0, EFFICIENCY.lowBelow - state.efficiency) * EFFICIENCY.lowBlameRate;
+  return clamp((1 - workedHours(state) / job.hours + slack) * strictness, 0, 1);
 }
 
 export const probationMonths = (job: Job): number => job.probation ?? PROBATION_MONTHS[job.grade];
@@ -45,6 +48,9 @@ export function startJob(s: GameState, job: Job, salary: number, companyId: stri
   s.raiseWaitUntil = 0;
   s.raiseOffer = null;
   s.raiseReply = null;
+  // L'efficacité repart bas pour faire ses preuves, plus haut si l'on reste dans le même domaine.
+  s.efficiency = s.lastField === job.field ? EFFICIENCY.sameField : EFFICIENCY.newJob;
+  s.lastField = job.field;
 }
 
 function leaveJob(s: GameState) {
@@ -57,6 +63,25 @@ function leaveJob(s: GameState) {
   s.boss = null;
   s.raiseOffer = null;
   s.raiseReply = null;
+}
+
+/**
+ * Efficacité nulle depuis trop longtemps : renvoi du poste et exclusion de la formation. Le renvoi pèse sur les
+ * candidatures des mois suivants, comme un renvoi pour blâmes.
+ */
+export function fireForSlacking(s: GameState) {
+  const job = jobById(s.job);
+  if (job) {
+    addLog(s, 'log.firedSlacking', { jobId: job.id, gender: s.gender }, 'bad');
+    leaveJob(s);
+    s.firedMonth = s.month;
+  }
+  if (s.training && !s.training.sponsored) {
+    addLog(s, 'log.expelledSlacking', { trainingId: s.training.id }, 'bad');
+    s.training = null;
+    s.schedule.study = 0;
+  }
+  s.zeroMonths = 0;
 }
 
 /** Démissionne : sans emploi, sans malus. */

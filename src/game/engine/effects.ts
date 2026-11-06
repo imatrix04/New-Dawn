@@ -1,5 +1,5 @@
 // Effets mensuels : revenus, dépenses, jauges, compétences et pénibilité.
-import { DEBT_HAPPINESS_LOSS, FOOD_COST, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, REPAIRS, SKILL_RULES, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, TRAININGS } from '../../data/content';
+import { DEBT_HAPPINESS_LOSS, EFFICIENCY, FOOD_COST, JOBS, LEISURE_COST_PER_WEEKLY_HOUR, LEISURE_NEUTRAL, REPAIRS, SKILL_RULES, SLEEP_NEUTRAL, SPORT_HEALTH_PER_HOUR, TRAININGS, WORK_STYLES } from '../../data/content';
 import type { Drawback, GameState, Schedule, SkillId, StatKey } from '../types';
 import { housingEffects } from './housing';
 import { companyById, currentSalary, gigById, gigPay, jobById, jobDrawback } from './lookup';
@@ -7,6 +7,7 @@ import { lettingIncome } from './property';
 import { weeklyHours } from './schedule';
 import { clamp } from './shared';
 import { trainingTuition } from './training';
+import { workActive } from './work';
 import { drivingVehicle, fuelCost, insuranceOf } from './vehicle';
 
 /** Une ligne du détail mensuel : `id` sert à retrouver le libellé traduit selon `kind`. */
@@ -20,7 +21,8 @@ export function monthlyIncomeLines(state: GameState): MoneyLine[] {
   const job = jobById(state.job);
   const gig = gigById(state.gig);
   const lines: MoneyLine[] = [];
-  if (job) lines.push({ kind: 'job', id: job.id, amount: currentSalary(state) });
+  // En arrêt maladie, seule une part du salaire est versée.
+  if (job) lines.push({ kind: 'job', id: job.id, amount: Math.round(currentSalary(state) * (state.sickLeave > 0 ? EFFICIENCY.sickPay : 1)) });
   if (gig) lines.push({ kind: 'gig', id: gig.id, amount: gigPay(state, gig) });
   const rentals = lettingIncome(state);
   if (rentals > 0) lines.push({ kind: 'rentals', amount: rentals });
@@ -77,14 +79,8 @@ export function scheduleEffects(schedule: Schedule) {
 
 /** Jauges attendues le mois prochain avec le planning actuel (hors événements). */
 export function projectNextStats(state: GameState): Record<StatKey, number> {
-  const fx = scheduleEffects(state.schedule);
-  const debt = state.money < 0 ? DEBT_HAPPINESS_LOSS : 0;
-  const drawbacks = monthlyDrawbacks(state);
-  const comfort = housingEffects(state);
-  return {
-    health: clamp(state.stats.health + fx.sleepHealth + fx.sportHealth + drawbacks.health + comfort.health),
-    happiness: clamp(state.stats.happiness + fx.leisureHappiness - debt + drawbacks.happiness + comfort.happiness),
-  };
+  const next = (key: StatKey) => clamp(state.stats[key] + statEffectLines(state, key).reduce((sum, l) => sum + l.amount, 0));
+  return { health: next('health'), happiness: next('happiness') };
 }
 
 const NO_GAIN = (): Record<SkillId, number> => ({ digital: 0, charisma: 0, strength: 0, intelligence: 0, logistics: 0, mechanics: 0 });
@@ -136,15 +132,16 @@ export const experienceGoal = (field: string): number =>
   ))));
 
 /** D'où vient la variation mensuelle d'une jauge (détail de `projectNextStats`, pour l'infobulle de la barre du haut). */
-export type StatLine = { kind: 'sleep' | 'sport' | 'leisure' | 'debt' | 'job' | 'gig' | 'training' | 'home'; id?: string; amount: number };
+export type StatLine = { kind: 'sleep' | 'sport' | 'leisure' | 'debt' | 'style' | 'rest' | 'job' | 'gig' | 'training' | 'home'; id?: string; amount: number };
 
 export function statEffectLines(state: GameState, key: StatKey): StatLine[] {
   const fx = scheduleEffects(state.schedule);
   const comfort = housingEffects(state);
   const job = jobById(state.job);
   const gig = gigById(state.gig);
+  const sick = state.sickLeave > 0;
   const drawbacks: [StatLine['kind'], string | undefined, Drawback][] = [
-    ['job', job?.id, job ? jobDrawback(job, companyById(state.jobCompany)) : {}],
+    ['job', job?.id, job && !sick ? jobDrawback(job, companyById(state.jobCompany)) : {}],
     ['gig', gig?.id, gig?.drawback ?? {}],
     ['training', state.training?.id, state.training ? TRAININGS[state.training.id].drawback : {}],
   ];
@@ -152,6 +149,9 @@ export function statEffectLines(state: GameState, key: StatKey): StatLine[] {
     ? [{ kind: 'sleep', amount: fx.sleepHealth }, { kind: 'sport', amount: fx.sportHealth }]
     : [{ kind: 'leisure', amount: fx.leisureHappiness }, { kind: 'debt', amount: state.money < 0 ? -DEBT_HAPPINESS_LOSS : 0 }];
   for (const [kind, id, d] of drawbacks) lines.push({ kind, id, amount: d[key] ?? 0 });
+  // Le style de travail pèse sur la santé et le bonheur ; en arrêt maladie, on se repose.
+  if (sick) lines.push({ kind: 'rest', amount: key === 'health' ? EFFICIENCY.sickRest : -1 });
+  else if (workActive(state)) lines.push({ kind: 'style', amount: WORK_STYLES[state.workStyle][key] });
   lines.push({ kind: 'home', amount: comfort[key] });
   return lines.filter((l) => l.amount !== 0);
 }

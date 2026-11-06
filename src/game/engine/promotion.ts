@@ -1,50 +1,42 @@
 // Promotions de manager proposées par l'employeur ou demandées par le joueur.
-import { PROMOTION_CHANCE, PROMOTION_REQUEST_BASE, PROMOTION_REQUEST_BLAME_PENALTY, PROMOTION_REQUEST_COOLDOWN, PROMOTION_REQUEST_MAX_BONUS, PROMOTION_REQUEST_PER_YEAR, PROMOTIONS } from '../../data/content';
+import { EFFICIENCY, PROMOTION_CHANCE, PROMOTION_FIRST_CHANCE, PROMOTION_REQUEST_BASE, PROMOTION_REQUEST_BLAME_PENALTY, PROMOTION_REQUEST_COOLDOWN, PROMOTION_REQUEST_MAX_BONUS, PROMOTION_REQUEST_PER_POINT, PROMOTIONS } from '../../data/content';
 import type { GameState, Job } from '../types';
 import { jobEligibility } from './career';
 import { startJob } from './job';
 import { companyById, jobById, salaryAt } from './lookup';
 import { addLog, clamp } from './shared';
 
-/** Promotion possible au poste actuel : assez d'ancienneté, ni formation en cours ni proposition en attente. */
+/** Promotion possible au poste actuel : assez efficace et au poste depuis assez longtemps, ni formation en cours ni proposition en attente. */
 export function promotionAvailable(state: GameState): { to: Job; training?: string } | null {
   const job = jobById(state.job);
   const rule = job && PROMOTIONS[job.id];
   const to = rule && jobById(rule.to);
-  if (!job || !rule || !to || (rule.training && state.training) || state.promotion || state.jobDecision) return null;
-  return (state.history[job.id] ?? 0) >= rule.months ? { to, training: rule.training } : null;
+  if (!job || !rule || !to || (rule.training && state.training) || state.promotion || state.jobDecision || state.sickLeave > 0) return null;
+  const ready = (state.history[job.id] ?? 0) >= EFFICIENCY.minMonths && state.efficiency >= EFFICIENCY.promoteAt;
+  return ready ? { to, training: rule.training } : null;
 }
 
 export interface CareerStep {
   job: Job;
-  /** Ancienneté totale (en mois, depuis l'embauche au poste de départ) à partir de laquelle ce poste est proposé. */
-  months: number;
-  /** Fin de la fenêtre de première proposition, si le poste en a une. */
-  latest?: number;
   training?: string;
 }
 
-/** Les promotions qui suivent un poste, de proche en proche, avec le délai cumulé et le salaire moyen de chaque étape. */
+/** Les promotions qui suivent un poste, de proche en proche. */
 export function careerPath(job: Job): CareerStep[] {
   const steps: CareerStep[] = [];
-  let months = 0;
-  let latest = 0;
   for (let rule = PROMOTIONS[job.id]; rule; rule = PROMOTIONS[rule.to]) {
     const to = jobById(rule.to);
     if (!to) break;
-    months += rule.months;
-    latest += rule.latest ?? rule.months;
-    steps.push({ job: to, months, latest: latest > months ? latest : undefined, training: rule.training });
+    steps.push({ job: to, training: rule.training });
   }
   return steps;
 }
 
-/** Chance que l'employeur accepte la demande de promotion : l'ancienneté aide, les blâmes pèsent. */
+/** Chance que l'employeur accepte la demande de promotion : l'efficacité au-dessus du seuil aide, les blâmes pèsent. */
 export function promotionRequestChance(state: GameState): number {
   const rule = PROMOTIONS[state.job ?? ''];
   if (!rule) return 0;
-  const yearsOver = Math.floor(((state.history[state.job!] ?? 0) - rule.months) / 12);
-  const bonus = Math.min(PROMOTION_REQUEST_MAX_BONUS, Math.max(0, yearsOver) * PROMOTION_REQUEST_PER_YEAR);
+  const bonus = Math.min(PROMOTION_REQUEST_MAX_BONUS, Math.max(0, state.efficiency - EFFICIENCY.promoteAt) * PROMOTION_REQUEST_PER_POINT);
   return clamp(PROMOTION_REQUEST_BASE + bonus - state.jobBlames * PROMOTION_REQUEST_BLAME_PENALTY, 0.05, 0.95);
 }
 
@@ -66,15 +58,14 @@ function proposePromotion(s: GameState, to: Job) {
 }
 
 /**
- * Fin de mois : l'employeur fait sa première proposition dès le seuil atteint (ou au hasard dans la fenêtre
- * `months` à `latest` si le poste en a une), puis seulement rarement après un refus.
+ * Fin de mois : une fois la promotion possible, l'employeur fait sa première proposition avec une bonne chance chaque
+ * mois, puis seulement rarement après un refus.
  */
 export function rollPromotion(s: GameState) {
   const available = promotionAvailable(s);
   const rule = PROMOTIONS[s.job ?? ''];
   if (!available || !rule) return;
-  const monthsLeft = (rule.latest ?? rule.months) - (s.history[s.job!] ?? 0);
-  const chance = s.promotionSeen ? PROMOTION_CHANCE : 1 / Math.max(1, monthsLeft + 1);
+  const chance = s.promotionSeen ? PROMOTION_CHANCE : PROMOTION_FIRST_CHANCE;
   if (Math.random() >= chance) return;
   proposePromotion(s, available.to);
 }

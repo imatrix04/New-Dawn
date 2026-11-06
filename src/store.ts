@@ -4,9 +4,10 @@ import {
   openSavings, quitJob, requestPromotion, resolveChoice, resolveJobDecision, resolvePromotion, sellProperty, setGig, setHousingTarget, setSchedule, toggleApplication,
   withdrawProperty, withdrawSavings,
   buyVehicle, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection,
-  answerRaiseOffer, dismissReport, requestRaise,
+  answerRaiseOffer, dismissReport, requestRaise, setWorkStyle,
 } from './game/engine';
 import type { VehicleSource } from './game/engine';
+import type { WorkStyle } from './data/content';
 import type { DrivingStyle, GameState, LeaveAction, Profile, RepairKind, SavingsProduct, ScheduleKey } from './game/types';
 
 const SAVE_KEY = 'newdawn-save-v5';
@@ -47,6 +48,7 @@ interface Store {
   resolvePromotion: (accept: boolean) => void;
   requestPromotion: () => void;
   requestRaise: (pct: number) => void;
+  setWorkStyle: (style: WorkStyle) => void;
   answerRaiseOffer: (accept: boolean) => void;
   dismissReport: () => void;
   quitJob: () => void;
@@ -102,6 +104,7 @@ export const useStore = create<Store>((set, get) => {
     resolveJobDecision: (jobId) => { const g = get().game; if (g) update(resolveJobDecision(g, jobId)); },
     resolvePromotion: (accept) => { const g = get().game; if (g) update(resolvePromotion(g, accept)); },
     requestPromotion: () => { const g = get().game; if (g) update(requestPromotion(g)); },
+    setWorkStyle: (style) => { const g = get().game; if (g) update(setWorkStyle(g, style)); },
     requestRaise: (pct) => { const g = get().game; if (g) update(requestRaise(g, pct)); },
     answerRaiseOffer: (accept) => { const g = get().game; if (g) update(answerRaiseOffer(g, accept)); },
     dismissReport: () => { const g = get().game; if (g) update(dismissReport(g)); },

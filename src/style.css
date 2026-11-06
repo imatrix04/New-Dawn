@@ -1104,3 +1104,12 @@ input[type="text"]:focus, .amount-input:focus { border-color: var(--accent); box
 .stat-pop { min-width: 250px; }
 .stat-pop h5 b { color: var(--text); }
 .hud-meter .money-pop { color: var(--text); }
+
+/* Efficacité : style de travail et jauge. */
+.style-box { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--inset); }
+.style-box p { margin: 0; }
+.hud-meter.efficiency.strained .hud-meter-bar > i { background: linear-gradient(90deg, #f6bd5e, #f08a4b); }
+.hud-meter.efficiency.sick { opacity: .75; }
+.money-pop .warn-note { margin: 0; padding: 7px 10px; border-radius: 8px; color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); font-weight: 600; }
+.money-pop .strain-row span { color: var(--amber); }
+.money-pop .pop-note { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: .78rem; }

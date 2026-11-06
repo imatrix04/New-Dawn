@@ -172,12 +172,13 @@
     },
     "prospects": {
       "title": "Perspectives de carrière",
-      "progress": "Ancienneté avant « {{job}} »",
+      "progress": "Efficacité avant « {{job}} »",
       "none": "Pas de promotion prévue à ce poste.",
-      "after_one": "après {{count}} mois",
-      "after_other": "après {{count}} mois",
-      "between": "entre {{from}} et {{to}} mois"
+      "efficiency": "efficacité {{n}}",
+      "minMonths_one": "Encore {{count}} mois au poste avant de pouvoir être promu.",
+      "minMonths_other": "Encore {{count}} mois au poste avant de pouvoir être promu."
     },
+    "pointsOf": "{{done}} / {{total}}",
     "chanceLabel": "Chance d'être pris chaque mois",
     "applied": "Candidature envoyée",
     "close": "Fermer",
@@ -294,6 +295,8 @@
     "report": "Rapport économique {{year}} disponible"
   },
   "statLines": {
+    "style": "Style de travail",
+    "rest": "Repos (arrêt maladie)",
     "sleep": "Sommeil",
     "sport": "Sport",
     "leisure": "Loisirs",
@@ -301,6 +304,40 @@
     "home": "Logement",
     "total": "Variation du mois",
     "none": "Rien ne change ce mois-ci."
+  },
+  "work": {
+    "efficiency": "Efficacité",
+    "styleLabel": "Style de travail",
+    "styles": {
+      "hard": {
+        "name": "À fond",
+        "desc": "Tu donnes tout : tu progresses vite, mais ça te coûte en santé et en moral. Trop longtemps, c’est l’épuisement."
+      },
+      "normal": {
+        "name": "Normal",
+        "desc": "Tu fais ton travail sérieusement, sans te ruiner."
+      },
+      "easy": {
+        "name": "Tranquille",
+        "desc": "Tu en fais le moins possible : ta réputation s’effrite doucement, mais tu gardes la forme."
+      }
+    },
+    "chip": {
+      "efficiency": "{{delta}} efficacité/mois",
+      "health": "{{delta}} santé/mois",
+      "happiness": "{{delta}} bonheur/mois"
+    },
+    "lines": {
+      "style": "Style : {{style}}",
+      "hours": "Heures sautées",
+      "fatigue": "Fatigue",
+      "strain": "Épuisement : tu tires sur la corde",
+      "slack": "Relâchement"
+    },
+    "sick": "Arrêt maladie : encore {{count}} mois. Salaire réduit de moitié, tu récupères.",
+    "zeroWarning": "Efficacité à zéro : encore un mois comme ça et c’est le renvoi.",
+    "sickShort": "Arrêt maladie",
+    "promotionAt": "Une promotion devient possible dès {{n}} d’efficacité."
   },
   "wallet": {
     "checking": "Compte courant",
@@ -799,6 +836,13 @@
     "monthMark": "— {{date}} —",
     "economyReport": "Rapport économique {{year}} : les prix, les taux et le SMIC ont changé.",
     "raiseEligible": "Cela fait un an : tu peux demander une augmentation à ton supérieur.",
+    "strain": "Tu tires sur la corde : à bout de forces, tu es moins efficace. Ralentis avant l’épuisement.",
+    "zeroWarning": "Ton efficacité est tombée à zéro : encore un mois comme ça et tu seras renvoyé.",
+    "firedSlacking": "Efficacité à zéro depuis trop longtemps : tu es renvoyé ({{job}}). Ce renvoi pèsera sur tes candidatures pendant 6 mois.",
+    "expelledSlacking": "Efficacité à zéro depuis trop longtemps : tu es renvoyé de ta formation ({{training}}).",
+    "burnout": "Épuisement : arrêt maladie de {{count}} mois.",
+    "sickBack": "Tu reprends le travail, en style normal.",
+    "paySick": "Arrêt maladie : {{job}} : +{{amount}} € (moitié du salaire).",
     "expenses": "Dépenses du mois : -{{amount, number}} €.",
     "lowMood": "Le moral au plus bas affecte ta santé.",
     "overdraft": "Tu es à découvert : stress.",

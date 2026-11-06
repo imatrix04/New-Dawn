@@ -1,16 +1,17 @@
 // Passage au mois suivant, évènements aléatoires et leurs choix.
-import { CATALOG_REFRESH_MONTHS, EVENT_CHANCE, EVENTS_ENABLED, SKILL_MAX, SKILLS } from '../../data/content';
+import { CATALOG_REFRESH_MONTHS, EFFICIENCY, EVENT_CHANCE, EVENTS_ENABLED, SKILL_MAX, SKILLS } from '../../data/content';
 import { eventById, EVENTS } from '../../data/events';
 import type { GameState } from '../types';
 import { drawCatalog } from './catalog';
 import { rollEconomy } from './economy';
 import { monthlyExpenses, projectNextStats, skillGains } from './effects';
 import { progressHome, refreshListings, resolveHousingApplication } from './housing';
-import { blameJob, gainExperience, jobBlameChance, workedHours } from './job';
+import { blameJob, fireForSlacking, gainExperience, jobBlameChance, workedHours } from './job';
 import { currentSalary, gigById, gigPay, jobById } from './lookup';
 import { refreshOffers, resolveApplications } from './offers';
 import { rollPromotion } from './promotion';
 import { announceRaise } from './raise';
+import { efficiencyDelta, endSickMonth, isStrained, startSickLeave, workActive } from './work';
 import { lettingIncome, progressProperties } from './property';
 import { accrueSavings, closeExpiredSavings } from './savings';
 import { isOverbooked } from './schedule';
@@ -37,11 +38,23 @@ export function endTurn(state: GameState): GameState {
   // Les jauges sont calculées avant de toucher à l'argent, comme dans l'aperçu affiché au joueur.
   const next = projectNextStats(s);
   const gains = skillGains(s);
+  // L'efficacité et l'épuisement du mois se calculent sur l'état de début de mois, comme l'aperçu affiché.
+  const effDelta = efficiencyDelta(s);
+  const strained = isStrained(s);
+  const sick = s.sickLeave > 0;
   s.stats = next;
   for (const { id } of SKILLS) s.skills[id] = clamp(s.skills[id] + gains[id], 0, SKILL_MAX);
 
+  s.efficiency = clamp(s.efficiency + effDelta);
+  if (strained) addLog(s, 'log.strain', {}, 'bad');
+
   const job = jobById(s.job);
-  if (job) {
+  if (job && sick) {
+    // Arrêt maladie : une part du salaire seulement, pas de travail, donc ni blâme ni expérience.
+    const salary = Math.round(currentSalary(s) * EFFICIENCY.sickPay);
+    s.money += salary;
+    addLog(s, 'log.paySick', { jobId: job.id, gender: s.gender, amount: salary }, 'good');
+  } else if (job) {
     // Heures sautées : si le patron s'en aperçoit, elles ne sont pas payées et le joueur reçoit un blâme.
     const caught = Math.random() < jobBlameChance(s);
     const full = currentSalary(s);
@@ -71,6 +84,19 @@ export function endTurn(state: GameState): GameState {
   accrueSavings(s);
 
   progressTraining(s);
+
+  // Efficacité nulle : un avertissement le premier mois, le renvoi le suivant.
+  if (workActive(s) && !sick && s.efficiency < 1) {
+    s.zeroMonths += 1;
+    if (s.zeroMonths >= EFFICIENCY.zeroMonths) fireForSlacking(s);
+    else addLog(s, 'log.zeroWarning', {}, 'bad');
+  } else {
+    s.zeroMonths = 0;
+  }
+
+  // Épuisement : à fond avec une santé trop basse, c'est l'arrêt maladie forcé.
+  if (sick) endSickMonth(s);
+  else if (workActive(s) && s.workStyle === 'hard' && s.stats.health < EFFICIENCY.burnoutHealth) startSickLeave(s);
 
   resolveApplications(s);
   rollPromotion(s);

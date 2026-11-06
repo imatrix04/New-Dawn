@@ -1,12 +1,13 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS } from '../data/content';
+import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS, WORK_STYLE_IDS, WORK_STYLES } from '../data/content';
 import {
-  blameChance, isOverbooked, jobBlameChance, jobById, scheduleEffects, weekBreakdown,
+  blameChance, isOverbooked, jobBlameChance, jobById, scheduleEffects, weekBreakdown, workActive,
 } from '../game/engine';
 import type { GameState, ScheduleKey } from '../game/types';
 import { formatSigned } from '../i18n/format';
 import { useStore } from '../store';
+import { Seg } from './cardKit';
 import { CatIcon } from './Icon';
 import { HoldButton } from './HoldButton';
 import { WeekDonut } from './WeekDonut';
@@ -20,7 +21,7 @@ const cat = (id: string) => TIME_CATS.find((c) => c.id === id)!;
 
 export function SchedulePanel({ game }: { game: GameState }) {
   const { t, i18n } = useTranslation();
-  const { setSchedule, endTurn } = useStore();
+  const { setSchedule, endTurn, setWorkStyle } = useStore();
   const week = weekBreakdown(game);
   const over = isOverbooked(game);
   const fx = scheduleEffects(game.schedule);
@@ -67,6 +68,30 @@ export function SchedulePanel({ game }: { game: GameState }) {
           {over && <p className="over-hint">{t('schedule.overHint')}</p>}
         </div>
       </div>
+
+      {workActive(game) && (
+        <div className="style-box">
+          {game.sickLeave > 0 ? (
+            <p className="over-hint">{t('work.sick', { count: game.sickLeave })}</p>
+          ) : (
+            <>
+              <Seg
+                label={t('work.styleLabel')}
+                value={game.workStyle}
+                options={WORK_STYLE_IDS.map((id) => ({ value: id, label: t(`work.styles.${id}.name`) }))}
+                onChange={setWorkStyle}
+              />
+              <p className="muted small">{t(`work.styles.${game.workStyle}.desc`)}</p>
+              <div className="reqs">
+                {([['efficiency', 'gain'], ['health', 'health'], ['happiness', 'happiness']] as const).map(([stat, field]) => {
+                  const v = WORK_STYLES[game.workStyle][field];
+                  return <span key={stat} className={`req ${v > 0 ? 'ok' : v < 0 ? 'no' : ''}`}>{t(`work.chip.${stat}`, { delta: formatSigned(v, lng) })}</span>;
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="tiles">
         {sliders.map((key, i) => {

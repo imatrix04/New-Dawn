@@ -1,5 +1,5 @@
 // Création d'une partie et migration des anciennes sauvegardes.
-import { AREAS, DEFAULT_SCHEDULE, JOBS, SKILL_MAX, START, START_LISTINGS, START_SKILLS, START_STATS, TRAININGS, USED_MARKET } from '../../data/content';
+import { AREAS, DEFAULT_SCHEDULE, EFFICIENCY, JOBS, SKILL_MAX, START, START_LISTINGS, START_SKILLS, START_STATS, TRAININGS, USED_MARKET } from '../../data/content';
 import type { Area, GameState, Profile, SkillId, Vehicle } from '../types';
 import { rollBoss } from './boss';
 import { drawCatalog } from './catalog';
@@ -29,6 +29,11 @@ export function createGame(profile: Profile): GameState {
     promotionRequested: null,
     jobBlames: 0,
     jobStart: NO_PROBATION,
+    efficiency: EFFICIENCY.start,
+    workStyle: 'normal',
+    sickLeave: 0,
+    zeroMonths: 0,
+    lastField: jobById(profile.job)?.field ?? null,
     boss: hired ? rollBoss(companyById(hired.companyId)) : null,
     raiseSince: 0,
     raiseWaitUntil: 0,
@@ -91,6 +96,11 @@ export function migrateGame(raw: GameState): GameState {
   g.jobBlames ??= 0;
   g.jobStart ??= NO_PROBATION;
   g.economy ??= startEconomy();
+  g.efficiency ??= EFFICIENCY.start;
+  g.workStyle ??= 'normal';
+  g.sickLeave ??= 0;
+  g.zeroMonths ??= 0;
+  g.lastField ??= jobById(g.job)?.field ?? null;
   g.report ??= null;
   g.raiseWaitUntil ??= 0;
   g.raiseOffer ??= null;

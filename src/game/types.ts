@@ -1,4 +1,5 @@
 import type { BossType, RateKey } from '../data/content/economy';
+import type { WorkStyle } from '../data/content/work';
 
 /** Jauges de condition : l'énergie n'existe plus, le sommeil agit directement sur la santé. */
 export type StatKey = 'health' | 'happiness';
@@ -281,6 +282,16 @@ export interface GameState {
   jobBlames: number;
   /** Mois de la partie où le poste actuel a commencé (sert à la période d'essai). */
   jobStart: number;
+  /** Efficacité (0 à 100) : sérieux et performances au travail et dans les études (voir EFFICIENCY). */
+  efficiency: number;
+  /** Style de travail et d'étude choisi par le joueur. */
+  workStyle: WorkStyle;
+  /** Mois d'arrêt maladie restants (épuisement) : 0 = en forme. */
+  sickLeave: number;
+  /** Mois de suite passés à efficacité nulle : au deuxième, c'est le renvoi. */
+  zeroMonths: number;
+  /** Domaine du dernier poste occupé : retrouver le même domaine fait repartir plus haut. */
+  lastField: string | null;
   /** Supérieur du poste actuel, ou null sans emploi. */
   boss: Boss | null;
   /** Mois du début du poste ou de la dernière augmentation : une nouvelle demande est possible un an plus tard. */

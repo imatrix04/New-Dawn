@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { STATS } from '../data/content';
-import { monthlyExpenses, monthlyIncome, projectNextStats } from '../game/engine';
+import { efficiencyDelta, isStrained, monthlyExpenses, monthlyIncome, projectNextStats, workActive } from '../game/engine';
 import type { GameState } from '../game/types';
 import { formatAge, formatDate, formatMoney, formatSigned } from '../i18n/format';
+import { EfficiencyBreakdown } from './EfficiencyBreakdown';
 import { Icon, type IconName } from './Icon';
 import { Money } from './Money';
 import { MoneyBreakdown } from './MoneyBreakdown';
@@ -25,6 +26,9 @@ export function Hud({ game, onPause }: { game: GameState; onPause: () => void })
   const next = projectNextStats(game);
   const balance = monthlyIncome(game) - monthlyExpenses(game);
   const season = useSeason(game.month);
+  const active = workActive(game);
+  const effDiff = efficiencyDelta(game);
+  const strained = isStrained(game);
 
   return (
     <div className="hud">
@@ -73,6 +77,25 @@ export function Hud({ game, onPause }: { game: GameState; onPause: () => void })
             </div>
           );
         })}
+
+        {active && (
+          <div
+            className={`hud-meter has-pop efficiency${game.efficiency < 25 ? ' low' : ''}${strained ? ' strained' : ''}${game.sickLeave > 0 ? ' sick' : ''}`}
+            style={{ '--hc': '#6ab7ff' } as CSSProperties}
+            tabIndex={0}
+          >
+            <div className="hud-meter-top">
+              <Icon name="bolt" size={14} />
+              <span>{t('work.efficiency')}</span>
+              <b>{Math.round(game.efficiency)}</b>
+              {game.sickLeave > 0
+                ? <small className="hud-trend bad">{t('work.sickShort')}</small>
+                : <Trend diff={effDiff}>{formatSigned(Math.abs(effDiff), lng).replace(/^[+−]/, '')}</Trend>}
+            </div>
+            <i className="hud-meter-bar"><i style={{ width: `${Math.min(100, Math.max(0, game.efficiency))}%` }} /></i>
+            <EfficiencyBreakdown game={game} />
+          </div>
+        )}
       </div>
     </div>
   );
