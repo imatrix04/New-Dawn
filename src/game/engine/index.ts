@@ -20,3 +20,5 @@ export type { PelClosePreview, TransferCheck } from './savings';
 export { availableRepairs, banMonthsLeft, baseCommute, buyVehicle, canDrive, commuteAt, commuteHours, driveBlock, estimatedKm, fuelCost, fuelSpec, hasLicense, inspectionPrice, inspectionStatus, insuranceCost, insuranceFor, insuranceOf, drivingVehicle, isImmobilised, isScrap, malusCo2, malusWeight, marketValue, monthlyKm, parkingOverflow, parkingSpots, registrationFee, repairHours, repairQuote, saleReady, salePrice, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection, vehicleAgeMonths, vehicleAgeYears, vehicleById, vehicleModel, vehicleQuote, vehicleValue } from './vehicle';
 export type { DriveBlock, InspectionStatus, RepairQuote, VehicleQuote, VehicleSource } from './vehicle';
 export { endTurn, resolveChoice } from './turn';
+export { calendarOf, dismissReport, smicFloor } from './economy';
+export { announceRaise, answerRaiseOffer, raiseStatus, requestRaise } from './raise';

@@ -3,12 +3,14 @@ import { CATALOG_REFRESH_MONTHS, EVENT_CHANCE, EVENTS_ENABLED, SKILL_MAX, SKILLS
 import { eventById, EVENTS } from '../../data/events';
 import type { GameState } from '../types';
 import { drawCatalog } from './catalog';
+import { rollEconomy } from './economy';
 import { monthlyExpenses, projectNextStats, skillGains } from './effects';
 import { progressHome, refreshListings, resolveHousingApplication } from './housing';
 import { blameJob, gainExperience, jobBlameChance, workedHours } from './job';
 import { currentSalary, gigById, gigPay, jobById } from './lookup';
 import { refreshOffers, resolveApplications } from './offers';
 import { rollPromotion } from './promotion';
+import { announceRaise } from './raise';
 import { lettingIncome, progressProperties } from './property';
 import { accrueSavings, closeExpiredSavings } from './savings';
 import { isOverbooked } from './schedule';
@@ -86,7 +88,9 @@ export function endTurn(state: GameState): GameState {
     addLog(s, 'log.catalogRefreshed');
   }
   addLog(s, 'log.monthMark', { month: s.month }, 'month');
+  if (s.month % 12 === 0) rollEconomy(s); // chaque janvier : prix de l'immobilier, taux et SMIC
   closeExpiredSavings(s);
+  announceRaise(s);
 
   checkOver(s);
   if (!s.over) rollEvent(s);

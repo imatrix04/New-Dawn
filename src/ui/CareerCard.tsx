@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, TRAININGS } from '../data/content';
+import { CATALOG_REFRESH_MONTHS, GIGS, JOBS, MAX_APPLICATIONS, MAX_BLAMES, OFFERS_MAX, RAISE, TRAININGS } from '../data/content';
 import type { Company, Gig, GigRequirement, TrainingConfig } from '../data/content';
 import {
   blameChance, careerPath, companyById, currentSalary, experienceMonths, gigPay, gigUnlocked, hireBreakdown, hireChance, jobById, jobCommute, jobDrawback, jobEligibility,
-  isApplied, probationLeft, promotionAvailable, promotionRequestChance, promotionRequestWait, reviewMonths, scheduleEffects, trainingPrice,
+  isApplied, probationLeft, raiseStatus, promotionAvailable, promotionRequestChance, promotionRequestWait, reviewMonths, scheduleEffects, trainingPrice,
 } from '../game/engine';
 import type { Drawback, GameState, Job, Qualification, SkillId } from '../game/types';
 import { formatMoney, formatSigned } from '../i18n/format';
 import { useStore } from '../store';
-import { ChanceBar, DetailHead, Facts, Split, Tile } from './cardKit';
+import { ChanceBar, DetailHead, Facts, PercentPick, Split, Tile } from './cardKit';
 import type { Rarity } from './cardKit';
 
 type Tab = 'gigs' | 'offers' | 'quick' | 'training';
@@ -186,6 +186,50 @@ function Prospects({ job, jobName }: { job: Job; jobName: (id: string) => string
 
 // ---------- Poste actuel ----------
 
+/** Supérieur et augmentation : on demande un pourcentage, le supérieur accepte, négocie ou refuse (son caractère se devine). */
+function RaiseBox({ game }: { game: GameState }) {
+  const { t, i18n } = useTranslation();
+  const { requestRaise, answerRaiseOffer } = useStore();
+  const [ask, setAsk] = useState(0.05);
+  const boss = game.boss;
+  if (!boss) return null;
+  const lng = i18n.language;
+  const status = raiseStatus(game);
+  const salary = currentSalary(game);
+  const money = (n: number) => formatMoney(n, lng);
+  const pct = (n: number) => Math.round(n * 1000) / 10;
+  const reply = game.raiseReply;
+
+  return (
+    <div className="chance-box raise-box">
+      <h4>{t('raise.title')}</h4>
+      <span className="job-meta">{t('raise.boss', { title: t(`raise.titles.${boss.title}`), name: boss.surname })}</span>
+      {reply && <p className={`raise-reply ${reply.kind === 'approved' ? 'good' : reply.kind === 'refused' ? 'bad' : ''}`}>
+        {t(`raise.reply.${reply.kind}.${boss.type}`, { pct: pct(reply.pct) })}
+      </p>}
+
+      {game.raiseOffer !== null ? (
+        <>
+          <span className="job-meta">{t('raise.offer', { pct: pct(game.raiseOffer), from: money(salary), to: money(Math.round(salary * (1 + game.raiseOffer))) })}</span>
+          <div className="reqs">
+            <button className="big-btn" onClick={() => answerRaiseOffer(true)}>{t('raise.accept')}</button>
+            <button className="big-btn secondary" onClick={() => answerRaiseOffer(false)}>{t('raise.decline')}</button>
+          </div>
+        </>
+      ) : status.canAsk ? (
+        <>
+          <PercentPick label={t('raise.ask')} value={ask} min={RAISE.minAsk} max={RAISE.maxAsk} onChange={setAsk} />
+          <Facts rows={[[t('raise.newSalary'), t('career.perMonth', { amount: money(Math.round(salary * (1 + ask))) })]]} />
+          <button className="big-btn" onClick={() => requestRaise(ask)}>{t('raise.request')}</button>
+        </>
+      ) : (
+        <span className="job-meta warn">{t('raise.wait', { count: status.wait })}</span>
+      )}
+    </div>
+  );
+}
+
+
 const CURRENT_JOB = '__current';
 
 /** Détail du poste occupé : toujours en tête des offres, sans expiration. */
@@ -224,6 +268,7 @@ function CurrentJobDetail({ game, jobName }: { game: GameState; jobName: (id: st
         </div>
       )}
       <Prospects job={job} jobName={jobName} />
+      <RaiseBox game={game} />
       {promotion && (
         <>
           <span className="job-meta">{t('career.promotion.chance', { job: jobName(promotion.to.id), pct: Math.round(promotionRequestChance(game) * 100) })}</span>

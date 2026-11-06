@@ -4,6 +4,7 @@ import {
   openSavings, quitJob, requestPromotion, resolveChoice, resolveJobDecision, resolvePromotion, sellProperty, setGig, setHousingTarget, setSchedule, toggleApplication,
   withdrawProperty, withdrawSavings,
   buyVehicle, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection,
+  answerRaiseOffer, dismissReport, requestRaise,
 } from './game/engine';
 import type { VehicleSource } from './game/engine';
 import type { DrivingStyle, GameState, LeaveAction, Profile, RepairKind, SavingsProduct, ScheduleKey } from './game/types';
@@ -45,6 +46,9 @@ interface Store {
   resolveJobDecision: (jobId: string | null) => void;
   resolvePromotion: (accept: boolean) => void;
   requestPromotion: () => void;
+  requestRaise: (pct: number) => void;
+  answerRaiseOffer: (accept: boolean) => void;
+  dismissReport: () => void;
   quitJob: () => void;
   setGig: (id: string | null) => void;
   setHousingTarget: (id: string | null, leave?: LeaveAction) => void;
@@ -98,6 +102,9 @@ export const useStore = create<Store>((set, get) => {
     resolveJobDecision: (jobId) => { const g = get().game; if (g) update(resolveJobDecision(g, jobId)); },
     resolvePromotion: (accept) => { const g = get().game; if (g) update(resolvePromotion(g, accept)); },
     requestPromotion: () => { const g = get().game; if (g) update(requestPromotion(g)); },
+    requestRaise: (pct) => { const g = get().game; if (g) update(requestRaise(g, pct)); },
+    answerRaiseOffer: (accept) => { const g = get().game; if (g) update(answerRaiseOffer(g, accept)); },
+    dismissReport: () => { const g = get().game; if (g) update(dismissReport(g)); },
     quitJob: () => { const g = get().game; if (g) update(quitJob(g)); },
     setGig: (id) => { const g = get().game; if (g) update(setGig(g, id)); },
     setHousingTarget: (id, leave) => { const g = get().game; if (g) update(setHousingTarget(g, id, leave)); },

@@ -1,5 +1,13 @@
 import type { TFunction } from 'i18next';
+import i18next from 'i18next';
+import { START_YEAR } from '../data/content';
 import type { Fx, LogEntry } from '../game/types';
+
+/** Date du mois de la partie : « Janvier 2026 » (le mois 0 est janvier de l'année de départ). */
+export function formatDate(month: number, lng = i18next.language): string {
+  const text = new Intl.DateTimeFormat(lng, { month: 'long', year: 'numeric' }).format(new Date(START_YEAR, month, 1));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 /** Âge affiché à partir du nombre de mois écoulés depuis les 18 ans. */
 export function formatAge(t: TFunction, month: number): string {
@@ -34,7 +42,10 @@ export function formatLogEntry(t: TFunction, entry: LogEntry): string {
   if (typeof params.accidentLevel === 'string') params.accidentLevel = t(`market.accident.${params.accidentLevel}`);
   if (typeof params.repairKind === 'string') params.repairKind = t(`market.repair.kind.${params.repairKind}`).toLowerCase();
   if (typeof params.productId === 'string') params.product = t(`wallet.products.${params.productId}.name`);
-  if (typeof params.month === 'number') params.age = formatAge(t, params.month);
+  if (typeof params.month === 'number') {
+    params.age = formatAge(t, params.month);
+    params.date = formatDate(params.month);
+  }
 
   const text = t(entry.key, params);
   if (!entry.titleKey) return text;

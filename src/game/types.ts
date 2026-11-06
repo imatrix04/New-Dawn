@@ -1,3 +1,5 @@
+import type { BossType, RateKey } from '../data/content/economy';
+
 /** Jauges de condition : l'énergie n'existe plus, le sommeil agit directement sur la santé. */
 export type StatKey = 'health' | 'happiness';
 
@@ -118,6 +120,39 @@ export interface HousingListing {
 }
 
 export type SavingsProduct = 'livretA' | 'ldds' | 'livretJeune' | 'pel';
+
+/** Situation économique de la partie : elle change chaque janvier (voir EconomyReport). */
+export interface Economy {
+  /** SMIC net mensuel : plancher de tous les salaires (au prorata des heures). */
+  smic: number;
+  /** Taux annuels courants (livrets, nouveaux PEL, prêts immobiliers selon la durée). */
+  rates: Record<RateKey, number>;
+  /** Prix de l'immobilier par rapport au départ (1 = prix de janvier 2026). */
+  housingIndex: number;
+}
+
+export interface EconomyReport {
+  year: number;
+  /** Variation des prix de l'immobilier sur l'année (0.03 = +3 %). */
+  housing: number;
+  smic: { from: number; to: number };
+  rates: Record<RateKey, { from: number; to: number }>;
+}
+
+/** Supérieur direct : son type est caché au joueur. `title` : civilité (m ou f). */
+export interface Boss {
+  type: BossType;
+  title: 'm' | 'f';
+  surname: string;
+}
+
+/** Dernière réponse du supérieur à une demande d'augmentation. */
+export interface RaiseReply {
+  kind: 'approved' | 'counter' | 'refused' | 'declined';
+  /** Pourcentage demandé (approved, refused) ou proposé (counter). */
+  pct: number;
+  month: number;
+}
 
 /** Compte d'épargne : `interest` = part du solde qui vient d'intérêts capitalisés (hors plafond de versements). */
 export interface Account {
@@ -246,6 +281,15 @@ export interface GameState {
   jobBlames: number;
   /** Mois de la partie où le poste actuel a commencé (sert à la période d'essai). */
   jobStart: number;
+  /** Supérieur du poste actuel, ou null sans emploi. */
+  boss: Boss | null;
+  /** Mois du début du poste ou de la dernière augmentation : une nouvelle demande est possible un an plus tard. */
+  raiseSince: number;
+  /** Mois avant lequel le joueur ne peut plus demander d'augmentation (après un refus). */
+  raiseWaitUntil: number;
+  /** Contre-proposition du supérieur en attente de réponse (fraction du salaire), ou null. */
+  raiseOffer: number | null;
+  raiseReply: RaiseReply | null;
   /** Mois du dernier renvoi, ou null : il pèse sur les candidatures des mois suivants. */
   firedMonth: number | null;
   /** Offres d'emploi visibles. Elles expirent, et ne se renouvellent qu'avec les heures de recherche. */
@@ -260,8 +304,11 @@ export interface GameState {
   skillMax?: number;
   /** Mois travaillés par poste (job.id) : détail de l'expérience, affiché dans le profil. */
   history: Record<string, number>;
-  /** Mois écoulés depuis les 18 ans. */
+  /** Mois écoulés depuis janvier 2026 et les 18 ans du personnage. */
   month: number;
+  economy: Economy;
+  /** Rapport économique de janvier, en attente de lecture (alerte). */
+  report: EconomyReport | null;
   money: number;
   job: string | null;
   /** Salaire et entreprise de l'offre acceptée (null pour une ancienne sauvegarde sans entreprise). */

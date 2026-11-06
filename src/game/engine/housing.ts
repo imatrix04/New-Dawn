@@ -26,12 +26,13 @@ const rollCommute = (area: Area): number => {
 };
 
 /** Nouvelle annonce pour un type de bien : à louer ou à vendre (50/50 si les deux sont possibles), dans un quartier tiré au sort. */
-function makeListing(typeId: string): HousingListing {
+function makeListing(typeId: string, priceIndex: number): HousingListing {
   const type = housingTypeById(typeId);
   const tenure = type.rent === null ? 'buy' : type.price === null || Math.random() < 0.5 ? 'rent' : 'buy';
   const area = drawWeighted(AREA_IDS.filter((a) => !type.notIn?.includes(a)), (a) => AREAS[a].weight, 1)[0];
   const base = (tenure === 'rent' ? type.rent : type.price)!;
-  const raw = base * AREAS[area].price * (1 + rollFactor());
+  // Les prix à l'achat suivent l'indice de l'immobilier ; les loyers restent ceux du barème.
+  const raw = base * AREAS[area].price * (1 + rollFactor()) * (tenure === 'buy' ? priceIndex : 1);
   return {
     id: Math.random().toString(36).slice(2, 8),
     typeId,
@@ -47,9 +48,9 @@ function makeListing(typeId: string): HousingListing {
  * Tire `count` annonces, chaque type de bien indépendamment des autres (un même type peut revenir dans un autre quartier) :
  * les plus rares (grosse maison) apparaissent bien moins souvent que les communs (studio).
  */
-export const drawListings = (count: number): HousingListing[] =>
+export const drawListings = (count: number, priceIndex = 1): HousingListing[] =>
   Array.from({ length: count }, () => makeListing(
-    drawWeighted(Object.keys(HOUSING_TYPES), (id) => LISTING_WEIGHT[HOUSING_TYPES[id].grade], 1)[0],
+    drawWeighted(Object.keys(HOUSING_TYPES), (id) => LISTING_WEIGHT[HOUSING_TYPES[id].grade], 1)[0], priceIndex,
   ));
 
 /** Effet mensuel du confort du bien et de l'ambiance du quartier sur la santé et le bonheur. */
@@ -206,7 +207,7 @@ export function refreshListings(s: GameState) {
   }
   const wanted = scheduleEffects(s.schedule).searchListings;
   if (wanted <= 0) return;
-  const fresh = drawListings(wanted);
+  const fresh = drawListings(wanted, s.economy.housingIndex);
   const overflow = s.listings.length + fresh.length - LISTINGS_MAX;
   if (overflow > 0) {
     const drop = s.listings

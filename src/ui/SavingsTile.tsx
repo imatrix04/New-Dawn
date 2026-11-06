@@ -54,7 +54,7 @@ export function SavingsTile({ product, game, expanded, onToggle }: Props) {
   const balance = savingsBalance(game, product);
   const principal = acct ? acct.balance - acct.interest : 0;
   const fill = Math.min(1, principal / def.ceiling);
-  const rate = isPel && pel ? pel.rate : def.rate;
+  const rate = isPel && pel ? pel.rate : game.economy.rates[product];
   const jeuneClosed = product === 'livretJeune' && !livretJeuneEligible(game);
   const pulse = usePulse(balance);
 

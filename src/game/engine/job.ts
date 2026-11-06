@@ -1,6 +1,7 @@
 // Poste actuel : heures travaillées, blâmes, période d'essai, démission, réponse aux candidatures, boulot rapide.
-import { JOBS, MAX_BLAMES, PROBATION_MONTHS } from '../../data/content';
+import { BOSSES, JOBS, MAX_BLAMES, PROBATION_MONTHS } from '../../data/content';
 import type { GameState, Job } from '../types';
+import { rollBoss } from './boss';
 import { experienceMonths } from './career';
 import { companyById, gigById, gigUnlocked, jobById } from './lookup';
 import { addLog, clamp, NO_PROBATION } from './shared';
@@ -14,7 +15,9 @@ export const workedHours = (state: GameState): number => {
 /** Risque de blâme du mois : 0 si le joueur fait toutes ses heures, jusqu'à 1 s'il n'en fait aucune. */
 export function jobBlameChance(state: GameState): number {
   const job = jobById(state.job);
-  return job ? clamp(1 - workedHours(state) / job.hours, 0, 1) : 0;
+  // Un supérieur strict ou méchant remarque plus souvent les heures sautées.
+  const strictness = state.boss ? BOSSES[state.boss.type].blame : 1;
+  return job ? clamp((1 - workedHours(state) / job.hours) * strictness, 0, 1) : 0;
 }
 
 export const probationMonths = (job: Job): number => job.probation ?? PROBATION_MONTHS[job.grade];
@@ -36,6 +39,12 @@ export function startJob(s: GameState, job: Job, salary: number, companyId: stri
   // Les promotions se comptent poste par poste : la première proposition du nouveau poste redevient certaine.
   s.promotionSeen = false;
   s.promotionRequested = null;
+  // Nouveau supérieur, et le compteur d'augmentation repart de zéro.
+  s.boss = rollBoss(companyById(companyId));
+  s.raiseSince = s.month;
+  s.raiseWaitUntil = 0;
+  s.raiseOffer = null;
+  s.raiseReply = null;
 }
 
 function leaveJob(s: GameState) {
@@ -45,6 +54,9 @@ function leaveJob(s: GameState) {
   s.jobBlames = 0;
   s.jobStart = NO_PROBATION;
   s.schedule.work = 0;
+  s.boss = null;
+  s.raiseOffer = null;
+  s.raiseReply = null;
 }
 
 /** Démissionne : sans emploi, sans malus. */

@@ -1,5 +1,6 @@
 export * from './catalog';
 export * from './companies';
+export * from './economy';
 export * from './general';
 export * from './gigs';
 export * from './housing';

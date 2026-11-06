@@ -54,7 +54,7 @@ export const promotionRequestWait = (state: GameState): number =>
 
 /** Passe au poste de manager chez le même employeur : nouveau contrat, nouvelle période d'essai. */
 export function promote(s: GameState, job: Job) {
-  const salary = salaryAt(job, companyById(s.jobCompany));
+  const salary = salaryAt(job, companyById(s.jobCompany), s.economy.smic);
   startJob(s, job, salary, s.jobCompany);
   addLog(s, 'log.promoted', { jobId: job.id, gender: s.gender, salary }, 'good');
 }

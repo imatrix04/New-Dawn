@@ -54,7 +54,7 @@ export function buyQuote(
   const price = l.price;
   const down = Math.round(price * downPct);
   const loan = price - down;
-  const rate = OWNING.rates[years] ?? 0;
+  const rate = state.economy.rates[`loan${years}` as 'loan15' | 'loan20' | 'loan25'] ?? 0;
   const monthly = loan > 0 ? annuity(loan, rate, years * 12) : 0;
   const upfront = down + Math.round(price * OWNING.notaryRate) + (live ? MOVING_COST : 0);
   const credit = live ? moveCredit(state, leave) : 0;
@@ -188,9 +188,8 @@ export function moveToProperty(state: GameState, id: string, leave: LeaveAction 
   return s;
 }
 
-/** Fin de mois d'un propriétaire : le bien prend un peu de valeur et le prêt s'amortit. */
+/** Fin de mois d'un propriétaire : le prêt s'amortit (la valeur du bien ne bouge qu'avec le rapport de janvier). */
 export function ageProperty(s: GameState, item: { value: number; loan: Home['loan'] }) {
-  item.value = Math.round(item.value * Math.pow(1 + OWNING.appreciation, 1 / 12));
   const loan = item.loan;
   if (!loan) return;
   loan.balance = Math.max(0, loan.balance * (1 + loan.rate / 12) - loan.monthly);

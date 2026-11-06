@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { STATS } from '../data/content';
 import { projectNextStats } from '../game/engine';
 import type { GameState } from '../game/types';
-import { formatAge, formatSigned } from '../i18n/format';
+import { formatAge, formatDate, formatSigned } from '../i18n/format';
 import { Money } from './Money';
 
 /** HUD du haut : santé, bonheur, argent et âge en pilules de verre, et le bouton pause. */
@@ -34,8 +34,8 @@ export function Hud({ game, onPause }: { game: GameState; onPause: () => void })
       </div>
 
       <div className="hud-group">
-        <div className="hud-pill"><small>{formatAge(t, game.month)}</small></div>
-        <div className="hud-pill money"><Money value={game.money} /></div>
+        <div className="hud-pill hud-date" title={formatAge(t, game.month)}><span className="hud-ico" aria-hidden>📆</span>{formatDate(game.month, i18n.language)}</div>
+        <div className="hud-pill money"><span className="hud-ico" aria-hidden>🪙</span><Money value={game.money} /></div>
         <button className="hud-icon-btn" title={t('board.pause')} aria-label={t('board.pause')} onClick={onPause}>⏸</button>
       </div>
     </div>

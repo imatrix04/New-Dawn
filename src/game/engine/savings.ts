@@ -94,7 +94,7 @@ export function depositSavings(state: GameState, p: SavingsProduct, rawAmount: n
   const s = structuredClone(state);
   s.money = cents(s.money - amount);
   if (p === 'pel') {
-    const pel = s.savings.pel ?? { balance: 0, interest: 0, openedMonth: s.month, rate: SAVINGS.pel.rate };
+    const pel = s.savings.pel ?? { balance: 0, interest: 0, openedMonth: s.month, rate: s.economy.rates.pel };
     pel.balance = cents(pel.balance + amount);
     s.savings.pel = pel;
   } else {
@@ -155,9 +155,9 @@ export function accrueSavings(s: GameState) {
     total += v;
   };
   const { livretA, ldds, livretJeune, pel } = s.savings;
-  if (livretA) credit(livretA, (livretA.balance * SAVINGS.livretA.rate) / 12);
-  if (ldds) credit(ldds, (ldds.balance * SAVINGS.ldds.rate) / 12);
-  if (livretJeune && livretJeuneEligible(s)) credit(livretJeune, (livretJeune.balance * SAVINGS.livretJeune.rate) / 12);
+  if (livretA) credit(livretA, (livretA.balance * s.economy.rates.livretA) / 12);
+  if (ldds) credit(ldds, (ldds.balance * s.economy.rates.ldds) / 12);
+  if (livretJeune && livretJeuneEligible(s)) credit(livretJeune, (livretJeune.balance * s.economy.rates.livretJeune) / 12);
   if (pel) credit(pel, ((pel.balance * pel.rate) / 12) * (1 - SAVINGS.pel.tax));
   if (total >= 0.01) addLog(s, 'log.interest', { amount: cents(total) }, 'good');
 }

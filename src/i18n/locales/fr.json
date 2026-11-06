@@ -231,6 +231,65 @@
       "ask": "Demander une promotion"
     }
   },
+  "raise": {
+    "title": "Augmentation",
+    "boss": "Ton supérieur : {{title}} {{name}}",
+    "titles": {
+      "m": "M.",
+      "f": "Mme"
+    },
+    "ask": "Augmentation demandée",
+    "newSalary": "Nouveau salaire",
+    "request": "Demander une augmentation",
+    "offer": "Contre-proposition : +{{pct}} % ({{from}} → {{to}} par mois).",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "wait_one": "Tu pourras en demander une dans {{count}} mois.",
+    "wait_other": "Tu pourras en demander une dans {{count}} mois.",
+    "reply": {
+      "approved": {
+        "kind": "Avec plaisir, tu l’as bien mérité : +{{pct}} %. Merci pour ton travail !",
+        "fair": "C’est d’accord pour +{{pct}} %. Continue comme ça.",
+        "strict": "Bon. +{{pct}} %, mais je m’attends à des résultats.",
+        "harsh": "+{{pct}} %. Ne t’habitue pas, et ne me fais pas regretter."
+      },
+      "counter": {
+        "kind": "Je ne peux pas aller jusque-là, mais que dirais-tu de +{{pct}} % ?",
+        "fair": "Pas autant, mais je peux te proposer +{{pct}} %.",
+        "strict": "Trop. Je peux aller à +{{pct}} %, à prendre ou à laisser.",
+        "harsh": "+{{pct}} %, point final. Estime-toi heureux."
+      },
+      "refused": {
+        "kind": "Désolé, pas cette fois : le budget est serré. Reparle-m’en plus tard.",
+        "fair": "Non, ce n’est pas possible pour le moment.",
+        "strict": "Non. Reviens quand tu auras fait tes preuves.",
+        "harsh": "Tu plaisantes ? Retourne travailler."
+      },
+      "declined": {
+        "kind": "Comme tu veux, on en reparlera quand tu voudras.",
+        "fair": "D’accord, on en reparlera plus tard.",
+        "strict": "Comme tu veux. Ne compte pas sur une autre occasion tout de suite.",
+        "harsh": "Tu as refusé : tant pis pour toi."
+      }
+    }
+  },
+  "report": {
+    "title": "Rapport économique {{year}}",
+    "intro": "Comme chaque janvier, voici l’évolution de l’année qui vient de s’écouler.",
+    "housing": "Prix de l’immobilier",
+    "smic": "SMIC net mensuel",
+    "rates": {
+      "livretA": "Livret A",
+      "ldds": "LDDS",
+      "livretJeune": "Livret Jeune",
+      "pel": "PEL (nouveaux plans)",
+      "loan15": "Prêt immobilier 15 ans",
+      "loan20": "Prêt immobilier 20 ans",
+      "loan25": "Prêt immobilier 25 ans"
+    },
+    "note": "Les salaires au niveau du SMIC suivent sa variation ; les prêts déjà signés et les PEL ouverts gardent leur taux.",
+    "ok": "Compris"
+  },
   "wallet": {
     "checking": "Compte courant",
     "total": "Patrimoine total",
@@ -725,7 +784,9 @@
   "log": {
     "startComfort": "Tu as 18 ans. Un petit capital, un logement, une voiture et un boulot : tu démarres sereinement.",
     "startTight": "Tu as 18 ans et presque rien en poche. Chaque choix compte.",
-    "monthMark": "— {{age}} —",
+    "monthMark": "— {{date}} —",
+    "economyReport": "Rapport économique {{year}} : les prix, les taux et le SMIC ont changé.",
+    "raiseEligible": "Cela fait un an : tu peux demander une augmentation à ton supérieur.",
     "expenses": "Dépenses du mois : -{{amount, number}} €.",
     "lowMood": "Le moral au plus bas affecte ta santé.",
     "overdraft": "Tu es à découvert : stress.",

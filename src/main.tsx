@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './i18n';
 import '@fontsource-variable/nunito';
+import '@fontsource-variable/fredoka';
 import './style.css';
 
 createRoot(document.getElementById('root')!).render(

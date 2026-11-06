@@ -14,9 +14,9 @@ export const gigById =(id: string | null): Gig | null => GIGS.find((g) => g.id =
 
 export const companyById = (id: string | null): Company | null => COMPANIES.find((c) => c.id === id) ?? null;
 
-/** Salaire proposé : le prix de base ajusté par l'entreprise (±10 % au plus), jamais sous le SMIC. */
-export const salaryAt = (job: Job, company: Company | null): number =>
-  Math.max(Math.round(SMIC_NET * Math.min(1, job.hours / 35)), Math.round(job.salary * (1 + (company?.pay ?? 0))));
+/** Salaire proposé : le prix de base ajusté par l'entreprise (±10 % au plus), jamais sous le SMIC en vigueur. */
+export const salaryAt = (job: Job, company: Company | null, smic = SMIC_NET): number =>
+  Math.max(Math.round(smic * Math.min(1, job.hours / 35)), Math.round(job.salary * (1 + (company?.pay ?? 0))));
 
 /** Trajet hebdomadaire d'un poste chez une entreprise : celui du poste plus l'ajustement de l'entreprise, jamais sous 0. */
 export const jobCommute = (job: Job, company: Company | null): number => Math.max(0, job.commute + (company?.commute ?? 0));

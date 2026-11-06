@@ -23,7 +23,7 @@ export function PromotionPanel({ game }: { game: GameState }) {
       <h2>{t('promotion.title')}</h2>
       <p>{t('promotion.text', { job: name(to.id), company: company?.name ?? t('promotion.yourEmployer') })}</p>
       <p>
-        <strong>{name(to.id)}</strong> • {t('career.perMonth', { amount: formatMoney(salaryAt(to, company), i18n.language) })}
+        <strong>{name(to.id)}</strong> • {t('career.perMonth', { amount: formatMoney(salaryAt(to, company, game.economy.smic), i18n.language) })}
         {' • '}{t('schedule.perWeek', { hours: to.hours })}
       </p>
       <p className="muted small">

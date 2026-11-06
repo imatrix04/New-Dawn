@@ -6,6 +6,7 @@ import { BoardWindow } from './board/BoardWindow';
 import { CareerCard } from './CareerCard';
 import { EventPanel } from './EventPanel';
 import { Hud } from './Hud';
+import { ReportPanel } from './ReportPanel';
 import { HousingCard } from './HousingCard';
 import { JobDecisionPanel } from './JobDecisionPanel';
 import { PromotionPanel } from './PromotionPanel';
@@ -86,10 +87,10 @@ export function GameScreen({ game }: { game: GameState }) {
       {import.meta.env.DEV && <DevCheats />}
 
       {/* Les réponses aux candidatures passent avant l'évènement du mois. */}
-      {(game.jobDecision || game.promotion || game.pendingEvent) && (
+      {(game.jobDecision || game.promotion || game.report || game.pendingEvent) && (
         <div className="overlay">
           <div className="modal-pop">
-            {game.jobDecision ? <JobDecisionPanel game={game} /> : game.promotion ? <PromotionPanel game={game} /> : <EventPanel game={game} />}
+            {game.jobDecision ? <JobDecisionPanel game={game} /> : game.promotion ? <PromotionPanel game={game} /> : game.report ? <ReportPanel report={game.report} /> : <EventPanel game={game} />}
           </div>
         </div>
       )}

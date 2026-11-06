@@ -7,10 +7,10 @@ import { jobById, salaryAt } from './lookup';
 import { addLog, drawWeighted } from './shared';
 
 /** Nouvelle offre pour un poste : une entreprise qui recrute est tirée au hasard, et fixe le salaire. */
-export function makeOffer(job: Job): JobOffer {
+export function makeOffer(job: Job, smic?: number): JobOffer {
   const pool = COMPANIES.filter((c) => c.jobs.includes(job.id));
   const company = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-  return { jobId: job.id, monthsLeft: OFFER_MONTHS[job.grade], companyId: company?.id ?? '', salary: salaryAt(job, company) };
+  return { jobId: job.id, monthsLeft: OFFER_MONTHS[job.grade], companyId: company?.id ?? '', salary: salaryAt(job, company, smic) };
 }
 
 /** Premières offres visibles : les postes de départ, qui durent longtemps. */
@@ -70,6 +70,6 @@ export function refreshOffers(s: GameState) {
       .slice(0, overflow);
     s.offers = s.offers.filter((o) => !drop.includes(o));
   }
-  s.offers.push(...fresh.map(makeOffer));
+  s.offers.push(...fresh.map((job) => makeOffer(job, s.economy.smic)));
   addLog(s, 'log.newOffers', { count: fresh.length }, 'good');
 }

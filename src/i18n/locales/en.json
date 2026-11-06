@@ -231,6 +231,65 @@
       "ask": "Ask for a promotion"
     }
   },
+  "raise": {
+    "title": "Pay raise",
+    "boss": "Your supervisor: {{title}} {{name}}",
+    "titles": {
+      "m": "Mr",
+      "f": "Ms"
+    },
+    "ask": "Raise requested",
+    "newSalary": "New salary",
+    "request": "Ask for a raise",
+    "offer": "Counter-offer: +{{pct}}% ({{from}} → {{to}} per month).",
+    "accept": "Accept",
+    "decline": "Decline",
+    "wait_one": "You can ask again in {{count}} month.",
+    "wait_other": "You can ask again in {{count}} months.",
+    "reply": {
+      "approved": {
+        "kind": "Happily, you earned it: +{{pct}}%. Thanks for your work!",
+        "fair": "Agreed for +{{pct}}%. Keep it up.",
+        "strict": "Fine. +{{pct}}%, but I expect results.",
+        "harsh": "+{{pct}}%. Don’t get used to it, and don’t make me regret it."
+      },
+      "counter": {
+        "kind": "I can’t go that far, but how about +{{pct}}%?",
+        "fair": "Not that much, but I can offer +{{pct}}%.",
+        "strict": "Too much. I can do +{{pct}}%, take it or leave it.",
+        "harsh": "+{{pct}}%, final. Count yourself lucky."
+      },
+      "refused": {
+        "kind": "Sorry, not this time: the budget is tight. Ask me again later.",
+        "fair": "No, that’s not possible right now.",
+        "strict": "No. Come back when you have proven yourself.",
+        "harsh": "Are you kidding? Get back to work."
+      },
+      "declined": {
+        "kind": "As you wish, we can talk again whenever you like.",
+        "fair": "All right, we’ll talk again later.",
+        "strict": "As you wish. Don’t expect another chance soon.",
+        "harsh": "You turned it down: your loss."
+      }
+    }
+  },
+  "report": {
+    "title": "Economic report {{year}}",
+    "intro": "As every January, here is how things changed over the past year.",
+    "housing": "Property prices",
+    "smic": "Monthly net minimum wage",
+    "rates": {
+      "livretA": "Livret A",
+      "ldds": "LDDS",
+      "livretJeune": "Livret Jeune",
+      "pel": "PEL (new plans)",
+      "loan15": "Mortgage 15 years",
+      "loan20": "Mortgage 20 years",
+      "loan25": "Mortgage 25 years"
+    },
+    "note": "Salaries at minimum wage follow its change; signed loans and open PEL plans keep their rate.",
+    "ok": "Got it"
+  },
   "wallet": {
     "checking": "Checking account",
     "total": "Total wealth",
@@ -713,7 +772,9 @@
   "log": {
     "startComfort": "You're 18. A small nest egg, a place, a car and a job: you start out steady.",
     "startTight": "You're 18 with barely anything in your pocket. Every choice counts.",
-    "monthMark": "— {{age}} —",
+    "monthMark": "— {{date}} —",
+    "economyReport": "Economic report {{year}}: prices, rates and the minimum wage have changed.",
+    "raiseEligible": "It has been a year: you can ask your supervisor for a raise.",
     "expenses": "Monthly expenses: -€{{amount, number}}.",
     "lowMood": "Your low mood is affecting your health.",
     "overdraft": "You're overdrawn: stress.",

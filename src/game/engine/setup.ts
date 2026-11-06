@@ -1,9 +1,11 @@
 // Création d'une partie et migration des anciennes sauvegardes.
 import { AREAS, DEFAULT_SCHEDULE, JOBS, SKILL_MAX, START, START_LISTINGS, START_SKILLS, START_STATS, TRAININGS, USED_MARKET } from '../../data/content';
 import type { Area, GameState, Profile, SkillId, Vehicle } from '../types';
+import { rollBoss } from './boss';
 import { drawCatalog } from './catalog';
+import { startEconomy } from './economy';
 import { drawListings, housingTypeById, starterHome } from './housing';
-import { jobById } from './lookup';
+import { companyById, jobById } from './lookup';
 import { makeOffer, starterOffers } from './offers';
 import { emptySavings, migrateSavings } from './savings';
 import { addLog, newId, NO_PROBATION } from './shared';
@@ -27,6 +29,11 @@ export function createGame(profile: Profile): GameState {
     promotionRequested: null,
     jobBlames: 0,
     jobStart: NO_PROBATION,
+    boss: hired ? rollBoss(companyById(hired.companyId)) : null,
+    raiseSince: 0,
+    raiseWaitUntil: 0,
+    raiseOffer: null,
+    raiseReply: null,
     firedMonth: null,
     offers: starterOffers().filter((o) => o.jobId !== profile.job),
     gig: null,
@@ -35,6 +42,8 @@ export function createGame(profile: Profile): GameState {
     skillMax: SKILL_MAX,
     history: {},
     month: 0,
+    economy: startEconomy(),
+    report: null,
     money: start.money,
     job: profile.job,
     jobSalary: hired?.salary ?? null,
@@ -81,6 +90,11 @@ export function migrateGame(raw: GameState): GameState {
   g.promotionRequested ??= null;
   g.jobBlames ??= 0;
   g.jobStart ??= NO_PROBATION;
+  g.economy ??= startEconomy();
+  g.report ??= null;
+  g.raiseWaitUntil ??= 0;
+  g.raiseOffer ??= null;
+  g.raiseReply ??= null;
   g.firedMonth ??= null;
   g.gig ??= null;
   g.offers ??= starterOffers();
@@ -96,6 +110,9 @@ export function migrateGame(raw: GameState): GameState {
   }
   g.jobCompany ??= null;
   g.jobSalary ??= null;
+  g.boss ??= g.job ? rollBoss(companyById(g.jobCompany)) : null;
+  // Une augmentation est possible tout de suite si le poste date de plus d'un an (ou d'avant le suivi).
+  g.raiseSince ??= Math.max(g.jobStart, g.month - 12);
   // Avant la carte Logement, le logement n'était qu'un identifiant (studio ou colocation) à loyer fixe.
   const legacyHome = g as unknown as { housing?: string };
   g.home ??= starterHome(legacyHome.housing ?? 'studio');

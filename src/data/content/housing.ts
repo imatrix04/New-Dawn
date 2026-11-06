@@ -80,14 +80,12 @@ export const MOVING_COST = 200;
 
 /**
  * Achat : frais de notaire (7,5 % dans l'ancien), charges annuelles (taxe foncière + copropriété, part du prix), prêt
- * (apport minimum de 10 %, endettement maximal de 35 % du salaire, emploi exigé), hausse annuelle de la valeur et
- * frais de revente (payés quand on déménage : le bien est alors vendu automatiquement).
+ * (apport minimum de 10 %, endettement maximal de 35 % du salaire, emploi exigé) et frais de revente (payés quand on déménage : le bien est alors vendu automatiquement).
  */
 export const OWNING = {
   notaryRate: 0.075,
   chargesRate: 0.012,
   debtCap: 0.35,
-  appreciation: 0.015,
   saleFee: 0.05,
   downChoices: [0.1, 0.2, 0.3, 0.5, 1],
   terms: [15, 20, 25],
