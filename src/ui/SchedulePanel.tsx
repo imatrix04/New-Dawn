@@ -2,12 +2,12 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HOURS_PER_WEEK, SCHEDULE, TIME_CATS } from '../data/content';
 import {
-  blameChance, isOverbooked, jobBlameChance, jobById, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, scheduleEffects, weekBreakdown,
-  type MoneyLine,
+  blameChance, isOverbooked, jobBlameChance, jobById, scheduleEffects, weekBreakdown,
 } from '../game/engine';
 import type { GameState, ScheduleKey } from '../game/types';
-import { formatNumber, formatSigned } from '../i18n/format';
+import { formatSigned } from '../i18n/format';
 import { useStore } from '../store';
+import { CatIcon } from './Icon';
 import { HoldButton } from './HoldButton';
 import { WeekDonut } from './WeekDonut';
 
@@ -17,22 +17,6 @@ const HOLD_MS = 1000;
 const SLIDERS: ScheduleKey[] = ['sleep', 'leisure', 'study', 'work', 'sport', 'search', 'housing'];
 const FIXED = ['work', 'commute', 'essentials', 'repair'] as const;
 const cat = (id: string) => TIME_CATS.find((c) => c.id === id)!;
-
-/** Infobulle au survol d'une pastille : une ligne par poste. */
-function MoneyTip({ lines, label, money, sign, empty }: {
-  lines: MoneyLine[]; label: (l: MoneyLine) => string; money: (n: number) => string; sign: 1 | -1; empty: string;
-}) {
-  return (
-    <div className={`money-tip ${sign > 0 ? 'good' : 'bad'}`} role="tooltip">
-      {lines.length === 0 && <span className="muted">{empty}</span>}
-      {lines.map((l, i) => (
-        <div className="money-tip-row" key={`${l.kind}-${l.id ?? ''}`} style={{ animationDelay: `${60 + i * 55}ms` }}>
-          <span>{label(l)}</span><b>{money(sign * l.amount)}</b>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function SchedulePanel({ game }: { game: GameState }) {
   const { t, i18n } = useTranslation();
@@ -47,12 +31,6 @@ export function SchedulePanel({ game }: { game: GameState }) {
   // Les curseurs « Études » et « Travail » n'existent que pendant une formation ou avec un poste, qui en réservent les heures.
   const sliders = SLIDERS.filter((key) => (key !== 'study' || (game.training && !game.training.sponsored)) && (key !== 'work' || job));
   const maxOf = (key: ScheduleKey) => (key === 'work' ? job?.hours ?? 0 : SCHEDULE[key].max);
-
-  const income = monthlyIncome(game);
-  const expenses = monthlyExpenses(game);
-  const balance = income - expenses;
-  const sign = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '');
-  const money = (n: number) => `${sign(n)}${formatNumber(Math.abs(n), lng)} €`;
 
   const blameEffect = (risk: number): { text: string; tone: 'good' | 'bad' } => risk > 0
     ? { text: t('schedule.effect.blame', { pct: Math.round(risk * 100) }), tone: 'bad' }
@@ -72,26 +50,6 @@ export function SchedulePanel({ game }: { game: GameState }) {
     }
   };
 
-  const vehicleName = (id?: string) => t(`vehicles.${game.vehicles.find((v) => v.id === id)?.modelId ?? 'city'}`);
-
-  const lineLabel = (l: MoneyLine): string => {
-    switch (l.kind) {
-      case 'job': return t(`jobs.${l.id}`, { context: game.gender });
-      case 'gig': return t(`gigs.${l.id}.name`);
-      case 'housing': return t(`housing.${l.id}`);
-      case 'loan': return t('estate.lines.loan');
-      case 'charges': return t('estate.lines.charges');
-      case 'rentals': return t('estate.lines.rentals');
-      case 'propLoan': return t('estate.lines.propLoan');
-      case 'propCharges': return t('estate.lines.propCharges');
-      case 'fuel': return t('market.lines.fuel', { vehicle: vehicleName(l.id) });
-      case 'insurance': return t('market.lines.insurance', { vehicle: vehicleName(l.id) });
-      case 'training': return t(`trainings.${l.id}.name`);
-      case 'food': return t('schedule.lines.food');
-      case 'leisure': return t('schedule.lines.leisure');
-    }
-  };
-
   return (
     <div className="sched">
       <div className="sched-top">
@@ -101,7 +59,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
           <div className="chips">
             {FIXED.filter((key) => key !== 'repair' || week.repair > 0).map((key) => (
               <div className="chip" key={key} style={{ '--c': cat(key).color } as CSSProperties} title={t(`schedule.cats.${key}.hint`)}>
-                <span>{cat(key).icon} {t(`schedule.cats.${key}.label`)}</span>
+                <span className="cat-label"><CatIcon id={key} /> {t(`schedule.cats.${key}.label`)}</span>
                 <b>{t('schedule.perWeek', { hours: week[key] })}</b>
               </div>
             ))}
@@ -127,7 +85,7 @@ export function SchedulePanel({ game }: { game: GameState }) {
               } as CSSProperties}
             >
               <div className="tile-head">
-                <span className="tile-label">{cat(key).icon} {t(`schedule.cats.${key}.label`)}</span>
+                <span className="tile-label cat-label"><CatIcon id={key} /> {t(`schedule.cats.${key}.label`)}</span>
                 <span className="tile-value" key={value}>
                   {t(def.perDay ? 'schedule.perDay' : 'schedule.perWeek', { hours: value })}
                 </span>
@@ -149,18 +107,6 @@ export function SchedulePanel({ game }: { game: GameState }) {
             </div>
           );
         })}
-      </div>
-
-      <div className="pills">
-        <div className="pill has-tip" tabIndex={0}>
-          <small>{t('schedule.income')}</small><strong className="good">{money(income)}</strong>
-          <MoneyTip lines={monthlyIncomeLines(game)} label={lineLabel} money={money} sign={1} empty={t('schedule.noIncome')} />
-        </div>
-        <div className="pill has-tip" tabIndex={0}>
-          <small>{t('schedule.expenses')}</small><strong className="bad">{money(-expenses)}</strong>
-          <MoneyTip lines={monthlyExpenseLines(game)} label={lineLabel} money={money} sign={-1} empty="" />
-        </div>
-        <div className="pill"><small>{t('schedule.balance')}</small><strong className={balance < 0 ? 'bad' : 'good'}>{money(balance)}</strong></div>
       </div>
 
       <HoldButton

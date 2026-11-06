@@ -13,12 +13,13 @@ export { buyHome, buyQuote, letProperty, lettingChance, lettingIncome, moveToPro
 export type { BuyQuote } from './property';
 export { isOverbooked, setSchedule, weekBreakdown } from './schedule';
 export type { WeekBreakdown } from './schedule';
-export { experienceGoal, monthlyDrawbacks, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, projectNextStats, scheduleEffects, skillGains, skillGainSources } from './effects';
-export type { MoneyLine, SkillGainSource } from './effects';
+export { experienceGoal, monthlyDrawbacks, monthlyExpenseLines, monthlyExpenses, monthlyIncome, monthlyIncomeLines, projectNextStats, scheduleEffects, skillGains, skillGainSources, statEffectLines } from './effects';
+export type { MoneyLine, SkillGainSource, StatLine } from './effects';
 export { ageYears, canOpen, checkDeposit, checkWithdraw, closePel, depositSavings, emptySavings, isOpen, livretJeuneEligible, migrateSavings, openSavings, pelClosePreview, SAVINGS_PRODUCTS, savingsBalance, savingsRoom, totalSavings, withdrawSavings } from './savings';
 export type { PelClosePreview, TransferCheck } from './savings';
 export { availableRepairs, banMonthsLeft, baseCommute, buyVehicle, canDrive, commuteAt, commuteHours, driveBlock, estimatedKm, fuelCost, fuelSpec, hasLicense, inspectionPrice, inspectionStatus, insuranceCost, insuranceFor, insuranceOf, drivingVehicle, isImmobilised, isScrap, malusCo2, malusWeight, marketValue, monthlyKm, parkingOverflow, parkingSpots, registrationFee, repairHours, repairQuote, saleReady, salePrice, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection, vehicleAgeMonths, vehicleAgeYears, vehicleById, vehicleModel, vehicleQuote, vehicleValue } from './vehicle';
 export type { DriveBlock, InspectionStatus, RepairQuote, VehicleQuote, VehicleSource } from './vehicle';
 export { endTurn, resolveChoice } from './turn';
-export { calendarOf, dismissReport, smicFloor } from './economy';
+export { calendarOf, dismissReport, seasonOf, smicFloor } from './economy';
+export type { Season } from './economy';
 export { announceRaise, answerRaiseOffer, raiseStatus, requestRaise } from './raise';

@@ -135,6 +135,27 @@ export const experienceGoal = (field: string): number =>
     q.type === 'experience' && q.field === field ? [q.months] : []
   ))));
 
+/** D'où vient la variation mensuelle d'une jauge (détail de `projectNextStats`, pour l'infobulle de la barre du haut). */
+export type StatLine = { kind: 'sleep' | 'sport' | 'leisure' | 'debt' | 'job' | 'gig' | 'training' | 'home'; id?: string; amount: number };
+
+export function statEffectLines(state: GameState, key: StatKey): StatLine[] {
+  const fx = scheduleEffects(state.schedule);
+  const comfort = housingEffects(state);
+  const job = jobById(state.job);
+  const gig = gigById(state.gig);
+  const drawbacks: [StatLine['kind'], string | undefined, Drawback][] = [
+    ['job', job?.id, job ? jobDrawback(job, companyById(state.jobCompany)) : {}],
+    ['gig', gig?.id, gig?.drawback ?? {}],
+    ['training', state.training?.id, state.training ? TRAININGS[state.training.id].drawback : {}],
+  ];
+  const lines: StatLine[] = key === 'health'
+    ? [{ kind: 'sleep', amount: fx.sleepHealth }, { kind: 'sport', amount: fx.sportHealth }]
+    : [{ kind: 'leisure', amount: fx.leisureHappiness }, { kind: 'debt', amount: state.money < 0 ? -DEBT_HAPPINESS_LOSS : 0 }];
+  for (const [kind, id, d] of drawbacks) lines.push({ kind, id, amount: d[key] ?? 0 });
+  lines.push({ kind: 'home', amount: comfort[key] });
+  return lines.filter((l) => l.amount !== 0);
+}
+
 /** Désavantages mensuels cumulés sur la santé et le bonheur : gros emploi, boulot rapide et formation en cours. */
 export function monthlyDrawbacks(state: GameState): Record<StatKey, number> {
   const total: Record<StatKey, number> = { health: 0, happiness: 0 };

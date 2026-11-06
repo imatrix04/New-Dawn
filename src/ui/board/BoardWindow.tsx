@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Icon, WINDOW_ICONS } from '../Icon';
 import { MIN_SIZE, useLayout, type WindowId } from './layout';
 
 interface Props {
@@ -205,7 +206,7 @@ export function BoardWindow({ id, title, children }: Props) {
       }}
     >
       <div className="win-title" onPointerDown={startDrag}>
-        <span>{title}</span>
+        <span className="win-heading"><Icon name={WINDOW_ICONS[id]} size={16} />{title}</span>
         <button
           className="win-close"
           title={t('board.close')}
@@ -213,7 +214,7 @@ export function BoardWindow({ id, title, children }: Props) {
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => close(id)}
         >
-          ✕
+          <Icon name="close" size={15} />
         </button>
       </div>
       <div className="win-body">{children}</div>

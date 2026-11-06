@@ -1,10 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useLayout, WINDOW_IDS, type WindowId } from './board/layout';
-
-/** Icône de chaque fenêtre dans le dock. */
-const ICONS: Record<WindowId, string> = {
-  schedule: '📅', status: '💗', profile: '👤', wallet: '💰', career: '💼', housing: '🏠', market: '🛒', journal: '📖',
-};
+import { useLayout, WINDOW_IDS } from './board/layout';
+import { Icon, WINDOW_ICONS } from './Icon';
 
 /** Dock du bas : une icône ronde par fenêtre, le nom s'affiche au survol. */
 export function TopBar() {
@@ -25,12 +21,12 @@ export function TopBar() {
             aria-pressed={windows[id].open}
             onClick={() => toggle(id)}
           >
-            {ICONS[id]}
+            <Icon name={WINDOW_ICONS[id]} />
           </button>
         ))}
         <span className="dock-sep" aria-hidden />
         <button className="dock-btn" data-label={t('board.reset')} aria-label={t('board.reset')} onClick={() => reset()}>
-          ↺
+          <Icon name="reset" />
         </button>
       </nav>
     </header>

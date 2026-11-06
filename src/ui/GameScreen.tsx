@@ -6,6 +6,7 @@ import { BoardWindow } from './board/BoardWindow';
 import { CareerCard } from './CareerCard';
 import { EventPanel } from './EventPanel';
 import { Hud } from './Hud';
+import { MonthSplash } from './MonthSplash';
 import { ReportPanel } from './ReportPanel';
 import { HousingCard } from './HousingCard';
 import { JobDecisionPanel } from './JobDecisionPanel';
@@ -15,7 +16,6 @@ import { MarketCard } from './MarketCard';
 import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
 import { SchedulePanel } from './SchedulePanel';
-import { StatusCard } from './StatusCard';
 import { DevCheats } from './DevCheats';
 import { TopBar } from './TopBar';
 import { WalletCard } from './WalletCard';
@@ -60,9 +60,6 @@ export function GameScreen({ game }: { game: GameState }) {
         <BoardWindow id="schedule" title={t('windows.schedule')}>
           <SchedulePanel game={game} />
         </BoardWindow>
-        <BoardWindow id="status" title={t('windows.status')}>
-          <StatusCard game={game} />
-        </BoardWindow>
         <BoardWindow id="profile" title={t('windows.profile')}>
           <ProfileCard game={game} />
         </BoardWindow>
@@ -84,6 +81,7 @@ export function GameScreen({ game }: { game: GameState }) {
       </Board>
 
       <TopBar />
+      <MonthSplash game={game} />
       {import.meta.env.DEV && <DevCheats />}
 
       {/* Les réponses aux candidatures passent avant l'évènement du mois. */}

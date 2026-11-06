@@ -2,8 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './i18n';
-import '@fontsource-variable/nunito';
-import '@fontsource-variable/fredoka';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/bricolage-grotesque';
 import './style.css';
 
 createRoot(document.getElementById('root')!).render(

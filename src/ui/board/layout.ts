@@ -2,11 +2,11 @@
 // C'est une préférence d'affichage du joueur, stockée à part de la partie.
 import { create } from 'zustand';
 
-export type WindowId = 'schedule' | 'status' | 'profile' | 'wallet' | 'career' | 'housing' | 'market' | 'journal';
-export const WINDOW_IDS: WindowId[] = ['schedule', 'status', 'profile', 'wallet', 'career', 'housing', 'market', 'journal'];
+export type WindowId = 'schedule' | 'profile' | 'wallet' | 'career' | 'housing' | 'market' | 'journal';
+export const WINDOW_IDS: WindowId[] = ['schedule', 'profile', 'wallet', 'career', 'housing', 'market', 'journal'];
 /** Largeur par défaut de chaque carte. */
 export const WINDOW_WIDTH: Record<WindowId, number> = {
-  schedule: 620, status: 330, profile: 380, wallet: 400, career: 780, housing: 780, market: 780, journal: 330,
+  schedule: 620, profile: 380, wallet: 400, career: 780, housing: 780, market: 780, journal: 330,
 };
 /** Taille minimale d'une carte redimensionnée. */
 export const MIN_SIZE = { w: 260, h: 140 };
@@ -25,30 +25,26 @@ type Layout = Record<WindowId, WinState>;
 const LAYOUT_KEY = 'newdawn-layout-v1';
 /** Part minimale d'une carte qui doit rester visible pour pouvoir la rattraper. */
 const MIN_VISIBLE = 100;
-/** Hauteur approximative de la carte Statut, pour empiler le Journal juste en dessous. */
-const STATUS_HEIGHT = 320;
 const GAP = 16;
 
 /**
  * Disposition par défaut selon la taille du tableau.
- * Écran large : Emploi du temps | Statut + Journal empilés | Portefeuille.
+ * Écran large : Emploi du temps | Journal | Portefeuille.
  * Écran étroit : le Portefeuille est rangé (fermé), on l'ouvre depuis la barre du haut.
  */
 export function defaultLayout(boardWidth: number, boardHeight = 600): Layout {
   const size = (id: WindowId) => ({ w: WINDOW_WIDTH[id], h: null });
   const middleX = GAP + WINDOW_WIDTH.schedule + GAP;
-  const walletX = middleX + WINDOW_WIDTH.status + GAP;
+  const walletX = middleX + WINDOW_WIDTH.journal + GAP;
   const wide = boardWidth >= walletX + WINDOW_WIDTH.wallet + GAP;
 
-  const stackX = wide ? middleX : Math.max(GAP, boardWidth - WINDOW_WIDTH.status - GAP);
-  const journalY = GAP + STATUS_HEIGHT + GAP;
-  // Le Journal occupe le reste de la colonne, sans dépasser du tableau.
-  const journalH = Math.max(MIN_SIZE.h, boardHeight - journalY - GAP);
+  const stackX = wide ? middleX : Math.max(GAP, boardWidth - WINDOW_WIDTH.journal - GAP);
+  // Le Journal occupe toute la hauteur de sa colonne, sans dépasser du tableau.
+  const journalH = Math.max(MIN_SIZE.h, boardHeight - 2 * GAP);
 
   return {
     schedule: { open: true, x: GAP, y: GAP, z: 1, ...size('schedule') },
-    status: { open: true, x: stackX, y: GAP, z: 2, ...size('status') },
-    journal: { open: true, x: stackX, y: journalY, z: 3, ...size('journal'), h: journalH },
+    journal: { open: true, x: stackX, y: GAP, z: 3, ...size('journal'), h: journalH },
     // La carte Carrière se range par défaut : on l'ouvre depuis la barre du haut quand on cherche un poste.
     career: { open: false, x: middleX, y: GAP, z: 5, ...size('career') },
     // Comme la carte Carrière, le Logement s'ouvre à la demande.

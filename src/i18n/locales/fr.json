@@ -16,7 +16,6 @@
   },
   "windows": {
     "schedule": "Emploi du temps",
-    "status": "Statut",
     "wallet": "Portefeuille",
     "profile": "Profil",
     "career": "Carrière",
@@ -289,6 +288,19 @@
     },
     "note": "Les salaires au niveau du SMIC suivent sa variation ; les prêts déjà signés et les PEL ouverts gardent leur taux.",
     "ok": "Compris"
+  },
+  "seasons": {"winter": "Hiver", "spring": "Printemps", "summer": "Été", "autumn": "Automne"},
+  "splash": {
+    "report": "Rapport économique {{year}} disponible"
+  },
+  "statLines": {
+    "sleep": "Sommeil",
+    "sport": "Sport",
+    "leisure": "Loisirs",
+    "debt": "Découvert bancaire",
+    "home": "Logement",
+    "total": "Variation du mois",
+    "none": "Rien ne change ce mois-ci."
   },
   "wallet": {
     "checking": "Compte courant",

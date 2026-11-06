@@ -13,6 +13,14 @@ export const calendarOf = (month: number): { year: number; monthIndex: number } 
   monthIndex: month % 12,
 });
 
+export type Season = 'winter' | 'spring' | 'summer' | 'autumn';
+
+/** Saison d'un mois de la partie (météorologique : décembre à février = hiver). */
+export const seasonOf = (month: number): Season => {
+  const m = calendarOf(month).monthIndex;
+  return m === 11 || m <= 1 ? 'winter' : m <= 4 ? 'spring' : m <= 7 ? 'summer' : 'autumn';
+};
+
 /** Plancher d'un salaire : le SMIC net, au prorata des heures du contrat (35 h = plein). */
 export const smicFloor = (smic: number, hours: number): number => Math.round(smic * Math.min(1, hours / 35));
 

@@ -18,7 +18,7 @@ export function useAnimatedNumber(target: number, duration = 700): number {
     const start = performance.now();
     let raf = 0;
     const tick = (now: number) => {
-      const p = Math.min(1, (now - start) / duration);
+      const p = Math.max(0, Math.min(1, (now - start) / duration));
       const eased = 1 - Math.pow(1 - p, 3); // décélération douce
       current.current = origin + (target - origin) * eased;
       setValue(current.current);

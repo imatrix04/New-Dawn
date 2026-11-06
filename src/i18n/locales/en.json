@@ -16,7 +16,6 @@
   },
   "windows": {
     "schedule": "Schedule",
-    "status": "Status",
     "wallet": "Wallet",
     "profile": "Profile",
     "career": "Career",
@@ -289,6 +288,19 @@
     },
     "note": "Salaries at minimum wage follow its change; signed loans and open PEL plans keep their rate.",
     "ok": "Got it"
+  },
+  "seasons": {"winter": "Winter", "spring": "Spring", "summer": "Summer", "autumn": "Autumn"},
+  "splash": {
+    "report": "Economic report {{year}} available"
+  },
+  "statLines": {
+    "sleep": "Sleep",
+    "sport": "Sport",
+    "leisure": "Leisure",
+    "debt": "Overdraft",
+    "home": "Home",
+    "total": "Change this month",
+    "none": "Nothing changes this month."
   },
   "wallet": {
     "checking": "Checking account",
