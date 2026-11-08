@@ -187,6 +187,9 @@
     "close": "Close",
     "lockedNote": "You don't meet the requirements to apply yet.",
     "detail": {
+      "reputation": "Manager reputation",
+      "reference_one": "Reference in the field",
+      "reference_other": "{{count}} references in the field",
       "title": "Where your chance comes from",
       "base": "Base chance (grade {{grade}} job)",
       "training": "Training: {{name}}",
@@ -343,6 +346,31 @@
     "sickShort": "Sick leave",
     "promotionAt": "A promotion becomes possible at {{n}} efficiency."
   },
+  "reputation": {
+    "title": "Manager reputation",
+    "level": { "0": "Unknown", "1": "Reliable", "2": "Respected", "3": "Industry reference", "4": "Legend" },
+    "next": "{{pts}} points, next tier at {{next}}",
+    "max": "Top tier",
+    "hint": "It follows you from job to job: better odds of being hired for a management role, raises and promotions come easier, and teams welcome you more warmly.",
+    "refs": "References",
+    "noRefs": "No references yet: a management job held at least {{count}} months leaves one.",
+    "rating": { "excellent": "Excellent", "good": "Good", "poor": "Poor" }
+  },
+  "teamReport": {
+    "title": "Quarterly review",
+    "objective": "Production target",
+    "prime": "Your bonus",
+    "net": "Company result",
+    "dividend": "Taken by head office",
+    "quits": "Departures this quarter",
+    "streak": "Targets in a row",
+    "nextEnvelope": "New bonus envelope",
+    "nextPool": "New bonus ceiling",
+    "ranking": "Each team member's performance",
+    "rankingDirector": "Each department's performance",
+    "rep": "Reputation: {{level}} ({{total}}/{{max}}).",
+    "ok": "Continue"
+  },
   "team": {
     "role": { "manager": "Team manager", "director": "Management" },
     "people_one": "{{count}} person",
@@ -437,9 +465,39 @@
       "recruit": "Recruit", "fire": "Fire", "confirmFire": "Confirm", "training": "in training",
       "waiting": "Your director turned something down recently: wait a bit before asking again."
     },
-    "trait": { "unknown": "?", "driven": "Driven", "lazy": "Slacker", "ambitious": "Ambitious" },
+    "trait": { "unknown": "?", "driven": "Driven", "lazy": "Slacker", "ambitious": "Ambitious", "toxic": "Toxic", "mentor": "Mentor", "unstable": "Unstable" },
     "events": {
-      "hint": "If you don't react before the end of the month, things get worse.",
+      "cost": "A reaction may cost part of your envelope or your own money: greyed-out choices aren't possible right now.",
+      "poach": {
+        "title": "A rival is poaching",
+        "text": "{{a}}, your best performer, got an offer from a competitor.",
+        "choices": { "0": "Counter with a €150 bonus from your envelope", "1": "Let them go", "2": "Appeal to loyalty (your charisma matters)" }
+      },
+      "complaint": {
+        "title": "Complaint in the team",
+        "text": "Several colleagues complain about {{a}}'s behaviour.",
+        "choices": { "0": "Open an investigation", "1": "Give {{a}} a private warning", "2": "Drop it" }
+      },
+      "holiday": {
+        "title": "Summer leave",
+        "text": "The team would like a breather this summer.",
+        "choices": { "0": "Grant leave to everyone", "1": "Set up a rota", "2": "Refuse: too much to do" }
+      },
+      "strike": {
+        "title": "Industrial action",
+        "text": "The team is worn out and threatens a walkout.",
+        "choices": { "0": "Negotiate and make a gesture (€60 each)", "1": "Stand firm", "2": "Wait for it to pass" }
+      },
+      "idea": {
+        "title": "An idea from the team",
+        "text": "{{a}} suggests a way to improve how things run.",
+        "choices": { "0": "Back it with a €50 bonus from your envelope", "1": "Set it aside", "2": "Present it as your own" }
+      },
+      "visit": {
+        "title": "Management visit",
+        "text": "Someone from head office is dropping by.",
+        "choices": { "0": "Prepare the team thoroughly", "1": "Wing it", "2": "Let {{a}} host the visit" }
+      },
       "conflict": {
         "title": "Row in the team",
         "text": "{{a}} and {{b}} are going at it in front of everyone.",
@@ -1051,6 +1109,39 @@
     "teamAuditWarning": "Surprise audit: one point to watch, management points it out (efficiency down).",
     "teamAuditBlame": "Surprise audit: several shortcomings found.",
     "teamEvent": {
+      "poach": {
+        "kept": "{{a}} turns down the competitor's offer and stays.",
+        "left": "{{a}} leaves for a competitor. A replacement arrives, but the team feels the blow.",
+        "bluffWin": "You convince {{a}} to stay: the grass isn't greener elsewhere.",
+        "bluffFail": "{{a}} isn't persuaded and walks out. The team is shaken."
+      },
+      "complaint": {
+        "investigatedGuilty": "The investigation confirms the facts: {{a}} is reprimanded, the team breathes.",
+        "investigatedInnocent": "The investigation finds nothing against {{a}}: tension rises, colleagues feel disowned.",
+        "warned": "You reprimand {{a}} in private: things calm down.",
+        "dismissed": "You drop the matter: the team feels abandoned."
+      },
+      "holiday": {
+        "granted": "You grant leave to everyone: the team comes back rested, but output suffers a little.",
+        "rotation": "You set up a rota: everyone gets a breather and output holds.",
+        "refusedLeave": "You refuse leave: the team takes it badly."
+      },
+      "strike": {
+        "negotiated": "You negotiate: a gesture calms tempers.",
+        "hardline": "You stand firm: the team takes it badly and management dislikes waves.",
+        "walkout": "It turns ugly: {{a}} walks out, the mood is dreadful."
+      },
+      "idea": {
+        "backed": "You back {{a}}'s idea: the team is motivated and management approves.",
+        "shelved": "You set {{a}}'s idea aside: disappointment.",
+        "credit": "You take credit for {{a}}'s idea: management is pleased, but {{a}} won't forget."
+      },
+      "visit": {
+        "prepared": "The visit goes well and management notes your rigour, though the team is a bit stressed.",
+        "improvisedGood": "You improvise brilliantly: good impression.",
+        "improvisedBad": "Your improvising falls flat: bad impression.",
+        "delegated": "{{a}} shines in front of management, which reflects well on you, but the others feel sidelined."
+      },
       "conflict": {
         "mediated": "You defuse the row between {{a}} and {{b}}: they make peace.",
         "mediateFail": "Your mediation backfires: {{a}} and {{b}} are angrier than before.",

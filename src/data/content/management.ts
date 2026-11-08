@@ -110,19 +110,26 @@ export const TEAM_NAMES = [
 // ---------- Traits, supérieur, événements et audits ----------
 
 /** Trait de caractère d'un membre : il se révèle après quelques mois dans l'équipe. */
-export type TeamTrait = 'driven' | 'lazy' | 'ambitious';
-export const TEAM_TRAIT_IDS: TeamTrait[] = ['driven', 'lazy', 'ambitious'];
+export type TeamTrait = 'driven' | 'lazy' | 'ambitious' | 'toxic' | 'mentor' | 'unstable';
+export const TEAM_TRAIT_IDS: TeamTrait[] = ['driven', 'lazy', 'ambitious', 'toxic', 'mentor', 'unstable'];
 /**
  * - `output` : multiplicateur de production du membre (un service entier pour un manager de service).
  * - `push` : part de la perte d'humeur du rythme « à fond » qu'il subit.
  * - `bonus` : multiplicateur de l'effet des primes sur son humeur.
  * - `quit` : multiplicateur de sa chance de démissionner quand il va mal.
  * - `denied` : multiplicateur de la perte d'humeur quand on lui refuse quelque chose.
+ * - `aura` : humeur gagnée (ou perdue) chaque mois par chacun des autres membres à cause de lui.
+ * - `noise` : multiplicateur de l'aléa mensuel de son humeur.
+ * - `train` : mois de formation supplémentaires qu'il fait gagner chaque mois aux recrues.
+ * - `weight` : fréquence relative du trait au tirage.
  */
-export const TEAM_TRAITS: Record<TeamTrait, { output: number; push: number; bonus: number; quit: number; denied: number }> = {
-  driven: { output: 1.25, push: 1, bonus: 1, quit: 1, denied: 1 },
-  lazy: { output: 0.75, push: 0.5, bonus: 1, quit: 0.5, denied: 1 },
-  ambitious: { output: 1, push: 1, bonus: 1.4, quit: 1.5, denied: 1.75 },
+export const TEAM_TRAITS: Record<TeamTrait, { output: number; push: number; bonus: number; quit: number; denied: number; aura: number; noise: number; train: number; weight: number }> = {
+  driven: { output: 1.25, push: 1, bonus: 1, quit: 1, denied: 1, aura: 0, noise: 1, train: 0, weight: 3 },
+  lazy: { output: 0.75, push: 0.5, bonus: 1, quit: 0.5, denied: 1, aura: 0, noise: 1, train: 0, weight: 3 },
+  ambitious: { output: 1, push: 1, bonus: 1.4, quit: 1.5, denied: 1.75, aura: 0, noise: 1, train: 0, weight: 3 },
+  toxic: { output: 0.9, push: 1, bonus: 1, quit: 1, denied: 1, aura: -0.8, noise: 1, train: 0, weight: 1.5 },
+  mentor: { output: 1.05, push: 1, bonus: 1, quit: 0.8, denied: 1, aura: 0.4, noise: 1, train: 1, weight: 2 },
+  unstable: { output: 1.1, push: 1.2, bonus: 1, quit: 1.3, denied: 1.3, aura: 0, noise: 3, train: 0, weight: 2 },
 };
 
 /**
@@ -161,10 +168,10 @@ export const TEAM_EXTRA = {
 };
 
 /** Événements d'équipe : le joueur choisit la réaction (voir l'événement en attente de la carte Équipe). */
-export type TeamEventId = 'conflict' | 'raise' | 'rumor';
+export type TeamEventId = 'conflict' | 'raise' | 'rumor' | 'poach' | 'complaint' | 'holiday' | 'strike' | 'idea' | 'visit';
 /** Réaction par défaut si l'événement reste sans réponse jusqu'à la fin du mois. */
-export const TEAM_EVENT_DEFAULT: Record<TeamEventId, number> = { conflict: 2, raise: 2, rumor: 1 };
-export const TEAM_EVENT_CHOICES: Record<TeamEventId, number> = { conflict: 3, raise: 3, rumor: 3 };
+export const TEAM_EVENT_DEFAULT: Record<TeamEventId, number> = { conflict: 2, raise: 2, rumor: 1, poach: 1, complaint: 2, holiday: 2, strike: 2, idea: 1, visit: 1 };
+export const TEAM_EVENT_CHOICES: Record<TeamEventId, number> = { conflict: 3, raise: 3, rumor: 3, poach: 3, complaint: 3, holiday: 3, strike: 3, idea: 3, visit: 3 };
 
 // ---------- Primes des employés ----------
 
@@ -193,3 +200,34 @@ export const PROFIT_SHARE = { minTenure: 6, year: [0.3, 1.3] as [number, number]
 
 /** Épuisement : chaque mois de suite à fond après le premier retire `pushStack` d'humeur en plus, jusqu'à `pushStackMax`. */
 export const TEAM_FATIGUE = { pushStack: 1.5, pushStackMax: 3 };
+
+// ---------- Réputation de manager et références ----------
+
+/**
+ * La réputation (0 à 100) suit le joueur d'un poste à l'autre. Elle monte avec les bons bilans, une équipe soudée et les audits
+ * réussis, et baisse avec les échecs et les blâmes.
+ * - `levels` : seuils des paliers (inconnu, fiable, reconnu, référence, légende).
+ * - `hit`, `partial`, `miss`, `blame`, `calm`, `happy`, `auditClean` : points gagnés ou perdus au bilan, selon le résultat.
+ * - `hire`, `hireMax` : bonus de chance d'embauche à un poste de management (points × `hire`, plafonné).
+ * - `raise`, `promo` : bonus (à 100 points) sur l'augmentation accordée et sur la chance de promotion demandée.
+ * - `startMood` : humeur de départ gagnée par chaque point de réputation par une nouvelle équipe (elle te connaît).
+ * - `ref` : bonus d'embauche (dans le même domaine) de chaque référence selon sa note, plafonné à `ref.max` (en plus ou en moins).
+ * - `minMonths` : mois minimum à un poste de management pour qu'il laisse une référence.
+ */
+export const REPUTATION = {
+  levels: [0, 20, 40, 60, 80],
+  hit: 4,
+  partial: 1,
+  miss: -3,
+  blame: -6,
+  calm: 1,
+  happy: 1,
+  auditClean: 2,
+  hire: 0.002,
+  hireMax: 0.2,
+  raise: 0.02,
+  promo: 0.1,
+  startMood: 0.1,
+  ref: { excellent: 0.05, good: 0.02, poor: -0.05, max: 0.15 },
+  minMonths: 6,
+};

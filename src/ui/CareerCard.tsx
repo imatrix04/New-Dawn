@@ -361,7 +361,11 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
                         ? t('career.detail.fired', { count: b.months })
                         : b.type === 'rank'
                           ? t('career.detail.rank', { job: jobName(b.jobId) })
-                          : t('career.detail.experience', { months: b.months, field: t(`fields.${b.field}`) })}
+                          : b.type === 'reputation'
+                            ? t('career.detail.reputation')
+                            : b.type === 'reference'
+                              ? t('career.detail.reference', { count: b.count })
+                              : t('career.detail.experience', { months: b.months, field: t(`fields.${b.field}`) })}
                   </span>
                   <b>{b.value < 0 ? '−' : '+'}{pct(Math.abs(b.value))}</b>
                 </li>

@@ -1174,3 +1174,21 @@ input[type="text"]:focus, .amount-input:focus { border-color: var(--accent); box
 .team-perf { font-size: .72rem; font-weight: 600; color: var(--muted); }
 .team-perf.best { color: var(--good); }
 .team-perf.worst { color: var(--bad); }
+
+/* Bilan du trimestre, réputation et références. */
+.team-report { gap: 10px; }
+.team-verdict { margin: 0; padding: 8px 12px; border-radius: 10px; font-weight: 700; border-left: 3px solid var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); }
+.team-verdict.bad { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+.team-ranking { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.team-ranking li { display: grid; grid-template-columns: 22px 1fr 90px 52px; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 9px; background: var(--inset); font-size: .82rem; }
+.rank-n { color: var(--muted); font-weight: 700; text-align: center; }
+.rank-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.rank-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.rank-val { text-align: right; font-variant-numeric: tabular-nums; }
+.team-rep { margin: 0; font-size: .85rem; }
+.ref-list { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0; list-style: none; font-size: .8rem; }
+.ref-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.trait.toxic { color: var(--bad); background: rgba(229, 100, 95, .13); }
+.trait.mentor { color: var(--good); background: rgba(91, 212, 138, .14); }
+.trait.unstable { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }

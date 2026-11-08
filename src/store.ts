@@ -5,7 +5,7 @@ import {
   withdrawProperty, withdrawSavings,
   buyVehicle, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection,
   answerRaiseOffer, dismissReport, requestRaise, setWorkStyle,
-  giveTeamBonus, setTeamPace, teamOuting, recruitMember, fireMember, resolveTeamEvent,
+  giveTeamBonus, setTeamPace, teamOuting, recruitMember, fireMember, resolveTeamEvent, dismissTeamReport,
 } from './game/engine';
 import type { VehicleSource } from './game/engine';
 import type { TeamPace, WorkStyle } from './data/content';
@@ -54,6 +54,7 @@ interface Store {
   setTeamPace: (pace: TeamPace) => void;
   giveTeamBonus: (target: string, perHead: number) => void;
   teamOuting: () => void;
+  dismissTeamReport: () => void;
   recruitMember: () => void;
   fireMember: (id: string) => void;
   resolveTeamEvent: (index: number) => void;
@@ -117,6 +118,7 @@ export const useStore = create<Store>((set, get) => {
     setTeamPace: (pace) => { const g = get().game; if (g) update(setTeamPace(g, pace)); },
     giveTeamBonus: (target, perHead) => { const g = get().game; if (g) update(giveTeamBonus(g, target, perHead)); },
     teamOuting: () => { const g = get().game; if (g) update(teamOuting(g)); },
+    dismissTeamReport: () => { const g = get().game; if (g) update(dismissTeamReport(g)); },
     recruitMember: () => { const g = get().game; if (g) update(recruitMember(g)); },
     fireMember: (id) => { const g = get().game; if (g) update(fireMember(g, id)); },
     resolveTeamEvent: (index) => { const g = get().game; if (g) update(resolveTeamEvent(g, index)); },

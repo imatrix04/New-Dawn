@@ -1,5 +1,5 @@
 // Équipe d'un poste de manager ou de directeur : création, humeur, production, coûts. Calculs sans effet de bord.
-import { TEAM, TEAM_BOSS, TEAM_EXTRA, TEAM_NAMES, TEAM_PACES, TEAM_TRAIT_IDS, TEAM_TRAITS } from '../../data/content';
+import { REPUTATION, TEAM, TEAM_BOSS, TEAM_EXTRA, TEAM_NAMES, TEAM_PACES, TEAM_TRAIT_IDS, TEAM_TRAITS } from '../../data/content';
 import type { BossType, Company, TeamTrait } from '../../data/content';
 import type { GameState, Job, Team, TeamMember } from '../types';
 import { jobById } from './lookup';
@@ -19,8 +19,12 @@ function drawNames(count: number, taken: string[] = []): string[] {
   return names;
 }
 
-/** Un trait au hasard pour un peu plus d'un membre sur deux. */
-const drawTrait = (): TeamTrait | null => (Math.random() < 0.55 ? TEAM_TRAIT_IDS[Math.floor(Math.random() * TEAM_TRAIT_IDS.length)] : null);
+/** Un trait (selon sa fréquence) pour un peu plus d'un membre sur deux. */
+function drawTrait(): TeamTrait | null {
+  if (Math.random() >= 0.55) return null;
+  let roll = Math.random() * TEAM_TRAIT_IDS.reduce((n, id) => n + TEAM_TRAITS[id].weight, 0);
+  return TEAM_TRAIT_IDS.find((id) => (roll -= TEAM_TRAITS[id].weight) < 0) ?? TEAM_TRAIT_IDS[0];
+}
 
 /** Un membre qui arrive : humeur correcte, sans plus. */
 export const newMember = (name: string, staff: number, mood = rand(52, 68), age = TEAM_EXTRA.trainMonths): TeamMember => ({
@@ -82,13 +86,16 @@ export const maxMembers = (job: Job, company: Company | null): number =>
   Math.round((job.management?.team[1] ?? 0) * (company?.staff ?? 1)) + TEAM_EXTRA.maxExtra;
 
 /** Crée l'équipe d'un poste de management (null si le poste n'encadre personne). */
-export function newTeam(job: Job, company: Company | null, month: number, boss: BossType = 'fair'): Team | null {
+export function newTeam(job: Job, company: Company | null, month: number, boss: BossType = 'fair', reputation = 0): Team | null {
   const cfg = job.management;
   if (!cfg) return null;
   const size = company?.staff ?? 1;
   const count = Math.max(TEAM_EXTRA.minMembers, Math.round(rand(...cfg.team) * size));
   const names = drawNames(count);
-  const members = names.map((name) => newMember(name, cfg.staff ? Math.max(2, Math.round(rand(...cfg.staff) * size)) : 0));
+  // Une nouvelle équipe accueille mieux un manager de bonne réputation.
+  const welcome = reputation * REPUTATION.startMood;
+  const members = names.map((name) =>
+    newMember(name, cfg.staff ? Math.max(2, Math.round(rand(...cfg.staff) * size)) : 0, clamp(rand(52, 68) + welcome, 0, 100)));
   const team: Team = {
     level: cfg.level,
     members,
@@ -178,11 +185,11 @@ export function teamHappiness(state: GameState): number {
 
 /** Bonus à l'augmentation accordée : l'équipe qui atteint ses objectifs de suite plaide pour son manager. */
 export const teamRaiseMerit = (state: GameState): number =>
-  state.team ? Math.min(TEAM.streakRaiseMax, state.team.streak * TEAM.streakRaise) : 0;
+  (state.team ? Math.min(TEAM.streakRaiseMax, state.team.streak * TEAM.streakRaise) : 0) + ((state.reputation ?? 0) / 100) * REPUTATION.raise;
 
 /** Bonus de chance à la demande de promotion. */
 export const teamPromotionBonus = (state: GameState): number =>
-  state.team ? Math.min(TEAM.streakPromoMax, state.team.streak * TEAM.streakPromo) : 0;
+  (state.team ? Math.min(TEAM.streakPromoMax, state.team.streak * TEAM.streakPromo) : 0) + ((state.reputation ?? 0) / 100) * REPUTATION.promo;
 
 /** Salaire moyen d'un salarié de l'équipe (0 sans équipe). */
 export const teamWage = (state: GameState): number => jobById(state.job)?.management?.wage ?? 0;

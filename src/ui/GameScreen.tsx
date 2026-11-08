@@ -11,6 +11,8 @@ import { ReportPanel } from './ReportPanel';
 import { HousingCard } from './HousingCard';
 import { JobDecisionPanel } from './JobDecisionPanel';
 import { PromotionPanel } from './PromotionPanel';
+import { TeamEventPanel } from './TeamEventPanel';
+import { TeamReportPanel } from './TeamReportPanel';
 import { LogPanel } from './LogPanel';
 import { MarketCard } from './MarketCard';
 import { PauseMenu } from './PauseMenu';
@@ -102,10 +104,10 @@ export function GameScreen({ game }: { game: GameState }) {
       {import.meta.env.DEV && <DevCheats />}
 
       {/* Les réponses aux candidatures passent avant l'évènement du mois. */}
-      {(game.jobDecision || game.promotion || game.report || game.pendingEvent) && (
+      {(game.jobDecision || game.promotion || game.report || game.teamReport || game.team?.event || game.pendingEvent) && (
         <div className="overlay">
           <div className="modal-pop">
-            {game.jobDecision ? <JobDecisionPanel game={game} /> : game.promotion ? <PromotionPanel game={game} /> : game.report ? <ReportPanel report={game.report} /> : <EventPanel game={game} />}
+            {game.jobDecision ? <JobDecisionPanel game={game} /> : game.promotion ? <PromotionPanel game={game} /> : game.report ? <ReportPanel report={game.report} /> : game.teamReport ? <TeamReportPanel report={game.teamReport} director={game.team?.level === 'director'} /> : game.team?.event ? <TeamEventPanel game={game} /> : <EventPanel game={game} />}
           </div>
         </div>
       )}

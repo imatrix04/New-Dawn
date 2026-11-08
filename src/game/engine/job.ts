@@ -5,6 +5,7 @@ import { rollBoss } from './boss';
 import { experienceMonths } from './career';
 import { companyById, gigById, gigUnlocked, jobById } from './lookup';
 import { addLog, clamp, NO_PROBATION } from './shared';
+import { recordReference } from './reputation';
 import { newTeam, teamHeadcount } from './team';
 
 /** Heures réellement travaillées par semaine au poste : le curseur, sans dépasser le contrat. */
@@ -34,6 +35,7 @@ export function probationLeft(state: GameState): number {
 
 /** Prend un nouveau poste : compteurs remis à zéro et heures du contrat réservées dans le planning. */
 export function startJob(s: GameState, job: Job, salary: number, companyId: string | null) {
+  recordReference(s); // le poste de management qu'on quitte (promotion ou changement) laisse une référence
   s.job = job.id;
   s.jobSalary = salary;
   s.jobCompany = companyId || null;
@@ -53,11 +55,12 @@ export function startJob(s: GameState, job: Job, salary: number, companyId: stri
   s.efficiency = s.lastField === job.field ? EFFICIENCY.sameField : EFFICIENCY.newJob;
   s.lastField = job.field;
   // Un poste de manager ou de directeur vient avec une équipe à prendre en main.
-  s.team = newTeam(job, companyById(companyId), s.month, s.boss?.type);
+  s.team = newTeam(job, companyById(companyId), s.month, s.boss?.type, s.reputation);
   if (s.team) addLog(s, 'log.teamNew', { count: teamHeadcount(s.team), level: s.team.level }, 'good');
 }
 
 function leaveJob(s: GameState) {
+  recordReference(s);
   s.job = null;
   s.jobSalary = null;
   s.jobCompany = null;

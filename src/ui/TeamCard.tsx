@@ -1,8 +1,8 @@
 import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MAX_BLAMES, TEAM, TEAM_EVENT_CHOICES, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES } from '../data/content';
+import { MAX_BLAMES, TEAM, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES } from '../data/content';
 import {
-  bonusCheck, bonusCost, bonusGainFor, canFire, canRecruit, companyById, memberQuarterPerf, currentSalary, eventChoiceOk, jobById, moodLevel, outingCost, outingWait, teamHeadcount, teamMood,
+  bonusCheck, bonusCost, bonusGainFor, canFire, canRecruit, companyById, memberQuarterPerf, currentSalary, jobById, moodLevel, outingCost, outingWait, teamHeadcount, teamMood,
   teamOutput, teamProgress, teamPromotionBonus, teamRaiseMerit, teamWage, traitKnown,
 } from '../game/engine';
 import type { MoodLevel } from '../game/engine';
@@ -10,6 +10,7 @@ import type { GameState } from '../game/types';
 import { formatMoney, formatSigned } from '../i18n/format';
 import { useStore } from '../store';
 import { Facts, Seg } from './cardKit';
+import { ReputationBox } from './ReputationBox';
 
 const MOOD_FACE: Record<MoodLevel, string> = { great: '😄', good: '🙂', ok: '😐', low: '😟', bad: '😡' };
 
@@ -27,7 +28,7 @@ function MoodBar({ mood }: { mood: number }) {
 /** Contenu de la carte « Équipe » : humeur, rythme demandé, objectif du trimestre, primes et finances. */
 export function TeamCard({ game }: { game: GameState }) {
   const { t, i18n } = useTranslation();
-  const { setTeamPace, giveTeamBonus, teamOuting, recruitMember, fireMember, resolveTeamEvent } = useStore();
+  const { setTeamPace, giveTeamBonus, teamOuting, recruitMember, fireMember } = useStore();
   const [confirmFire, setConfirmFire] = useState<string | null>(null);
   const [pick, setPick] = useState('all');
   const [perHead, setPerHead] = useState(100);
@@ -72,9 +73,6 @@ export function TeamCard({ game }: { game: GameState }) {
   const perfs = team.members.map((m) => memberQuarterPerf(m, team) / Math.max(0.01, team.objective));
   const bestPerf = Math.max(...perfs);
   const worstPerf = Math.min(...perfs);
-  const event = team.event;
-  const evA = team.members.find((m) => m.id === event?.a)?.name ?? '';
-  const evB = team.members.find((m) => m.id === event?.b)?.name ?? '';
   const reply = team.reply && team.reply.month === game.month ? team.reply : null;
   const waiting = !director && team.askWaitUntil > game.month;
 
@@ -97,21 +95,6 @@ export function TeamCard({ game }: { game: GameState }) {
 
       {sick && <p className="job-meta">{t('team.sickNote')}</p>}
       {!sick && presence < 1 && <p className="job-meta warn">{t('team.presenceWarn', { pct: Math.round((1 - (TEAM.presenceFloor + (1 - TEAM.presenceFloor) * presence)) * 100) })}</p>}
-
-      {event && (
-        <section className="team-event" role="alert">
-          <h4>{t(`team.events.${event.id}.title`)}</h4>
-          <p>{t(`team.events.${event.id}.text`, { a: evA, b: evB })}</p>
-          <div className="team-event-choices">
-            {Array.from({ length: TEAM_EVENT_CHOICES[event.id] }, (_, i) => (
-              <button key={i} className="big-btn secondary" disabled={!eventChoiceOk(game, i)} onClick={() => resolveTeamEvent(i)}>
-                {t(`team.events.${event.id}.choices.${i}`, { a: evA, b: evB })}
-              </button>
-            ))}
-          </div>
-          <p className="muted small">{t('team.events.hint')}</p>
-        </section>
-      )}
 
       <section className="chance-box">
         <h4>{t('team.pace.title')}</h4>
@@ -230,6 +213,8 @@ export function TeamCard({ game }: { game: GameState }) {
           <p className={`job-meta${team.periodNet < 0 ? ' warn' : ''}`}>{team.periodNet < 0 ? t('team.finance.red') : t('team.finance.hint', { pct: Math.round(TEAM.dividend * 100) })}</p>
         </section>
       )}
+
+      <ReputationBox game={game} />
 
       <section className="team-members">
         <div className="team-members-head">

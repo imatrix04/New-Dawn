@@ -37,6 +37,9 @@ export function createGame(profile: Profile): GameState {
     lastField: jobById(profile.job)?.field ?? null,
     boss: hired ? rollBoss(companyById(hired.companyId)) : null,
     team: null,
+    teamReport: null,
+    reputation: 0,
+    references: [],
     raiseSince: 0,
     raiseWaitUntil: 0,
     raiseOffer: null,
@@ -125,7 +128,10 @@ export function migrateGame(raw: GameState): GameState {
   g.boss ??= g.job ? rollBoss(companyById(g.jobCompany)) : null;
   // Avant la carte Équipe, un manager ou un directeur n'encadrait personne : l'équipe est constituée à l'ouverture de la sauvegarde.
   const savedJob = jobById(g.job);
-  g.team ??= savedJob ? newTeam(savedJob, companyById(g.jobCompany), g.month, g.boss?.type) : null;
+  g.teamReport ??= null;
+  g.reputation ??= 0;
+  g.references ??= [];
+  g.team ??= savedJob ? newTeam(savedJob, companyById(g.jobCompany), g.month, g.boss?.type, g.reputation) : null;
   if (!savedJob?.management) g.team = null;
   // Une augmentation est possible tout de suite si le poste date de plus d'un an (ou d'avant le suivi).
   g.raiseSince ??= Math.max(g.jobStart, g.month - 12);

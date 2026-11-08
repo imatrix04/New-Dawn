@@ -187,6 +187,9 @@
     "close": "Fermer",
     "lockedNote": "Tu ne remplis pas encore les conditions pour postuler.",
     "detail": {
+      "reputation": "Réputation de manager",
+      "reference_one": "Référence dans le domaine",
+      "reference_other": "{{count}} références dans le domaine",
       "title": "D'où vient ta chance",
       "base": "Chance de base (poste de grade {{grade}})",
       "training": "Formation : {{name}}",
@@ -343,6 +346,31 @@
     "sickShort": "Arrêt maladie",
     "promotionAt": "Une promotion devient possible dès {{n}} d’efficacité."
   },
+  "reputation": {
+    "title": "Réputation de manager",
+    "level": { "0": "Inconnu", "1": "Fiable", "2": "Reconnu", "3": "Référence du secteur", "4": "Légende" },
+    "next": "{{pts}} points, prochain palier à {{next}}",
+    "max": "Palier maximal",
+    "hint": "Elle te suit de poste en poste : meilleures chances d'être embauché à un poste de management, augmentations et promotions facilitées, équipes plus accueillantes à ton arrivée.",
+    "refs": "Références",
+    "noRefs": "Aucune référence pour l'instant : un poste de management tenu au moins {{count}} mois en laisse une.",
+    "rating": { "excellent": "Excellente", "good": "Bonne", "poor": "Mauvaise" }
+  },
+  "teamReport": {
+    "title": "Bilan du trimestre",
+    "objective": "Objectif de production",
+    "prime": "Ta prime",
+    "net": "Résultat de l'entreprise",
+    "dividend": "Repris par le siège",
+    "quits": "Départs ce trimestre",
+    "streak": "Objectifs de suite",
+    "nextEnvelope": "Nouvelle enveloppe de primes",
+    "nextPool": "Nouveau plafond de primes",
+    "ranking": "Performance de chaque équipier",
+    "rankingDirector": "Performance de chaque service",
+    "rep": "Réputation : {{level}} ({{total}}/{{max}}).",
+    "ok": "Continuer"
+  },
   "team": {
     "role": { "manager": "Manager d'équipe", "director": "Direction" },
     "people_one": "{{count}} personne",
@@ -437,9 +465,39 @@
       "recruit": "Recruter", "fire": "Licencier", "confirmFire": "Confirmer", "training": "en formation",
       "waiting": "Ton directeur t'a refusé quelque chose récemment : attends un peu avant de redemander."
     },
-    "trait": { "unknown": "?", "driven": "Moteur", "lazy": "Fainéant", "ambitious": "Ambitieux" },
+    "trait": { "unknown": "?", "driven": "Moteur", "lazy": "Fainéant", "ambitious": "Ambitieux", "toxic": "Toxique", "mentor": "Mentor", "unstable": "Instable" },
     "events": {
-      "hint": "Sans réponse d'ici la fin du mois, la situation se dégrade.",
+      "cost": "Une réaction peut coûter une part de ton enveloppe ou de ton argent : les choix grisés ne sont pas possibles pour l'instant.",
+      "poach": {
+        "title": "Un concurrent le débauche",
+        "text": "{{a}}, ton meilleur élément, a reçu une offre d'un concurrent.",
+        "choices": { "0": "Contre-offrir avec une prime de 150 € de ton enveloppe", "1": "Le laisser partir", "2": "Jouer sur la fidélité (ton charisme compte)" }
+      },
+      "complaint": {
+        "title": "Plainte dans l'équipe",
+        "text": "Plusieurs collègues se plaignent du comportement de {{a}}.",
+        "choices": { "0": "Ouvrir une enquête", "1": "Recadrer {{a}} en privé", "2": "Classer l'affaire" }
+      },
+      "holiday": {
+        "title": "Congés d'été",
+        "text": "L'équipe aimerait souffler un peu cet été.",
+        "choices": { "0": "Accorder des congés à tous", "1": "Organiser une rotation", "2": "Refuser : on a trop à faire" }
+      },
+      "strike": {
+        "title": "Mouvement social",
+        "text": "L'équipe est à bout et menace un débrayage.",
+        "choices": { "0": "Négocier et faire un geste (60 € par personne)", "1": "Rester ferme", "2": "Attendre que ça passe" }
+      },
+      "idea": {
+        "title": "Une idée de l'équipe",
+        "text": "{{a}} propose une amélioration du fonctionnement.",
+        "choices": { "0": "La soutenir avec une prime de 50 € de ton enveloppe", "1": "La mettre de côté", "2": "La présenter comme la tienne" }
+      },
+      "visit": {
+        "title": "Visite de la direction",
+        "text": "Un responsable du siège passe voir le service.",
+        "choices": { "0": "Préparer l'équipe à fond", "1": "Improviser", "2": "Laisser {{a}} faire la visite" }
+      },
       "conflict": {
         "title": "Dispute dans l'équipe",
         "text": "{{a}} et {{b}} s'accrochent devant tout le monde.",
@@ -1063,6 +1121,39 @@
     "teamAuditWarning": "Audit surprise : un point à surveiller, la direction te le fait remarquer (efficacité en baisse).",
     "teamAuditBlame": "Audit surprise : plusieurs manquements relevés.",
     "teamEvent": {
+      "poach": {
+        "kept": "{{a}} décline l'offre du concurrent et reste dans l'équipe.",
+        "left": "{{a}} part chez un concurrent. Un remplaçant arrive, mais l'équipe accuse le coup.",
+        "bluffWin": "Tu convaincs {{a}} de rester : l'herbe n'est pas plus verte ailleurs.",
+        "bluffFail": "{{a}} ne se laisse pas convaincre et claque la porte. L'équipe est secouée."
+      },
+      "complaint": {
+        "investigatedGuilty": "L'enquête confirme les faits : {{a}} est recadré, l'équipe respire.",
+        "investigatedInnocent": "L'enquête ne trouve rien contre {{a}} : l'ambiance se tend, des collègues se sentent désavoués.",
+        "warned": "Tu recadres {{a}} en privé : l'affaire se calme.",
+        "dismissed": "Tu classes l'affaire : l'équipe se sent abandonnée."
+      },
+      "holiday": {
+        "granted": "Tu accordes des congés à tous : l'équipe revient reposée, mais la production en pâtit un peu.",
+        "rotation": "Tu organises une rotation : chacun souffle un peu, la production tient.",
+        "refusedLeave": "Tu refuses les congés : l'équipe le prend mal."
+      },
+      "strike": {
+        "negotiated": "Tu négocies : un geste calme les esprits.",
+        "hardline": "Tu restes ferme : l'équipe encaisse mal et ta direction n'aime pas les remous.",
+        "walkout": "Le mouvement s'envenime : {{a}} claque la porte, l'ambiance est exécrable."
+      },
+      "idea": {
+        "backed": "Tu soutiens l'idée de {{a}} : l'équipe est motivée et ta direction apprécie.",
+        "shelved": "Tu mets l'idée de {{a}} de côté : déception.",
+        "credit": "Tu t'attribues l'idée de {{a}} : ta direction est contente, mais {{a}} ne l'oubliera pas."
+      },
+      "visit": {
+        "prepared": "La visite se passe bien et ta direction note ton sérieux, mais l'équipe est un peu stressée.",
+        "improvisedGood": "Tu improvises avec brio : bonne impression.",
+        "improvisedBad": "Ton improvisation tourne court : mauvaise impression.",
+        "delegated": "{{a}} brille devant la direction, ça te profite aussi, mais les autres se sentent mis de côté."
+      },
       "conflict": {
         "mediated": "Tu désamorces la dispute entre {{a}} et {{b}} : ils font la paix.",
         "mediateFail": "Ta médiation tourne mal : {{a}} et {{b}} sont plus remontés qu'avant.",

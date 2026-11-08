@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { JOBS, SKILL_MAX, SKILLS, TRAININGS } from '../data/content';
+import { ReputationBox } from './ReputationBox';
 import { experienceGoal, experienceMonths, skillGainSources, skillGains, type SkillGainSource } from '../game/engine';
 import type { GameState } from '../game/types';
 import { formatAge, formatSigned } from '../i18n/format';
@@ -152,6 +153,7 @@ export function ProfileCard({ game }: { game: GameState }) {
               <p className="muted small">{t('profile.noWork')}</p>
             )}
           </section>
+          {((game.reputation ?? 0) > 0 || (game.references ?? []).length > 0 || game.team) && <ReputationBox game={game} />}
         </div>
       )}
     </div>

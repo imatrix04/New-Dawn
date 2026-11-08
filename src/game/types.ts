@@ -294,6 +294,37 @@ export interface TeamReply {
   amount: number;
 }
 
+/** Bilan complet du trimestre, affiché au joueur dans une fenêtre. */
+export interface TeamReport {
+  month: number;
+  ratio: number;
+  objective: number;
+  outcome: 'hit' | 'partial' | 'miss';
+  prime: number;
+  net: number | null;
+  blame: 'finance' | 'team' | null;
+  primeBlocked: boolean;
+  streak: number;
+  quits: number;
+  /** Membres classés du plus performant au moins performant : performance moyenne du trimestre (1 = rendement normal). */
+  members: { name: string; perf: number; mood: number; trait: TeamTrait | null; staff: number }[];
+  /** Enveloppe ou plafond de primes du trimestre qui commence, et part du bénéfice reprise par le siège. */
+  nextBudget: number;
+  dividend: number;
+  /** Variation de la réputation de manager et nouveau total. */
+  repDelta: number;
+  repTotal: number;
+}
+
+/** Référence laissée par un poste de management quitté : elle suit le joueur dans ses candidatures. */
+export interface Reference {
+  jobId: string;
+  company: string | null;
+  months: number;
+  rating: 'excellent' | 'good' | 'poor';
+  month: number;
+}
+
 /** Dernier audit surprise du siège (ou du directeur). */
 export interface TeamAudit {
   month: number;
@@ -392,6 +423,12 @@ export interface GameState {
   boss: Boss | null;
   /** Équipe encadrée (poste de manager ou de directeur), ou null. */
   team: Team | null;
+  /** Bilan du trimestre en attente de lecture (alerte), ou null. */
+  teamReport: TeamReport | null;
+  /** Réputation de manager (0 à 100) : elle reste d'un poste à l'autre. Absente des anciennes sauvegardes : 0. */
+  reputation: number;
+  /** Références laissées par les postes de management quittés. */
+  references: Reference[];
   /** Mois du début du poste ou de la dernière augmentation : une nouvelle demande est possible un an plus tard. */
   raiseSince: number;
   /** Mois avant lequel le joueur ne peut plus demander d'augmentation (après un refus). */

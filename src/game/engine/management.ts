@@ -1,13 +1,14 @@
 // Management : rythme, primes (soumises au supérieur), recrutement, événements d'équipe, audits, passage du mois et bilan du trimestre.
-import { SKILL_MAX, TEAM, TEAM_FATIGUE, TEAM_EVENT_CHOICES, TEAM_EVENT_DEFAULT, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES, TEAM_TRAITS } from '../../data/content';
-import type { Management, TeamEventId, TeamPace } from '../../data/content';
-import type { GameState, Job, Team, TeamMember, TeamReply } from '../types';
+import { REPUTATION, SKILL_MAX, TEAM, TEAM_FATIGUE, TEAM_EVENT_CHOICES, TEAM_EVENT_DEFAULT, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES, TEAM_TRAITS } from '../../data/content';
+import type { Management, TeamEventId, TeamPace, TeamTrait } from '../../data/content';
+import type { GameState, Job, Team, TeamMember, TeamReply, TeamReport } from '../types';
 import { blameJob } from './job';
 import type { BlameCause } from './job';
 import { companyById, currentSalary, jobById } from './lookup';
+import { addReputation } from './reputation';
 import { addLog, clamp } from './shared';
 import {
-  approvalChance, bonusCost, bonusGainFor, bonusTargets, bossTypeOf, directorPool, effectivePace, maxMembers, memberPerf, outingCost, outingWait, recruitFor,
+  approvalChance, bonusCost, bonusGainFor, memberQuarterPerf, traitKnown, bonusTargets, bossTypeOf, directorPool, effectivePace, maxMembers, memberPerf, outingCost, outingWait, recruitFor,
   replacementFor, teamEnvelope, teamHeadcount, teamMood, teamObjective, teamOutput, teamWage,
 } from './team';
 
@@ -163,6 +164,7 @@ export function fireMember(state: GameState, id: string): GameState {
     spend(team, staffCost(s, TEAM_EXTRA.fireCost, gone.staff), false);
   }
   team.members = team.members.filter((m) => m.id !== id);
+  if (team.event && (team.event.a === id || team.event.b === id)) team.event = null;
   // Voir partir un collègue inquiète, sauf quand on le trouvait peu investi.
   for (const m of team.members) hurt(m, gone.trait === 'lazy' ? 1.5 : TEAM_EXTRA.fireFear);
   addLog(s, 'log.teamFire', { name: gone.name }, 'bad');
@@ -173,35 +175,70 @@ export function fireMember(state: GameState, id: string): GameState {
 
 const charismaChance = (s: GameState) => clamp(0.35 + 0.55 * (s.skills.charisma / SKILL_MAX), 0.1, 0.95);
 
-function drawEvent(team: Team): { id: TeamEventId; a: string | null; b: string | null } | null {
-  const pool: { id: TeamEventId; w: number }[] = [{ id: 'rumor', w: 1 }];
-  if (team.members.length >= 2) pool.push({ id: 'conflict', w: 1 });
-  pool.push({ id: 'raise', w: 1 });
-  const total = pool.reduce((n, e) => n + e.w, 0);
-  let roll = Math.random() * total;
-  const id = (pool.find((e) => (roll -= e.w) < 0) ?? pool[0]).id;
-  const pick = (exclude?: string) => {
-    const list = team.members.filter((m) => m.id !== exclude);
-    return list[Math.floor(Math.random() * list.length)];
-  };
-  if (id === 'conflict') { const a = pick(); return { id, a: a.id, b: pick(a.id).id }; }
-  if (id === 'raise') {
-    // Les ambitieux sont les premiers à réclamer.
-    const weighted = team.members.flatMap((m) => (m.trait === 'ambitious' ? [m, m, m] : [m]));
-    return { id, a: weighted[Math.floor(Math.random() * weighted.length)].id, b: null };
+/** Départ d'un membre (démission, renvoi forcé par un événement) : un remplaçant arrive, recruté et formé aux frais de l'entreprise. */
+function replaceMember(s: GameState, team: Team, m: TeamMember): TeamMember {
+  const next = replacementFor(team, m);
+  team.members = team.members.map((x) => (x.id === m.id ? next : x));
+  team.quits += 1;
+  if (team.level === 'director') {
+    const cost = Math.round(teamWage(s) * TEAM.quitCost * (1 + m.staff));
+    team.fund -= cost;
+    team.periodNet -= cost;
+    team.periodSpent += cost;
   }
+  if (team.event && (team.event.a === m.id || team.event.b === m.id)) team.event = null;
+  return next;
+}
+
+/** Tire l'événement du mois : certains n'arrivent que dans les bonnes conditions (saison, humeur, effectif). */
+function drawEvent(s: GameState, team: Team): { id: TeamEventId; a: string | null; b: string | null } | null {
+  const best = [...team.members].sort((x, y) => memberPerf(y) - memberPerf(x))[0];
+  const many = team.members.length >= 2;
+  const pool: { id: TeamEventId; w: number }[] = ([
+    { id: 'rumor', w: 1 },
+    { id: 'raise', w: 1 },
+    { id: 'idea', w: 1 },
+    { id: 'visit', w: 0.7 },
+    { id: 'conflict', w: many ? 1 : 0 },
+    { id: 'complaint', w: many ? 1 : 0 },
+    { id: 'poach', w: team.members.length >= 3 && memberPerf(best) >= 1 ? 1 : 0 },
+    { id: 'holiday', w: [5, 6, 7].includes(s.month % 12) ? 2 : 0 },
+    { id: 'strike', w: teamMood(team) < 42 ? 3 : 0 },
+  ] as { id: TeamEventId; w: number }[]).filter((e) => e.w > 0);
+  let roll = Math.random() * pool.reduce((n, e) => n + e.w, 0);
+  const id = (pool.find((e) => (roll -= e.w) < 0) ?? pool[0]).id;
+  const pickFrom = (list: TeamMember[]) => list[Math.floor(Math.random() * list.length)];
+  // Un trait rend un membre plus souvent concerné (les ambitieux réclament, les toxiques s'accrochent).
+  const weighted = (trait: TeamTrait, k: number) => team.members.flatMap((m) => Array<TeamMember>(m.trait === trait ? k : 1).fill(m));
+  if (id === 'conflict') {
+    const a = pickFrom(weighted('toxic', 3));
+    return { id, a: a.id, b: pickFrom(team.members.filter((m) => m.id !== a.id)).id };
+  }
+  if (id === 'raise') return { id, a: pickFrom(weighted('ambitious', 3)).id, b: null };
+  if (id === 'complaint') return { id, a: pickFrom(weighted('toxic', 4)).id, b: null };
+  if (id === 'idea') return { id, a: pickFrom(weighted('driven', 3)).id, b: null };
+  if (id === 'poach' || id === 'visit') return { id, a: best.id, b: null };
   return { id, a: null, b: null };
 }
 
-/** Le choix `index` de l'événement en attente est-il faisable (argent, enveloppe) ? */
+/** Ce que coûte une réaction : une part de l'enveloppe de primes, et de l'argent (au manager) ou de la caisse (au directeur). */
+function choiceNeeds(team: Team, id: TeamEventId, a: TeamMember | undefined, index: number): { budget: number; cash: number } {
+  const staff = 1 + (a?.staff ?? 0);
+  if (id === 'raise' && index === 1) return { budget: 100 * staff, cash: 0 };
+  if (id === 'poach' && index === 0) return { budget: 150 * staff, cash: 0 };
+  if (id === 'idea' && index === 0) return { budget: 50, cash: 0 };
+  if (id === 'rumor' && index === 2) return { budget: 0, cash: 20 * teamHeadcount(team) };
+  if (id === 'strike' && index === 0) return { budget: 0, cash: 60 * teamHeadcount(team) };
+  return { budget: 0, cash: 0 };
+}
+
+/** Le choix `index` de l'événement en attente est-il faisable (enveloppe, argent) ? */
 export function eventChoiceOk(state: GameState, index: number): boolean {
   const team = state.team;
   const ev = team?.event;
   if (!team || !ev || index < 0 || index >= TEAM_EVENT_CHOICES[ev.id]) return false;
-  const a = team.members.find((m) => m.id === ev.a);
-  if (ev.id === 'raise') return index !== 1 || (!!a && team.budget >= 100 * (1 + a.staff));
-  if (ev.id === 'rumor' && index === 2) return team.level === 'director' || state.money >= 20 * teamHeadcount(team);
-  return true;
+  const need = choiceNeeds(team, ev.id, team.members.find((m) => m.id === ev.a), index);
+  return need.budget <= team.budget && (team.level === 'director' || state.money >= need.cash);
 }
 
 /** Applique la réaction `index` à l'événement en attente et le clôt. */
@@ -210,61 +247,118 @@ function applyEvent(s: GameState, index: number) {
   const ev = team.event!;
   const a = team.members.find((m) => m.id === ev.a);
   const b = team.members.find((m) => m.id === ev.b);
+  const need = choiceNeeds(team, ev.id, a, index);
+  if (need.budget) spend(team, need.budget, true);
+  if (need.cash) {
+    if (team.level === 'manager') s.money -= need.cash;
+    else spend(team, need.cash, false);
+  }
+  const everyone = (d: number) => team.members.forEach((m) => bump(m, d));
+  const others = (d: number) => team.members.filter((m) => m.id !== a?.id).forEach((m) => bump(m, d));
+  const eff = (d: number) => { s.efficiency = clamp(s.efficiency + d); };
   const names = { a: a?.name ?? '', b: b?.name ?? '' };
   let outcome = 'ignored';
-  const log = (cls: 'good' | 'bad' | '' = '') => addLog(s, `log.teamEvent.${ev.id}.${outcome}`, names, cls);
+  let tone: 'good' | 'bad' | '' = '';
 
-  if (ev.id === 'conflict' && a && b) {
-    if (index === 0) {
-      const ok = Math.random() < charismaChance(s);
-      outcome = ok ? 'mediated' : 'mediateFail';
-      for (const m of [a, b]) bump(m, ok ? 5 : -5);
-      log(ok ? 'good' : 'bad');
-    } else if (index === 1) {
-      outcome = 'sided';
-      bump(a, 6);
-      hurt(b, 9);
-      log();
-    } else {
-      outcome = 'ignored';
-      hurt(a, 7);
-      hurt(b, 7);
-      log('bad');
-    }
-  } else if (ev.id === 'raise' && a) {
-    if (index === 0) {
-      const win = Math.random() < approvalChance(s, 'raise');
-      outcome = win ? 'pushWin' : 'pushLose';
-      if (win) bump(a, 14); else hurt(a, 10);
-      log(win ? 'good' : 'bad');
-    } else if (index === 1 && team.budget >= 100 * (1 + a.staff)) {
-      outcome = 'bonused';
-      bump(a, 9);
-      spend(team, 100 * (1 + a.staff), true);
-      log('good');
-    } else {
-      outcome = 'refused';
-      hurt(a, 8);
-      log('bad');
-    }
-  } else if (ev.id === 'rumor') {
-    if (index === 0) {
-      const ok = Math.random() < charismaChance(s);
-      outcome = ok ? 'reassured' : 'reassureFail';
-      for (const m of team.members) bump(m, ok ? 6 : -4);
-      log(ok ? 'good' : 'bad');
-    } else if (index === 2 && (team.level === 'director' || s.money >= 20 * teamHeadcount(team))) {
-      outcome = 'meeting';
-      const cost = 20 * teamHeadcount(team);
-      if (team.level === 'manager') s.money -= cost; else spend(team, cost, false);
-      for (const m of team.members) bump(m, 3);
-      log('good');
-    } else {
-      outcome = 'silent';
-      for (const m of team.members) bump(m, -6);
-      log('bad');
-    }
+  switch (ev.id) {
+    case 'conflict':
+      if (!a || !b) break;
+      if (index === 0) {
+        const ok = Math.random() < charismaChance(s);
+        outcome = ok ? 'mediated' : 'mediateFail';
+        for (const m of [a, b]) bump(m, ok ? 5 : -5);
+        tone = ok ? 'good' : 'bad';
+      } else if (index === 1) {
+        outcome = 'sided'; bump(a, 6); hurt(b, 9);
+      } else {
+        outcome = 'ignored'; hurt(a, 7); hurt(b, 7); tone = 'bad';
+      }
+      break;
+    case 'raise':
+      if (!a) break;
+      if (index === 0) {
+        const win = Math.random() < approvalChance(s, 'raise');
+        outcome = win ? 'pushWin' : 'pushLose';
+        if (win) bump(a, 14); else hurt(a, 10);
+        tone = win ? 'good' : 'bad';
+      } else if (index === 1) {
+        outcome = 'bonused'; bump(a, 9); tone = 'good';
+      } else {
+        outcome = 'refused'; hurt(a, 8); tone = 'bad';
+      }
+      break;
+    case 'rumor':
+      if (index === 0) {
+        const ok = Math.random() < charismaChance(s);
+        outcome = ok ? 'reassured' : 'reassureFail';
+        everyone(ok ? 6 : -4);
+        tone = ok ? 'good' : 'bad';
+      } else if (index === 2) {
+        outcome = 'meeting'; everyone(3); tone = 'good';
+      } else {
+        outcome = 'silent'; everyone(-6); tone = 'bad';
+      }
+      break;
+    case 'poach':
+      if (!a) break;
+      if (index === 0) {
+        outcome = 'kept'; bump(a, 8); tone = 'good';
+      } else if (index === 2 && Math.random() < charismaChance(s)) {
+        outcome = 'bluffWin'; bump(a, 3); tone = 'good';
+      } else {
+        outcome = index === 2 ? 'bluffFail' : 'left';
+        replaceMember(s, team, a);
+        others(index === 2 ? -5 : -3);
+        tone = 'bad';
+      }
+      break;
+    case 'complaint':
+      if (!a) break;
+      if (index === 0) {
+        const guilty = Math.random() < (a.trait === 'toxic' ? 0.85 : 0.25);
+        if (guilty) {
+          outcome = 'investigatedGuilty'; hurt(a, 10); others(5); a.age = Math.max(a.age, TEAM_EXTRA.trainMonths); tone = 'good';
+        } else {
+          outcome = 'investigatedInnocent'; hurt(a, 6); others(-2); tone = 'bad';
+        }
+      } else if (index === 1) {
+        outcome = 'warned'; hurt(a, 4); others(1);
+      } else {
+        outcome = 'dismissed'; bump(a, 2); others(-6); tone = 'bad';
+      }
+      break;
+    case 'holiday':
+      if (index === 0) { outcome = 'granted'; everyone(8); team.outputSum = Math.max(0, team.outputSum - 0.06); tone = 'good'; }
+      else if (index === 1) { outcome = 'rotation'; everyone(3); team.outputSum = Math.max(0, team.outputSum - 0.02); tone = 'good'; }
+      else { outcome = 'refusedLeave'; everyone(-5); tone = 'bad'; }
+      break;
+    case 'strike':
+      if (index === 0) { outcome = 'negotiated'; everyone(8); tone = 'good'; }
+      else if (index === 1) { outcome = 'hardline'; everyone(-8); eff(-2); tone = 'bad'; }
+      else {
+        outcome = 'walkout'; everyone(-5);
+        const worst = [...team.members].sort((x, y) => x.mood - y.mood)[0];
+        names.a = worst.name;
+        replaceMember(s, team, worst);
+        tone = 'bad';
+      }
+      break;
+    case 'idea':
+      if (!a) break;
+      if (index === 0) { outcome = 'backed'; bump(a, 10); others(2); eff(2); tone = 'good'; }
+      else if (index === 1) { outcome = 'shelved'; hurt(a, 4); }
+      else { outcome = 'credit'; hurt(a, 10); eff(3); }
+      break;
+    case 'visit':
+      if (index === 0) { outcome = 'prepared'; everyone(-3); eff(team.lastOutput >= 0.95 ? 4 : 1); tone = 'good'; }
+      else if (index === 1) {
+        const ok = Math.random() < 0.5;
+        outcome = ok ? 'improvisedGood' : 'improvisedBad'; eff(ok ? 3 : -3); tone = ok ? 'good' : 'bad';
+      } else if (a) { outcome = 'delegated'; bump(a, 6); others(-2); eff(2); tone = 'good'; }
+      break;
   }
+  // Un événement dont le membre a disparu en chemin se clôt sans suite.
+  if (outcome !== 'ignored' || ev.id === 'conflict') addLog(s, `log.teamEvent.${ev.id}.${outcome}`, names, tone);
   team.event = null;
 }
 
@@ -283,7 +377,7 @@ function rollTeamEvent(s: GameState, team: Team) {
     addLog(s, 'log.teamEventLate', {}, 'bad');
   }
   if (Math.random() >= TEAM_EXTRA.eventChance) return;
-  team.event = drawEvent(team);
+  team.event = drawEvent(s, team);
   if (team.event) addLog(s, 'log.teamEventNew', { id: team.event.id });
 }
 
@@ -308,12 +402,14 @@ function audit(s: GameState, team: Team, cfg: Management) {
   team.audit = { month: s.month, verdict };
   if (verdict === 'clean') {
     s.efficiency = clamp(s.efficiency + TEAM_EXTRA.audit.praise);
+    addReputation(s, REPUTATION.auditClean);
     addLog(s, 'log.teamAuditClean', {}, 'good');
   } else if (verdict === 'warning') {
     s.efficiency = clamp(s.efficiency + TEAM_EXTRA.audit.warn);
     addLog(s, 'log.teamAuditWarning', {}, 'bad');
   } else {
     addLog(s, 'log.teamAuditBlame', {}, 'bad');
+    addReputation(s, REPUTATION.blame);
   }
   return verdict === 'blame' ? (finance.length > 0 ? 'finance' : 'team') as BlameCause : null;
 }
@@ -355,30 +451,25 @@ export function progressTeam(s: GameState) {
   // À fond plusieurs mois de suite : l'épuisement s'accumule.
   team.pushMonths = paceId === 'push' ? (team.pushMonths ?? 0) + 1 : 0;
   const fatigue = paceId === 'push' ? -Math.min(TEAM_FATIGUE.pushStackMax, (team.pushMonths - 1) * TEAM_FATIGUE.pushStack) : 0;
+  // Certains traits pèsent (ou aident) toute l'équipe : les toxiques tirent vers le bas, les mentors vers le haut et forment les recrues.
+  const auraTotal = team.members.reduce((n, x) => n + (x.trait ? TEAM_TRAITS[x.trait].aura : 0), 0);
+  const mentored = team.members.some((x) => x.trait && TEAM_TRAITS[x.trait].train > 0);
   for (const m of team.members) {
-    const push = pace.mood < 0 && m.trait ? TEAM_TRAITS[m.trait].push : 1;
+    const t = m.trait ? TEAM_TRAITS[m.trait] : null;
+    const push = pace.mood < 0 && t ? t.push : 1;
     const pull = (TEAM.baseMood - m.mood) * TEAM.moodPull;
-    m.mood = clamp(m.mood + (pace.mood + fatigue) * push + climate + pull + (Math.random() * 2 - 1) * TEAM.moodNoise);
-    m.age += 1;
+    const aura = auraTotal - (t?.aura ?? 0);
+    m.mood = clamp(m.mood + (pace.mood + fatigue) * push + climate + pull + aura + (Math.random() * 2 - 1) * TEAM.moodNoise * (t?.noise ?? 1));
+    m.age += m.age < TEAM_EXTRA.trainMonths && mentored ? 2 : 1;
   }
 
   // Démissions : un membre à bout peut claquer la porte, un remplaçant arrive aussitôt (en formation).
-  team.members = team.members.map((m) => {
+  for (const m of [...team.members]) {
     const chance = TEAM.quitChance * (m.trait ? TEAM_TRAITS[m.trait].quit : 1);
-    if (m.mood >= TEAM.quitBelow || Math.random() >= chance) return m;
-    const next = replacementFor(team, m);
-    team.quits += 1;
-    // Recruter et former le remplaçant coûte cher à l'entreprise.
-    if (cfg.level === 'director') {
-      const cost = Math.round(cfg.wage * TEAM.quitCost * (1 + m.staff));
-      team.fund -= cost;
-      team.periodNet -= cost;
-      team.periodSpent += cost;
-    }
-    if (team.event && (team.event.a === m.id || team.event.b === m.id)) team.event = null;
+    if (m.mood >= TEAM.quitBelow || Math.random() >= chance) continue;
+    const next = replaceMember(s, team, m);
     addLog(s, 'log.teamQuit', { name: m.name, next: next.name }, 'bad');
-    return next;
-  });
+  }
 
   rollTeamEvent(s, team);
 
@@ -419,6 +510,15 @@ function review(s: GameState, team: Team, job: Job, cfg: Management) {
   }
 
   s.efficiency = clamp(s.efficiency + TEAM.efficiency[outcome]);
+  // Réputation : le résultat, une équipe qui reste (aucun départ) et heureuse.
+  const repGain = (blame ? REPUTATION.blame : REPUTATION[outcome])
+    + (team.quits === 0 && outcome !== 'miss' ? REPUTATION.calm : 0) + (teamMood(team) >= 70 ? REPUTATION.happy : 0);
+  const repDelta = addReputation(s, repGain);
+  // Classement des membres sur le trimestre (avant la remise à zéro).
+  const ranked = [...team.members].sort((x, y) => memberQuarterPerf(y, team) - memberQuarterPerf(x, team)).map((x) => ({
+    name: x.name, perf: memberQuarterPerf(x, team), mood: x.mood, trait: traitKnown(x) ? x.trait : null, staff: x.staff,
+  }));
+  const quitsThisQuarter = team.quits;
   // Objectifs de suite : un blâme ou un échec remet le compteur à zéro, un « presque » le laisse tel quel.
   team.streak = blame || outcome === 'miss' ? 0 : outcome === 'hit' ? team.streak + 1 : team.streak;
   if (prime > 0) s.money += prime;
@@ -433,16 +533,19 @@ function review(s: GameState, team: Team, job: Job, cfg: Management) {
 
   // Nouveau trimestre : l'objectif et l'enveloppe de primes suivent le bilan.
   const boss = bossTypeOf(s);
+  let dividendPaid = 0;
   // Le siège reprend une part du bénéfice : la caisse ne sert qu'à faire tourner l'entreprise.
   if (director && team.periodNet > 0) {
     const dividend = Math.round(team.periodNet * TEAM.dividend);
     team.fund -= dividend;
+    dividendPaid = dividend;
     addLog(s, 'log.teamDividend', { amount: dividend });
   }
   team.periodStart = s.month + 1;
   team.outputSum = 0;
   team.outputMonths = 0;
   team.quits = 0;
+  const wasObjective = team.objective;
   team.objective = teamObjective(team.streak);
   if (director) {
     // Plafond des primes : une petite part du bénéfice avant primes, fixée par le siège selon son humeur.
@@ -452,10 +555,20 @@ function review(s: GameState, team: Team, job: Job, cfg: Management) {
     team.budgetTotal = team.budget = teamEnvelope(team, companyById(s.jobCompany), boss, outcome === 'hit' ? 1.15 : outcome === 'miss' ? 0.85 : 1);
     addLog(s, 'log.teamEnvelope', { amount: team.budget });
   }
+  const report: TeamReport = {
+    month: s.month, ratio, objective: wasObjective, outcome, prime, net, blame, primeBlocked, streak: team.streak, quits: quitsThisQuarter,
+    members: ranked, nextBudget: team.budget, dividend: dividendPaid, repDelta, repTotal: s.reputation,
+  };
+  s.teamReport = report;
   team.periodNet = 0;
   team.periodSpent = 0;
   for (const m of team.members) m.perfSum = 0;
 
   // En dernier : un blâme peut aller jusqu'au renvoi, qui supprime l'équipe.
   if (blame) blameJob(s, job, 0, blame);
+}
+
+/** Le joueur a lu le bilan du trimestre. */
+export function dismissTeamReport(state: GameState): GameState {
+  return state.teamReport ? { ...state, teamReport: null } : state;
 }
