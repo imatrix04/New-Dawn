@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MAX_BLAMES, TEAM, TEAM_EVENT_CHOICES, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES } from '../data/content';
 import {
-  bonusCheck, bonusCost, bonusGainFor, canFire, canRecruit, companyById, currentSalary, eventChoiceOk, jobById, moodLevel, outingCost, outingWait, teamHeadcount, teamMood,
+  bonusCheck, bonusCost, bonusGainFor, canFire, canRecruit, companyById, memberQuarterPerf, currentSalary, eventChoiceOk, jobById, moodLevel, outingCost, outingWait, teamHeadcount, teamMood,
   teamOutput, teamProgress, teamPromotionBonus, teamRaiseMerit, teamWage, traitKnown,
 } from '../game/engine';
 import type { MoodLevel } from '../game/engine';
@@ -69,6 +69,9 @@ export function TeamCard({ game }: { game: GameState }) {
   const goalTone = progress.ratio >= 1 ? 'ok' : progress.ratio >= TEAM.partialAt ? 'near' : 'low';
   const primeFull = Math.round(salary * TEAM.prime[team.level]);
   const review = team.review;
+  const perfs = team.members.map((m) => memberQuarterPerf(m, team) / Math.max(0.01, team.objective));
+  const bestPerf = Math.max(...perfs);
+  const worstPerf = Math.min(...perfs);
   const event = team.event;
   const evA = team.members.find((m) => m.id === event?.a)?.name ?? '';
   const evB = team.members.find((m) => m.id === event?.b)?.name ?? '';
@@ -233,16 +236,22 @@ export function TeamCard({ game }: { game: GameState }) {
           <h4 className="pick-label">{t('team.members.title')}</h4>
           <button className="mini-btn" disabled={!canRecruit(game)} onClick={recruitMember}>{t('team.members.recruit')}{director ? ` (${money(Math.round(wage * TEAM_EXTRA.recruitCost))})` : ''}</button>
         </div>
+        <p className="muted small">{t('team.members.perfHint')}</p>
         {reply === null && waiting && <p className="job-meta warn">{t('team.members.waiting')}</p>}
         <ul>
-          {team.members.map((m) => {
+          {team.members.map((m, i) => {
             const lv = moodLevel(m.mood);
+            const perf = memberQuarterPerf(m, team);
+            const rank = team.members.length > 1 && bestPerf !== worstPerf ? (perfs[i] === bestPerf ? 'best' : perfs[i] === worstPerf ? 'worst' : null) : null;
             return (
               <li key={m.id} className="team-row">
                 <button className={`team-member${target === m.id ? ' selected' : ''}`} aria-pressed={target === m.id} onClick={() => setPick(target === m.id ? 'all' : m.id)}>
                   <span className="team-face small" aria-hidden>{MOOD_FACE[lv]}</span>
                   <span className="team-member-name">
                     <strong>{m.name} <span className={`trait ${traitKnown(m) ? m.trait ?? 'none' : 'unknown'}`}>{!traitKnown(m) ? t('team.trait.unknown') : m.trait ? t(`team.trait.${m.trait}`) : ''}</span></strong>
+                    <span className={`team-perf${rank ? ` ${rank}` : ''}`}>
+                      {rank === 'best' ? '⭐ ' : rank === 'worst' ? '⚠ ' : ''}{t('team.members.perf', { pct: Math.round(perf * 100) })}
+                    </span>
                     {m.age < TEAM_EXTRA.trainMonths && <span className="muted small">{t('team.members.training')}</span>}
                     {m.staff > 0 &&<span className="muted small">{t('team.members.staff', { count: m.staff })}</span>}
                   </span>

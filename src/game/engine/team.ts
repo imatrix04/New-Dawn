@@ -48,6 +48,14 @@ export const traitKnown = (m: TeamMember): boolean => m.age >= TEAM_EXTRA.trainM
 /** Production d'un membre selon son humeur : 1 à l'humeur de base, 0,6 à zéro. */
 export const moodFactor = (mood: number): number => 0.6 + mood / (TEAM.baseMood * 2.5);
 
+/** Performance d'un membre ce mois-ci (1 = rendement normal) : son humeur, son trait et sa formation s'il vient d'arriver. Pour un manager de service, c'est celle de son service. */
+export const memberPerf = (m: TeamMember): number =>
+  moodFactor(m.mood) * (m.trait ? TEAM_TRAITS[m.trait].output : 1) * (m.age < TEAM_EXTRA.trainMonths ? TEAM_EXTRA.newcomerOutput : 1);
+
+/** Performance moyenne d'un membre sur le trimestre en cours (sa performance actuelle si le trimestre vient de commencer). */
+export const memberQuarterPerf = (m: TeamMember, team: Team): number =>
+  team.outputMonths > 0 ? (m.perfSum ?? 0) / team.outputMonths : memberPerf(m);
+
 /** Poids d'un membre dans la production : ses équipiers, son trait, et sa formation s'il vient d'arriver. */
 export const memberWeight = (m: TeamMember): number =>
   (1 + m.staff) * (m.trait ? TEAM_TRAITS[m.trait].output : 1) * (m.age < TEAM_EXTRA.trainMonths ? TEAM_EXTRA.newcomerOutput : 1);

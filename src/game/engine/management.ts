@@ -1,5 +1,5 @@
 // Management : rythme, primes (soumises au supérieur), recrutement, événements d'équipe, audits, passage du mois et bilan du trimestre.
-import { SKILL_MAX, TEAM, TEAM_EVENT_CHOICES, TEAM_EVENT_DEFAULT, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES, TEAM_TRAITS } from '../../data/content';
+import { SKILL_MAX, TEAM, TEAM_FATIGUE, TEAM_EVENT_CHOICES, TEAM_EVENT_DEFAULT, TEAM_EXTRA, TEAM_PACE_IDS, TEAM_PACES, TEAM_TRAITS } from '../../data/content';
 import type { Management, TeamEventId, TeamPace } from '../../data/content';
 import type { GameState, Job, Team, TeamMember, TeamReply } from '../types';
 import { blameJob } from './job';
@@ -7,7 +7,7 @@ import type { BlameCause } from './job';
 import { companyById, currentSalary, jobById } from './lookup';
 import { addLog, clamp } from './shared';
 import {
-  approvalChance, bonusCost, bonusGainFor, bonusTargets, bossTypeOf, directorPool, effectivePace, maxMembers, outingCost, outingWait, recruitFor,
+  approvalChance, bonusCost, bonusGainFor, bonusTargets, bossTypeOf, directorPool, effectivePace, maxMembers, memberPerf, outingCost, outingWait, recruitFor,
   replacementFor, teamEnvelope, teamHeadcount, teamMood, teamObjective, teamOutput, teamWage,
 } from './team';
 
@@ -347,12 +347,18 @@ export function progressTeam(s: GameState) {
   }
 
   // Humeur : rythme demandé, ambiance de l'entreprise, retour vers l'humeur de base et un peu de hasard.
+  // Performance du mois de chaque membre, sur l'humeur de début de mois comme la production d'équipe.
+  for (const m of team.members) m.perfSum = (m.perfSum ?? 0) + memberPerf(m);
   const climate = (companyById(s.jobCompany)?.drawback.happiness ?? 0) * TEAM.climate;
-  const pace = TEAM_PACES[effectivePace(s)];
+  const paceId = effectivePace(s);
+  const pace = TEAM_PACES[paceId];
+  // À fond plusieurs mois de suite : l'épuisement s'accumule.
+  team.pushMonths = paceId === 'push' ? (team.pushMonths ?? 0) + 1 : 0;
+  const fatigue = paceId === 'push' ? -Math.min(TEAM_FATIGUE.pushStackMax, (team.pushMonths - 1) * TEAM_FATIGUE.pushStack) : 0;
   for (const m of team.members) {
     const push = pace.mood < 0 && m.trait ? TEAM_TRAITS[m.trait].push : 1;
     const pull = (TEAM.baseMood - m.mood) * TEAM.moodPull;
-    m.mood = clamp(m.mood + pace.mood * push + climate + pull + (Math.random() * 2 - 1) * TEAM.moodNoise);
+    m.mood = clamp(m.mood + (pace.mood + fatigue) * push + climate + pull + (Math.random() * 2 - 1) * TEAM.moodNoise);
     m.age += 1;
   }
 
@@ -448,6 +454,7 @@ function review(s: GameState, team: Team, job: Job, cfg: Management) {
   }
   team.periodNet = 0;
   team.periodSpent = 0;
+  for (const m of team.members) m.perfSum = 0;
 
   // En dernier : un blâme peut aller jusqu'au renvoi, qui supprime l'équipe.
   if (blame) blameJob(s, job, 0, blame);

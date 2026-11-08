@@ -27,7 +27,7 @@ export type { EfficiencyLine } from './work';
 export { announceRaise, answerRaiseOffer, raiseStatus, requestRaise } from './raise';
 export { bonusApproval, bonusCheck, canFire, canRecruit, eventChoiceOk, fireMember, giveTeamBonus, progressTeam, recruitMember, resolveTeamEvent, setTeamPace, teamOuting } from './management';
 export {
-  approvalChance, bonusCost, bonusGainFor, bonusMoodGain, bonusStale, bossTypeOf, effectivePace, maxMembers, memberWeight, traitKnown, moodFactor, moodLevel, newTeam, outingCost, outingWait, teamHappiness, teamHeadcount, teamMood, teamOutput,
+  approvalChance, bonusCost, bonusGainFor, bonusMoodGain, bonusStale, bossTypeOf, effectivePace, maxMembers, memberPerf, memberQuarterPerf, memberWeight, traitKnown, moodFactor, moodLevel, newTeam, outingCost, outingWait, teamHappiness, teamHeadcount, teamMood, teamOutput,
   teamProgress, teamPromotionBonus, teamRaiseMerit, teamWage,
 } from './team';
 export type { MoodLevel, TeamProgress } from './team';

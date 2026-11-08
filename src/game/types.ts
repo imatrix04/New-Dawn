@@ -272,6 +272,8 @@ export interface TeamMember {
   lastBonus: number | null;
   /** Trait de caractère (null : sans particularité). Il ne se révèle qu'après quelques mois. */
   trait: TeamTrait | null;
+  /** Performance cumulée sur le trimestre en cours (absente des anciennes sauvegardes : 0). */
+  perfSum?: number;
   /** Mois passés dans l'équipe : un nouvel arrivant est d'abord en formation. */
   age: number;
 }
@@ -337,6 +339,8 @@ export interface Team {
   /** Directeur : résultat net du trimestre (après primes) et part dépensée en primes et sorties. */
   periodNet: number;
   periodSpent: number;
+  /** Mois de suite passés à fond : l'épuisement s'aggrave (absent des anciennes sauvegardes : 0). */
+  pushMonths?: number;
   /** Mois de la dernière sortie d'équipe (voir TEAM.outing). */
   outingMonth: number | null;
   /** Démissions du trimestre : elles pèsent sur le bilan. */

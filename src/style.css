@@ -1170,3 +1170,7 @@ input[type="text"]:focus, .amount-input:focus { border-color: var(--accent); box
 .trait.lazy { color: var(--bad); background: rgba(229, 100, 95, .13); }
 .trait.ambitious { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .trait.none:empty, .trait:empty { display: none; }
+
+.team-perf { font-size: .72rem; font-weight: 600; color: var(--muted); }
+.team-perf.best { color: var(--good); }
+.team-perf.worst { color: var(--bad); }

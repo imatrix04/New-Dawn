@@ -432,6 +432,8 @@
     },
     "members": {
       "title": "The team", "staff_one": "{{count}} team member", "staff_other": "{{count}} team members",
+      "perf": "Performance {{pct}}%",
+      "perfHint": "Performance is the quarter's average (100% = normal output). For a director, it covers the whole department. Reward those who carry the team, motivate the laggards.",
       "recruit": "Recruit", "fire": "Fire", "confirmFire": "Confirm", "training": "in training",
       "waiting": "Your director turned something down recently: wait a bit before asking again."
     },

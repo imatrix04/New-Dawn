@@ -29,7 +29,7 @@ export const TEAM_PACE_IDS: TeamPace[] = ['easy', 'normal', 'push'];
 export const TEAM_PACES: Record<TeamPace, { output: number; mood: number }> = {
   easy: { output: 0.8, mood: 2.5 },
   normal: { output: 1, mood: 0 },
-  push: { output: 1.25, mood: -4.5 },
+  push: { output: 1.25, mood: -6 },
 };
 
 /**
@@ -190,3 +190,6 @@ export const EMPLOYEE_BONUS = {
 
 /** Intéressement : versé chaque décembre aux salariés d'une entreprise qui en a un, après `minTenure` mois ; l'année de l'entreprise varie dans `year`. */
 export const PROFIT_SHARE = { minTenure: 6, year: [0.3, 1.3] as [number, number] };
+
+/** Épuisement : chaque mois de suite à fond après le premier retire `pushStack` d'humeur en plus, jusqu'à `pushStackMax`. */
+export const TEAM_FATIGUE = { pushStack: 1.5, pushStackMax: 3 };

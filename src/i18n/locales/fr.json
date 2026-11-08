@@ -432,6 +432,8 @@
     },
     "members": {
       "title": "L'équipe", "staff_one": "{{count}} équipier", "staff_other": "{{count}} équipiers",
+      "perf": "Performance {{pct}} %",
+      "perfHint": "La performance est la moyenne du trimestre (100 % = rendement normal). Pour un directeur, c'est celle de tout le service. Récompense ceux qui tirent l'équipe, motive ceux qui sont à la traîne.",
       "recruit": "Recruter", "fire": "Licencier", "confirmFire": "Confirmer", "training": "en formation",
       "waiting": "Ton directeur t'a refusé quelque chose récemment : attends un peu avant de redemander."
     },
