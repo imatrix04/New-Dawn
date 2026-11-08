@@ -1113,3 +1113,60 @@ input[type="text"]:focus, .amount-input:focus { border-color: var(--accent); box
 .money-pop .warn-note { margin: 0; padding: 7px 10px; border-radius: 8px; color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); font-weight: 600; }
 .money-pop .strain-row span { color: var(--amber); }
 .money-pop .pop-note { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: .78rem; }
+
+/* Carte Équipe : humeur générale, rythme, objectif du trimestre, primes et membres. */
+.team { display: flex; flex-direction: column; gap: 12px; }
+.team-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.team-role { display: flex; flex-direction: column; gap: 2px; }
+.team-role strong { font-size: 1.05rem; }
+.team-mood { display: flex; align-items: center; gap: 10px; min-width: 190px; }
+.team-mood-text { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.team-face { display: grid; place-items: center; flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--inset); font-size: 1.7rem; line-height: 1; }
+.team-face.small { width: 30px; height: 30px; font-size: 1.1rem; }
+.team-mood-bar > div { background: hsl(var(--h) 62% 46%); }
+.team .chance-box p { margin: 0; }
+.team .big-btn { width: 100%; }
+.team-target { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.team-target button { padding: 3px 12px; border-radius: 999px; font-size: .75rem; background: var(--chip); color: var(--muted); box-shadow: none; transition: background .15s, color .15s; }
+.team-target button.on { background: var(--accent); color: var(--on-accent); }
+.team-amount { min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Jauge d'objectif : le trait marque 100 % de l'objectif, le remplissage va jusqu'à 125 %. */
+.team-goal { position: relative; height: 9px; border-radius: 5px; background: var(--track); overflow: visible; }
+.team-goal > i { display: block; height: 100%; border-radius: 5px; background: var(--accent); transition: width .6s cubic-bezier(.3, .8, .3, 1), background .3s; }
+.team-goal.ok > i { background: var(--good); }
+.team-goal.low > i { background: var(--bad); }
+.team-goal > b { position: absolute; top: -3px; width: 2px; height: 15px; border-radius: 1px; background: var(--text); opacity: .55; }
+
+.team-review { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 10px; font-size: .78rem; border-left: 3px solid var(--good); background: color-mix(in srgb, var(--good) 9%, transparent); }
+.team-review.bad { border-left-color: var(--bad); background: color-mix(in srgb, var(--bad) 9%, transparent); }
+
+.team-members ul { display: flex; flex-direction: column; gap: 5px; margin: 6px 0 0; padding: 0; list-style: none; }
+.team-member {
+  all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; border-radius: 12px; cursor: pointer;
+  background: var(--inset); box-shadow: inset 0 0 0 1px transparent; transition: box-shadow .15s, transform .15s;
+}
+.team-member:hover { transform: translateY(-1px); }
+.team-member:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.team-member.selected { box-shadow: inset 0 0 0 2px var(--accent); }
+.team-member-name { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: .85rem; }
+.team-member-mood { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; width: 96px; flex: none; }
+.team-member-mood .meter { width: 100%; }
+@media (prefers-reduced-motion: reduce) { .team-goal > i, .team-member { transition: none; } }
+
+/* Carte Équipe : événement en attente, traits, recrutement. */
+.team-event { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); animation: hint-in .3s ease; }
+.team-event h4 { margin: 0; font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+.team-event p { margin: 0; font-size: .85rem; }
+.team-event-choices { display: flex; flex-direction: column; gap: 6px; }
+.team-event-choices .big-btn { padding: 8px 12px; font-size: .85rem; text-align: left; }
+.team-members-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.team-row { display: flex; align-items: center; gap: 6px; }
+.team-row .team-member { flex: 1; min-width: 0; }
+.team-row .mini-btn { align-self: center; flex: none; background: var(--chip); color: var(--muted); box-shadow: none; }
+.team-row .mini-btn.danger { background: var(--bad); color: #fff; }
+.trait { margin-left: 4px; padding: 0 7px; border-radius: 999px; font-size: .62rem; font-weight: 700; background: var(--chip); color: var(--muted); }
+.trait.driven { color: var(--good); background: rgba(91, 212, 138, .14); }
+.trait.lazy { color: var(--bad); background: rgba(229, 100, 95, .13); }
+.trait.ambitious { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.trait.none:empty, .trait:empty { display: none; }

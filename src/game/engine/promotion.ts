@@ -5,6 +5,7 @@ import { jobEligibility } from './career';
 import { startJob } from './job';
 import { companyById, jobById, salaryAt } from './lookup';
 import { addLog, clamp } from './shared';
+import { teamPromotionBonus } from './team';
 
 /** Promotion possible au poste actuel : assez efficace et au poste depuis assez longtemps, ni formation en cours ni proposition en attente. */
 export function promotionAvailable(state: GameState): { to: Job; training?: string } | null {
@@ -37,7 +38,8 @@ export function promotionRequestChance(state: GameState): number {
   const rule = PROMOTIONS[state.job ?? ''];
   if (!rule) return 0;
   const bonus = Math.min(PROMOTION_REQUEST_MAX_BONUS, Math.max(0, state.efficiency - EFFICIENCY.promoteAt) * PROMOTION_REQUEST_PER_POINT);
-  return clamp(PROMOTION_REQUEST_BASE + bonus - state.jobBlames * PROMOTION_REQUEST_BLAME_PENALTY, 0.05, 0.95);
+  // Les objectifs d'équipe atteints de suite comptent aussi dans le dossier d'un manager.
+  return clamp(PROMOTION_REQUEST_BASE + bonus + teamPromotionBonus(state) - state.jobBlames * PROMOTION_REQUEST_BLAME_PENALTY, 0.05, 0.95);
 }
 
 /** Mois à attendre avant de pouvoir redemander une promotion (0 = possible). */

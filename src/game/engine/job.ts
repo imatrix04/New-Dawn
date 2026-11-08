@@ -5,6 +5,7 @@ import { rollBoss } from './boss';
 import { experienceMonths } from './career';
 import { companyById, gigById, gigUnlocked, jobById } from './lookup';
 import { addLog, clamp, NO_PROBATION } from './shared';
+import { newTeam, teamHeadcount } from './team';
 
 /** Heures réellement travaillées par semaine au poste : le curseur, sans dépasser le contrat. */
 export const workedHours = (state: GameState): number => {
@@ -51,6 +52,9 @@ export function startJob(s: GameState, job: Job, salary: number, companyId: stri
   // L'efficacité repart bas pour faire ses preuves, plus haut si l'on reste dans le même domaine.
   s.efficiency = s.lastField === job.field ? EFFICIENCY.sameField : EFFICIENCY.newJob;
   s.lastField = job.field;
+  // Un poste de manager ou de directeur vient avec une équipe à prendre en main.
+  s.team = newTeam(job, companyById(companyId), s.month, s.boss?.type);
+  if (s.team) addLog(s, 'log.teamNew', { count: teamHeadcount(s.team), level: s.team.level }, 'good');
 }
 
 function leaveJob(s: GameState) {
@@ -61,6 +65,7 @@ function leaveJob(s: GameState) {
   s.jobStart = NO_PROBATION;
   s.schedule.work = 0;
   s.boss = null;
+  s.team = null;
   s.raiseOffer = null;
   s.raiseReply = null;
 }
@@ -135,17 +140,21 @@ export function gainExperience(s: GameState, job: Job) {
   }
 }
 
+/** Raison d'un blâme : heures sautées (par défaut), comptes de l'entreprise dans le rouge ou équipe en échec. */
+export type BlameCause = 'hours' | 'finance' | 'team';
+
 /**
  * Un blâme au poste (double pendant la période d'essai) ; au troisième, le joueur est renvoyé, et ce renvoi
  * pèse sur ses candidatures des mois suivants.
  */
-export function blameJob(s: GameState, job: Job, lost: number) {
+export function blameJob(s: GameState, job: Job, lost: number, cause: BlameCause = 'hours') {
   s.jobBlames += probationLeft(s) > 0 ? 2 : 1;
+  const results = cause !== 'hours';
   if (s.jobBlames >= MAX_BLAMES) {
-    addLog(s, 'log.jobFired', { jobId: job.id, gender: s.gender, lost }, 'bad');
+    addLog(s, results ? 'log.firedResults' : 'log.jobFired', { jobId: job.id, gender: s.gender, lost }, 'bad');
     leaveJob(s);
     s.firedMonth = s.month;
   } else {
-    addLog(s, 'log.jobBlamed', { jobId: job.id, gender: s.gender, n: s.jobBlames, max: MAX_BLAMES, lost }, 'bad');
+    addLog(s, results ? `log.blamed.${cause}` : 'log.jobBlamed', { jobId: job.id, gender: s.gender, n: s.jobBlames, max: MAX_BLAMES, lost }, 'bad');
   }
 }

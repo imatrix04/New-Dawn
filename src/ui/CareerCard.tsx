@@ -255,6 +255,8 @@ function CurrentJobDetail({ game, jobName }: { game: GameState; jobName: (id: st
       ]} />
       <div className="reqs">
         <Drawbacks fx={jobDrawback(job, company)} />
+        {job.management && <span className="req ok">👥 {t(`career.manages.${job.management.level}`)}</span>}
+        {company?.profitShare && <span className="req ok">💶 {t('career.profitShare')}</span>}
         {probation > 0 && <span className="req no">{t('career.probation', { count: probation })}</span>}
         <span className={game.jobBlames > 0 ? 'req no' : 'req ok'}>{t('career.blames')} {Math.min(game.jobBlames, MAX_BLAMES)} / {MAX_BLAMES}</span>
       </div>
@@ -324,6 +326,8 @@ function Offers({ game, selected, onSelect, jobName }: PaneProps & { jobName: (i
         ]} />
         <div className="reqs">
           <Drawbacks fx={jobDrawback(job, company)} />
+          {job.management && <span className="req ok">👥 {t(`career.manages.${job.management.level}`)}</span>}
+          {company?.profitShare && <span className="req ok">💶 {t('career.profitShare')}</span>}
           {skillReqs.map(([skill, min]) => {
             const have = game.skills[skill];
             const ok = have >= min;

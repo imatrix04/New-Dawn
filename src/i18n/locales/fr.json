@@ -19,6 +19,7 @@
     "wallet": "Portefeuille",
     "profile": "Profil",
     "career": "Carrière",
+    "team": "Équipe",
     "housing": "Logement",
     "market": "Marché",
     "journal": "Journal"
@@ -140,6 +141,8 @@
   },
   "career": {
     "current": "Poste actuel",
+    "profitShare": "Intéressement annuel",
+    "manages": { "manager": "Encadre une équipe", "director": "Dirige le site et ses managers" },
     "tabs": { "gigs": "Boulot rapide", "offers": "Offres d'emploi", "quick": "Formation rapide", "training": "Études" },
     "gigsHint": "Des petits boulots sans candidature, payés à la fin de chaque mois. Un seul à la fois, et ils fatiguent.",
     "refreshIn_one": "Le choix change dans {{count}} mois (tous les 6 mois, 6 propositions au maximum).",
@@ -295,6 +298,7 @@
     "report": "Rapport économique {{year}} disponible"
   },
   "statLines": {
+    "team": "Humeur de ton équipe",
     "style": "Style de travail",
     "rest": "Repos (arrêt maladie)",
     "sleep": "Sommeil",
@@ -338,6 +342,132 @@
     "zeroWarning": "Efficacité à zéro : encore un mois comme ça et c’est le renvoi.",
     "sickShort": "Arrêt maladie",
     "promotionAt": "Une promotion devient possible dès {{n}} d’efficacité."
+  },
+  "team": {
+    "role": { "manager": "Manager d'équipe", "director": "Direction" },
+    "people_one": "{{count}} personne",
+    "people_other": "{{count}} personnes",
+    "moodTitle": "Humeur générale",
+    "moodLevel": { "great": "Au top", "good": "Plutôt bien", "ok": "Moyen", "low": "Tendu", "bad": "À bout" },
+    "sickNote": "Tu es en arrêt maladie : l'équipe tourne sans toi, au rythme normal.",
+    "presenceWarn": "Tu sautes des heures de travail : sans toi, l'équipe produit {{pct}} % de moins.",
+    "pace": {
+      "title": "Rythme demandé",
+      "ask": "Ce que tu demandes à l'équipe",
+      "easy": "Détendu",
+      "normal": "Normal",
+      "push": "À fond",
+      "hint": {
+        "easy": "Moins de production, mais l'équipe respire et l'humeur remonte.",
+        "normal": "Le rythme habituel : l'humeur reste stable.",
+        "push": "Un coup de collier : beaucoup plus de production, mais l'humeur s'effondre. Tenu trop longtemps, des gens démissionnent."
+      },
+      "output": "Production prévue ce mois-ci",
+      "trend": "Effet sur l'humeur",
+      "perMonth": "{{delta}} / mois"
+    },
+    "goal": {
+      "title": "Objectif du trimestre",
+      "month": "Mois {{n}} sur {{total}}",
+      "projected": "Prévu : {{pct}} % (objectif {{target}} %)",
+      "mark": "Objectif",
+      "ok": "À ce rythme, l'objectif est atteint : la prime est dans la poche.",
+      "near": "Presque : à ce rythme, tu n'auras qu'une demi-prime. Une prime à l'équipe ou un coup de collier peut suffire.",
+      "low": "L'objectif est hors d'atteinte à ce rythme. Sans réaction, pas de prime, et un échec cuisant te vaudra un blâme.",
+      "primeFull": "Ta prime si l'objectif est atteint",
+      "primePartial": "Ta prime s'il est presque atteint",
+      "streak_one": "{{count}} objectif de suite",
+      "streak_other": "{{count}} objectifs de suite",
+      "streakHint": "Ta direction te remarque : augmentations facilitées (+{{raise}} % accordés en plus) et promotion plus probable (+{{promo}} points).",
+      "noStreak": "Atteins ton objectif plusieurs trimestres de suite pour faciliter tes augmentations et ta promotion. L'objectif monte à chaque succès."
+    },
+    "review": {
+      "title": "Dernier bilan",
+      "hit": "Objectif atteint ({{pct}} %).",
+      "partial": "Objectif presque atteint ({{pct}} %).",
+      "miss": "Objectif raté ({{pct}} %).",
+      "prime": "Prime : +{{amount}}.",
+      "primeBlocked": "Pas de prime : les comptes de l'entreprise sont dans le rouge.",
+      "blame": {
+        "finance": "Blâme : tes primes et tes dépenses ont creusé les comptes.",
+        "team": "Blâme : les résultats de l'équipe sont jugés insuffisants."
+      }
+    },
+    "bonus": {
+      "title": "Primes à l'équipe",
+      "envelope": "Enveloppe de ce trimestre",
+      "fund": "Caisse de l'entreprise",
+      "pool": "Plafond de primes (part du bénéfice)",
+      "envelopeHint": "Ton directeur t'accorde une enveloppe de primes chaque trimestre, selon tes résultats et son caractère : généreuse avec un patron cool, maigre avec un patron dur.",
+      "fundHint": "Le siège ne te laisse qu'une petite part du bénéfice du trimestre pour les primes (de 2 % à 7 % selon son humeur) : impossible de la dépasser. Et si les dépenses font passer le trimestre dans le rouge, tu en répondras.",
+      "submit": "Envoyer la répartition à ton directeur ({{amount}})",
+      "submitHint": "Ton directeur doit l'approuver : selon son caractère, il accepte, réduit de moitié ou refuse.",
+      "waiting": "Ton directeur t'a refusé quelque chose récemment : attends le mois prochain.",
+      "toAll": "Toute l'équipe",
+      "toOne": "{{name}} seulement",
+      "pickHint": "Clique sur un membre ci-dessous pour récompenser une seule personne.",
+      "perHead": "Prime par personne",
+      "cost": "Coût total",
+      "gain": "Gain d'humeur",
+      "stale": "Une prime récente a déjà été versée : on s'y habitue, l'effet est réduit. Mieux vaut attendre un trimestre.",
+      "warnRed": "Attention : avec cette prime, le résultat du trimestre passe dans le rouge.",
+      "give": "Verser la prime ({{amount}})",
+      "empty": "L'enveloppe est épuisée. Elle sera renouvelée au prochain bilan.",
+      "expire": "Ce qui reste de l'enveloppe est perdu à la fin du trimestre."
+    },
+    "outing": {
+      "title": "Sortie d'équipe",
+      "hint": "Un repas ou une activité : +{{mood}} d'humeur pour tout le monde, une fois tous les {{count}} mois.",
+      "own": "Offrir la sortie de ta poche ({{amount}})",
+      "fund": "Payer la sortie par l'entreprise ({{amount}})",
+      "wait": "Prochaine sortie possible dans {{count}} mois.",
+      "poor": "Tu n'as pas assez d'argent."
+    },
+    "finance": {
+      "title": "Finances de l'entreprise",
+      "net": "Résultat du trimestre",
+      "spent": "Dont primes, sorties et remplacements",
+      "red": "Le trimestre est dans le rouge. Le siège n'aime pas ça : sans redressement, c'est un blâme.",
+      "hint": "Le siège reprend {{pct}} % du bénéfice à chaque bilan. Le reste alimente la caisse."
+    },
+    "members": {
+      "title": "L'équipe", "staff_one": "{{count}} équipier", "staff_other": "{{count}} équipiers",
+      "recruit": "Recruter", "fire": "Licencier", "confirmFire": "Confirmer", "training": "en formation",
+      "waiting": "Ton directeur t'a refusé quelque chose récemment : attends un peu avant de redemander."
+    },
+    "trait": { "unknown": "?", "driven": "Moteur", "lazy": "Fainéant", "ambitious": "Ambitieux" },
+    "events": {
+      "hint": "Sans réponse d'ici la fin du mois, la situation se dégrade.",
+      "conflict": {
+        "title": "Dispute dans l'équipe",
+        "text": "{{a}} et {{b}} s'accrochent devant tout le monde.",
+        "choices": { "0": "Jouer les médiateurs (ton charisme compte)", "1": "Donner raison à {{a}}", "2": "Faire semblant de ne rien voir" }
+      },
+      "raise": {
+        "title": "Demande d'augmentation",
+        "text": "{{a}} estime mériter plus et vient t'en parler.",
+        "choices": { "0": "Plaider sa cause auprès de ta direction", "1": "Calmer le jeu avec une prime de 100 € de ton enveloppe", "2": "Refuser net" }
+      },
+      "rumor": {
+        "title": "Rumeur de licenciements",
+        "text": "Le bruit court que des postes vont être supprimés. L'équipe est inquiète.",
+        "choices": { "0": "Rassurer tout le monde (ton charisme compte)", "1": "Ne rien dire", "2": "Réunion d'équipe autour d'un café (20 € par personne)" }
+      }
+    },
+    "audit": {
+      "clean": "Dernier audit surprise : tout était en règle, ta direction est impressionnée.",
+      "warning": "Dernier audit surprise : un point à surveiller, c'est noté.",
+      "blame": "Dernier audit surprise : plusieurs manquements, ce fut un blâme."
+    },
+    "reply": {
+      "bonus": {
+        "approved": "Ton directeur a approuvé ta répartition de primes.",
+        "reduced": "Ton directeur a réduit ta répartition de moitié : {{amount}} par personne.",
+        "refused": "Ton directeur a refusé ta répartition. Retente le mois prochain."
+      },
+      "recruit": { "approved": "Ton directeur a accepté l'embauche.", "refused": "Ton directeur a refusé l'embauche." },
+      "fire": { "approved": "Ton directeur a validé le licenciement.", "refused": "Ton directeur a refusé le licenciement." }
+    }
   },
   "wallet": {
     "checking": "Compte courant",
@@ -894,6 +1024,67 @@
     "promotionRefused": "Tu refuses le poste de {{job}}. Ton employeur pourrait te le reproposer plus tard.",
     "promotionTraining": "Ton employeur t'inscrit à la formation : {{training}}, sur tes heures de travail.",
     "promoted": "Promotion ! Tu deviens {{job}} ({{salary, number}} €/mois).",
+    "employeeBonus": {
+      "good": "Prime de fin de trimestre : ton service a atteint ses objectifs, ton manager te verse {{amount, number}} €.",
+      "bad": "Prime de fin de trimestre : le service a raté ses objectifs, ton manager ne peut te verser que {{amount, number}} €.",
+      "none": "Pas de prime ce trimestre : ton efficacité ou ton assiduité ne suffisent pas (ou ton manager n'a rien à donner)."
+    },
+    "profitShare": {
+      "good": "Intéressement ({{company}}) : excellente année, tu touches {{amount, number}} €.",
+      "ok": "Intéressement ({{company}}) : année correcte, tu touches {{amount, number}} €.",
+      "poor": "Intéressement ({{company}}) : année difficile, tu ne touches que {{amount, number}} €."
+    },
+    "teamNew": "Tu prends la tête d'une équipe de {{count}} personnes. Une nouvelle carte, Équipe, apparaît dans la barre du bas.",
+    "teamQuit": "{{name}} démissionne, à bout. {{next}} arrive pour le remplacer.",
+    "teamHit": "Bilan du trimestre : objectif atteint ({{pct}} %). Prime : +{{amount, number}} €.",
+    "teamPartial": "Bilan du trimestre : objectif presque atteint ({{pct}} %). Demi-prime : +{{amount, number}} €.",
+    "teamMiss": "Bilan du trimestre : objectif raté ({{pct}} %), pas de prime.",
+    "teamNoPrime": "Bilan du trimestre : {{pct}} % de l'objectif, mais pas de prime.",
+    "teamNoPrimeRed": "Bilan du trimestre : objectif tenu ({{pct}} %), mais les comptes sont dans le rouge ({{amount, number}} € de perte) : pas de prime.",
+    "teamMarket": "Trimestre difficile pour l'entreprise ({{amount, number}} € de perte) : le marché est en cause, le siège ne te sanctionne pas.",
+    "teamEnvelope": "Nouvelle enveloppe de primes pour ton équipe : {{amount, number}} €.",
+    "teamDividend": "Le siège reprend {{amount, number}} € du bénéfice du trimestre.",
+    "teamBonusAll": "Prime versée à toute l'équipe : {{perHead, number}} € par personne ({{amount, number}} € en tout).",
+    "teamBonusOne": "Prime versée à {{name}} : {{amount, number}} €.",
+    "teamOutingOwn": "Sortie d'équipe offerte de ta poche : -{{amount, number}} €. L'ambiance remonte.",
+    "teamOutingFund": "Sortie d'équipe payée par l'entreprise : {{amount, number}} €. L'ambiance remonte.",
+    "teamBonusReduced": "Ton directeur réduit ta répartition de moitié : {{perHead, number}} € par personne ({{amount, number}} € en tout).",
+    "teamBonusRefused": "Ton directeur refuse ta répartition de primes.",
+    "teamRecruit": "{{name}} rejoint l'équipe (en formation pour quelques mois).",
+    "teamRecruitRefused": "Ton directeur refuse l'embauche demandée.",
+    "teamFire": "{{name}} est licencié. L'équipe est secouée.",
+    "teamFireRefused": "Ton directeur refuse de licencier {{name}}.",
+    "teamPool": "Nouveau plafond de primes fixé par le siège : {{amount, number}} €.",
+    "teamEventNew": "Un événement t'attend dans la carte Équipe.",
+    "teamEventLate": "Tu n'as pas réagi à temps : l'affaire a tourné au vinaigre.",
+    "teamAuditClean": "Audit surprise : tout est en règle, ta direction est impressionnée (efficacité en hausse).",
+    "teamAuditWarning": "Audit surprise : un point à surveiller, la direction te le fait remarquer (efficacité en baisse).",
+    "teamAuditBlame": "Audit surprise : plusieurs manquements relevés.",
+    "teamEvent": {
+      "conflict": {
+        "mediated": "Tu désamorces la dispute entre {{a}} et {{b}} : ils font la paix.",
+        "mediateFail": "Ta médiation tourne mal : {{a}} et {{b}} sont plus remontés qu'avant.",
+        "sided": "Tu donnes raison à {{a}} : {{b}} se sent lésé.",
+        "ignored": "La dispute entre {{a}} et {{b}} s'envenime."
+      },
+      "raise": {
+        "pushWin": "Ta direction accorde son augmentation à {{a}} : c'est un succès pour toi.",
+        "pushLose": "Ta direction refuse l'augmentation de {{a}} : grosse déception.",
+        "bonused": "Tu calmes {{a}} avec une prime prise sur ton enveloppe.",
+        "refused": "Tu refuses la demande de {{a}} : la déception se voit."
+      },
+      "rumor": {
+        "reassured": "Tu rassures l'équipe : la rumeur de licenciements retombe.",
+        "reassureFail": "Personne ne te croit : la rumeur de licenciements inquiète encore plus.",
+        "silent": "Tu laisses courir la rumeur de licenciements : l'inquiétude monte.",
+        "meeting": "Tu organises une réunion franche autour d'un café : l'équipe se sent écoutée."
+      }
+    },
+    "blamed": {
+      "finance": "Blâme {{n}}/{{max}} : ton trimestre est dans le rouge à cause de tes dépenses.",
+      "team": "Blâme {{n}}/{{max}} : les résultats de ton équipe sont insuffisants."
+    },
+    "firedResults": "Troisième blâme pour mauvais résultats : tu es renvoyé ({{job}}). Ce renvoi pèsera sur tes candidatures pendant 6 mois.",
     "trainingLost": "Tu perds ton poste : la formation payée par ton employeur s'arrête ({{training}}).",
     "jobBlamed": "Heures sautées repérées ({{job}}) : blâme {{n}}/{{max}}, {{lost, number}} € retenus sur ta paie.",
     "jobFired": "Troisième blâme : tu es renvoyé ({{job}}), {{lost, number}} € retenus. Ce renvoi pèsera sur tes candidatures pendant 6 mois.",

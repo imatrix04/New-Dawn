@@ -25,3 +25,9 @@ export type { Season } from './economy';
 export { efficiencyDelta, efficiencyLines, isStrained, setWorkStyle, workActive } from './work';
 export type { EfficiencyLine } from './work';
 export { announceRaise, answerRaiseOffer, raiseStatus, requestRaise } from './raise';
+export { bonusApproval, bonusCheck, canFire, canRecruit, eventChoiceOk, fireMember, giveTeamBonus, progressTeam, recruitMember, resolveTeamEvent, setTeamPace, teamOuting } from './management';
+export {
+  approvalChance, bonusCost, bonusGainFor, bonusMoodGain, bonusStale, bossTypeOf, effectivePace, maxMembers, memberWeight, traitKnown, moodFactor, moodLevel, newTeam, outingCost, outingWait, teamHappiness, teamHeadcount, teamMood, teamOutput,
+  teamProgress, teamPromotionBonus, teamRaiseMerit, teamWage,
+} from './team';
+export type { MoodLevel, TeamProgress } from './team';

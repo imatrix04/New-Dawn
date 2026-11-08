@@ -73,24 +73,24 @@ export const JOBS: Job[] = [
     ],
   },
   {
-    id: 'fastFoodManager', grade: 2, drawback: { health: -1.5, happiness: -2 }, field: 'restaurant', salary: 1850, hours: 39, commute: 3,
+    id: 'fastFoodManager', grade: 2, drawback: { health: -1.5, happiness: -2 }, field: 'restaurant', salary: 1850, hours: 39, commute: 3, management: { level: 'manager', team: [4, 8], wage: 1400 },
     anyOf: [{ type: 'diploma', id: 'btsMhr' }, { type: 'experience', field: 'restaurant', months: 24 }],
   },
   {
-    id: 'dinerManager', grade: 2, drawback: { health: -1.5, happiness: -1.5 }, field: 'restaurant', salary: 1950, hours: 39, commute: 4,
+    id: 'dinerManager', grade: 2, drawback: { health: -1.5, happiness: -1.5 }, field: 'restaurant', salary: 1950, hours: 39, commute: 4, management: { level: 'manager', team: [4, 8], wage: 1500 },
     anyOf: [{ type: 'diploma', id: 'btsMhr' }, { type: 'experience', field: 'restaurant', months: 24 }],
   },
   {
-    id: 'fineDiningManager', grade: 4, drawback: { health: -2, happiness: -3 }, field: 'restaurant', salary: 2600, hours: 42, commute: 6,
+    id: 'fineDiningManager', grade: 4, drawback: { health: -2, happiness: -3 }, field: 'restaurant', salary: 2600, hours: 42, commute: 6, management: { level: 'manager', team: [5, 9], wage: 1750 },
     anyOf: [{ type: 'diploma', id: 'btsMhr' }],
   },
   { id: 'cashier', grade: 1, drawback: { health: -1, happiness: -1.5 }, field: 'retail', salary: 1500, hours: 35, commute: 4 },
   {
-    id: 'retailManager', grade: 2, drawback: { health: -0.5, happiness: -2 }, field: 'retail', salary: 1850, hours: 39, commute: 4,
+    id: 'retailManager', grade: 2, drawback: { health: -0.5, happiness: -2 }, field: 'retail', salary: 1850, hours: 39, commute: 4, management: { level: 'manager', team: [5, 10], wage: 1500 },
     anyOf: [{ type: 'experience', field: 'retail', months: 24 }, { type: 'diploma', id: 'btsMco' }],
   },
   {
-    id: 'storeDirector', grade: 3, drawback: { health: -1, happiness: -2.5 }, field: 'retail', salary: 2800, hours: 42, commute: 4,
+    id: 'storeDirector', grade: 3, drawback: { health: -1, happiness: -2.5 }, field: 'retail', salary: 2800, hours: 42, commute: 4, management: { level: 'director', team: [3, 5], staff: [3, 6], wage: 1550 },
     anyOf: [{ type: 'experience', field: 'retail', months: 72 }],
   },
   { id: 'driver', grade: 1, drawback: { health: -1.5, happiness: -0.5 }, field: 'transport', salary: 1650, minSkills: { logistics: 120 }, hours: 40, commute: 2 },

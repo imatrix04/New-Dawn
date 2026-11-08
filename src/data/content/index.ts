@@ -5,6 +5,7 @@ export * from './general';
 export * from './gigs';
 export * from './housing';
 export * from './jobs';
+export * from './management';
 export * from './promotions';
 export * from './savings';
 export * from './skills';

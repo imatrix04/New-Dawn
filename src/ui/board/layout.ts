@@ -2,11 +2,11 @@
 // C'est une préférence d'affichage du joueur, stockée à part de la partie.
 import { create } from 'zustand';
 
-export type WindowId = 'schedule' | 'profile' | 'wallet' | 'career' | 'housing' | 'market' | 'journal';
-export const WINDOW_IDS: WindowId[] = ['schedule', 'profile', 'wallet', 'career', 'housing', 'market', 'journal'];
+export type WindowId = 'schedule' | 'profile' | 'wallet' | 'career' | 'team' | 'housing' | 'market' | 'journal';
+export const WINDOW_IDS: WindowId[] = ['schedule', 'profile', 'wallet', 'career', 'team', 'housing', 'market', 'journal'];
 /** Largeur par défaut de chaque carte. */
 export const WINDOW_WIDTH: Record<WindowId, number> = {
-  schedule: 620, profile: 380, wallet: 400, career: 780, housing: 780, market: 780, journal: 330,
+  schedule: 620, profile: 380, wallet: 400, career: 780, team: 560, housing: 780, market: 780, journal: 330,
 };
 /** Taille minimale d'une carte redimensionnée. */
 export const MIN_SIZE = { w: 260, h: 140 };
@@ -47,6 +47,8 @@ export function defaultLayout(boardWidth: number, boardHeight = 600): Layout {
     journal: { open: true, x: stackX, y: GAP, z: 3, ...size('journal'), h: journalH },
     // La carte Carrière se range par défaut : on l'ouvre depuis la barre du haut quand on cherche un poste.
     career: { open: false, x: middleX, y: GAP, z: 5, ...size('career') },
+    // La carte Équipe n'existe que pour un poste de manager ou de directeur : elle s'ouvre toute seule à la prise de poste.
+    team: { open: false, x: middleX + 10, y: GAP + 10, z: 9, ...size('team') },
     // Comme la carte Carrière, le Logement s'ouvre à la demande.
     housing: { open: false, x: middleX + 15, y: GAP + 15, z: 7, ...size('housing') },
     // Le Marché s'ouvre aussi à la demande.
@@ -97,6 +99,8 @@ interface LayoutStore {
   boardWidth: number;
   boardHeight: number;
   toggle: (id: WindowId) => void;
+  /** Ouvre la carte au premier plan si elle est fermée. */
+  open: (id: WindowId) => void;
   close: (id: WindowId) => void;
   focus: (id: WindowId) => void;
   move: (id: WindowId, x: number, y: number) => void;
@@ -120,7 +124,13 @@ export const useLayout = create<LayoutStore>((set) => ({
       const z = w.open ? w.z : topZ(s.windows) + 1; // une carte qui s'ouvre passe au premier plan
       return { windows: { ...s.windows, [id]: { ...w, open: !w.open, z } } };
     }),
-  close: (id) => set((s) => ({ windows: { ...s.windows, [id]: { ...s.windows[id], open: false } } })),
+  open: (id) =>
+    set((s) => {
+      const w = s.windows[id];
+      return w.open ? s : { windows: { ...s.windows, [id]: { ...w, open: true, z: topZ(s.windows) + 1 } } };
+    }),
+  close: (id) =>
+    set((s) => (s.windows[id].open ? { windows: { ...s.windows, [id]: { ...s.windows[id], open: false } } } : s)),
   focus: (id) =>
     set((s) => {
       const w = s.windows[id];

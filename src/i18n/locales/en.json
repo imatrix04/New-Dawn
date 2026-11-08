@@ -19,6 +19,7 @@
     "wallet": "Wallet",
     "profile": "Profile",
     "career": "Career",
+    "team": "Team",
     "housing": "Housing",
     "market": "Market",
     "journal": "Journal"
@@ -140,6 +141,8 @@
   },
   "career": {
     "current": "Current job",
+    "profitShare": "Annual profit sharing",
+    "manages": { "manager": "Leads a team", "director": "Runs the site and its managers" },
     "tabs": { "gigs": "Quick job", "offers": "Job offers", "quick": "Quick training", "training": "Studies" },
     "gigsHint": "Small jobs, no application needed, paid at the end of each month. One at a time, and they take a toll.",
     "refreshIn_one": "The selection changes in {{count}} month (every 6 months, 6 listings at most).",
@@ -295,6 +298,7 @@
     "report": "Economic report {{year}} available"
   },
   "statLines": {
+    "team": "Your team's mood",
     "style": "Work style",
     "rest": "Rest (sick leave)",
     "sleep": "Sleep",
@@ -338,6 +342,132 @@
     "zeroWarning": "Efficiency at zero: one more month like this and you are fired.",
     "sickShort": "Sick leave",
     "promotionAt": "A promotion becomes possible at {{n}} efficiency."
+  },
+  "team": {
+    "role": { "manager": "Team manager", "director": "Management" },
+    "people_one": "{{count}} person",
+    "people_other": "{{count}} people",
+    "moodTitle": "Overall mood",
+    "moodLevel": { "great": "On top", "good": "Pretty good", "ok": "So-so", "low": "Tense", "bad": "Burnt out" },
+    "sickNote": "You're on sick leave: the team runs without you, at the normal pace.",
+    "presenceWarn": "You're skipping work hours: without you, the team produces {{pct}}% less.",
+    "pace": {
+      "title": "Pace asked",
+      "ask": "What you ask of the team",
+      "easy": "Relaxed",
+      "normal": "Normal",
+      "push": "All out",
+      "hint": {
+        "easy": "Less output, but the team breathes and morale picks up.",
+        "normal": "The usual pace: morale stays steady.",
+        "push": "A big push: far more output, but morale collapses. Held too long, people quit."
+      },
+      "output": "Expected output this month",
+      "trend": "Effect on mood",
+      "perMonth": "{{delta}} / month"
+    },
+    "goal": {
+      "title": "Quarterly target",
+      "month": "Month {{n}} of {{total}}",
+      "projected": "Forecast: {{pct}}% (target {{target}}%)",
+      "mark": "Target",
+      "ok": "At this pace the target is met: the bonus is in the bag.",
+      "near": "Close: at this pace you'll only get half a bonus. A team bonus or a push may be enough.",
+      "low": "The target is out of reach at this pace. Without a reaction, no bonus, and a bad miss will earn you a warning.",
+      "primeFull": "Your bonus if the target is met",
+      "primePartial": "Your bonus if it's nearly met",
+      "streak_one": "{{count}} target in a row",
+      "streak_other": "{{count}} targets in a row",
+      "streakHint": "Management is noticing you: raises come easier (+{{raise}}% granted on top) and promotion is likelier (+{{promo}} points).",
+      "noStreak": "Hit your target several quarters in a row to ease your raises and promotion. The target rises with every success."
+    },
+    "review": {
+      "title": "Last review",
+      "hit": "Target met ({{pct}}%).",
+      "partial": "Target nearly met ({{pct}}%).",
+      "miss": "Target missed ({{pct}}%).",
+      "prime": "Bonus: +{{amount}}.",
+      "primeBlocked": "No bonus: the company's books are in the red.",
+      "blame": {
+        "finance": "Warning: your bonuses and spending dug into the books.",
+        "team": "Warning: the team's results are judged insufficient."
+      }
+    },
+    "bonus": {
+      "title": "Team bonuses",
+      "envelope": "This quarter's envelope",
+      "fund": "Company funds",
+      "pool": "Bonus ceiling (share of profit)",
+      "envelopeHint": "Your director grants you a bonus envelope each quarter, based on your results and their temper: generous with a kind boss, meagre with a harsh one.",
+      "fundHint": "Head office only leaves you a small share of the quarter's profit for bonuses (2% to 7% depending on its mood): you can't exceed it. And if spending pushes the quarter into the red, you'll answer for it.",
+      "submit": "Send the split to your director ({{amount}})",
+      "submitHint": "Your director must approve it: depending on their temper, they accept, cut it in half or refuse.",
+      "waiting": "Your director turned something down recently: wait until next month.",
+      "toAll": "Whole team",
+      "toOne": "{{name}} only",
+      "pickHint": "Click a member below to reward just one person.",
+      "perHead": "Bonus per person",
+      "cost": "Total cost",
+      "gain": "Mood gain",
+      "stale": "A bonus was paid recently: people get used to it, so the effect is reduced. Better wait a quarter.",
+      "warnRed": "Careful: with this bonus, the quarter's result goes into the red.",
+      "give": "Pay the bonus ({{amount}})",
+      "empty": "The envelope is spent. It will be renewed at the next review.",
+      "expire": "Whatever is left of the envelope is lost at the end of the quarter."
+    },
+    "outing": {
+      "title": "Team outing",
+      "hint": "A meal or an activity: +{{mood}} mood for everyone, once every {{count}} months.",
+      "own": "Treat them out of your pocket ({{amount}})",
+      "fund": "Pay for it with company funds ({{amount}})",
+      "wait": "Next outing possible in {{count}} months.",
+      "poor": "You don't have enough money."
+    },
+    "finance": {
+      "title": "Company finances",
+      "net": "Quarter's result",
+      "spent": "Of which bonuses, outings and replacements",
+      "red": "The quarter is in the red. Head office hates that: without a recovery, it's a warning.",
+      "hint": "Head office takes back {{pct}}% of the profit at each review. The rest feeds the till."
+    },
+    "members": {
+      "title": "The team", "staff_one": "{{count}} team member", "staff_other": "{{count}} team members",
+      "recruit": "Recruit", "fire": "Fire", "confirmFire": "Confirm", "training": "in training",
+      "waiting": "Your director turned something down recently: wait a bit before asking again."
+    },
+    "trait": { "unknown": "?", "driven": "Driven", "lazy": "Slacker", "ambitious": "Ambitious" },
+    "events": {
+      "hint": "If you don't react before the end of the month, things get worse.",
+      "conflict": {
+        "title": "Row in the team",
+        "text": "{{a}} and {{b}} are going at it in front of everyone.",
+        "choices": { "0": "Play mediator (your charisma matters)", "1": "Side with {{a}}", "2": "Pretend not to see" }
+      },
+      "raise": {
+        "title": "Pay rise request",
+        "text": "{{a}} thinks they deserve more and comes to talk to you.",
+        "choices": { "0": "Plead their case with management", "1": "Smooth things over with a €100 bonus from your envelope", "2": "Flatly refuse" }
+      },
+      "rumor": {
+        "title": "Layoff rumour",
+        "text": "Word is that jobs will be cut. The team is worried.",
+        "choices": { "0": "Reassure everyone (your charisma matters)", "1": "Say nothing", "2": "Team meeting over coffee (€20 per person)" }
+      }
+    },
+    "audit": {
+      "clean": "Last surprise audit: everything was in order, management is impressed.",
+      "warning": "Last surprise audit: one point to watch, noted.",
+      "blame": "Last surprise audit: several shortcomings, it earned you a warning."
+    },
+    "reply": {
+      "bonus": {
+        "approved": "Your director approved your bonus split.",
+        "reduced": "Your director cut your split in half: {{amount}} per person.",
+        "refused": "Your director refused your split. Try again next month."
+      },
+      "recruit": { "approved": "Your director accepted the hire.", "refused": "Your director refused the hire." },
+      "fire": { "approved": "Your director approved the dismissal.", "refused": "Your director refused the dismissal." }
+    }
   },
   "wallet": {
     "checking": "Checking account",
@@ -882,6 +1012,67 @@
     "promotionRefused": "You turn down the {{job}} position. Your employer might offer it again later.",
     "promotionTraining": "Your employer enrolls you in training: {{training}}, during your work hours.",
     "promoted": "Promotion! You become {{job}} (€{{salary, number}}/month).",
+    "employeeBonus": {
+      "good": "Quarter-end bonus: your department hit its targets, your manager pays you €{{amount, number}}.",
+      "bad": "Quarter-end bonus: the department missed its targets, your manager can only pay you €{{amount, number}}.",
+      "none": "No bonus this quarter: your efficiency or attendance fall short (or your manager has nothing to give)."
+    },
+    "profitShare": {
+      "good": "Profit sharing ({{company}}): excellent year, you receive €{{amount, number}}.",
+      "ok": "Profit sharing ({{company}}): decent year, you receive €{{amount, number}}.",
+      "poor": "Profit sharing ({{company}}): tough year, you only receive €{{amount, number}}."
+    },
+    "teamNew": "You take charge of a team of {{count}} people. A new card, Team, appears in the bottom bar.",
+    "teamQuit": "{{name}} quits, burnt out. {{next}} arrives to replace them.",
+    "teamHit": "Quarterly review: target met ({{pct}}%). Bonus: +€{{amount, number}}.",
+    "teamPartial": "Quarterly review: target nearly met ({{pct}}%). Half bonus: +€{{amount, number}}.",
+    "teamMiss": "Quarterly review: target missed ({{pct}}%), no bonus.",
+    "teamNoPrime": "Quarterly review: {{pct}}% of the target, but no bonus.",
+    "teamNoPrimeRed": "Quarterly review: target held ({{pct}}%), but the books are in the red (€{{amount, number}} loss): no bonus.",
+    "teamMarket": "Tough quarter for the company (€{{amount, number}} loss): the market is to blame, head office doesn't penalise you.",
+    "teamEnvelope": "New bonus envelope for your team: €{{amount, number}}.",
+    "teamDividend": "Head office takes back €{{amount, number}} of the quarter's profit.",
+    "teamBonusAll": "Bonus paid to the whole team: €{{perHead, number}} each (€{{amount, number}} in all).",
+    "teamBonusOne": "Bonus paid to {{name}}: €{{amount, number}}.",
+    "teamOutingOwn": "Team outing treated out of your pocket: -€{{amount, number}}. The mood lifts.",
+    "teamOutingFund": "Team outing paid by the company: €{{amount, number}}. The mood lifts.",
+    "teamBonusReduced": "Your director cuts your split in half: €{{perHead, number}} each (€{{amount, number}} in all).",
+    "teamBonusRefused": "Your director refuses your bonus split.",
+    "teamRecruit": "{{name}} joins the team (in training for a few months).",
+    "teamRecruitRefused": "Your director refuses the requested hire.",
+    "teamFire": "{{name}} is fired. The team is shaken.",
+    "teamFireRefused": "Your director refuses to let {{name}} go.",
+    "teamPool": "New bonus ceiling set by head office: €{{amount, number}}.",
+    "teamEventNew": "Something awaits you in the Team card.",
+    "teamEventLate": "You didn't react in time: the situation turned sour.",
+    "teamAuditClean": "Surprise audit: everything is in order, management is impressed (efficiency up).",
+    "teamAuditWarning": "Surprise audit: one point to watch, management points it out (efficiency down).",
+    "teamAuditBlame": "Surprise audit: several shortcomings found.",
+    "teamEvent": {
+      "conflict": {
+        "mediated": "You defuse the row between {{a}} and {{b}}: they make peace.",
+        "mediateFail": "Your mediation backfires: {{a}} and {{b}} are angrier than before.",
+        "sided": "You side with {{a}}: {{b}} feels wronged.",
+        "ignored": "The row between {{a}} and {{b}} festers."
+      },
+      "raise": {
+        "pushWin": "Management grants {{a}}'s raise: a win for you.",
+        "pushLose": "Management refuses {{a}}'s raise: big disappointment.",
+        "bonused": "You calm {{a}} down with a bonus from your envelope.",
+        "refused": "You refuse {{a}}'s request: the disappointment shows."
+      },
+      "rumor": {
+        "reassured": "You reassure the team: the layoff rumour dies down.",
+        "reassureFail": "Nobody believes you: the layoff rumour worries them even more.",
+        "silent": "You let the layoff rumour run: anxiety rises.",
+        "meeting": "You hold a frank meeting over coffee: the team feels heard."
+      }
+    },
+    "blamed": {
+      "finance": "Warning {{n}}/{{max}}: your quarter is in the red because of your spending.",
+      "team": "Warning {{n}}/{{max}}: your team's results are insufficient."
+    },
+    "firedResults": "Third warning for poor results: you are fired ({{job}}). This will weigh on your applications for 6 months.",
     "trainingLost": "You lose your job: the training paid for by your employer stops ({{training}}).",
     "jobBlamed": "Skipped hours noticed ({{job}}): warning {{n}}/{{max}}, {{lost, number}} € withheld from your pay.",
     "jobFired": "Third warning: you are fired ({{job}}), {{lost, number}} € withheld. This will weigh on your applications for 6 months.",

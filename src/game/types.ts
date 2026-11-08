@@ -1,4 +1,5 @@
 import type { BossType, RateKey } from '../data/content/economy';
+import type { Management, TeamEventId, TeamPace, TeamTrait } from '../data/content/management';
 import type { WorkStyle } from '../data/content/work';
 
 /** Jauges de condition : l'énergie n'existe plus, le sommeil agit directement sur la santé. */
@@ -259,6 +260,97 @@ export interface Driver {
   style: DrivingStyle;
 }
 
+/** Membre de l'équipe : un équipier (manager) ou un manager de service (directeur, avec ses propres équipiers). */
+export interface TeamMember {
+  id: string;
+  name: string;
+  /** Humeur de 0 (à bout) à 100 (au top). Pour un manager de service, c'est celle de tout son service. */
+  mood: number;
+  /** Équipiers sous sa responsabilité (directeur seulement, 0 sinon). */
+  staff: number;
+  /** Mois de la dernière prime reçue : une prime répétée ne fait presque plus d'effet. */
+  lastBonus: number | null;
+  /** Trait de caractère (null : sans particularité). Il ne se révèle qu'après quelques mois. */
+  trait: TeamTrait | null;
+  /** Mois passés dans l'équipe : un nouvel arrivant est d'abord en formation. */
+  age: number;
+}
+
+/** Événement d'équipe en attente de la réaction du joueur. `a` et `b` sont des membres. */
+export interface TeamEvent {
+  id: TeamEventId;
+  a: string | null;
+  b: string | null;
+}
+
+/** Réponse du supérieur à une demande du joueur (répartition de primes, embauche, licenciement, augmentation). */
+export interface TeamReply {
+  kind: 'bonus' | 'recruit' | 'fire' | 'raise';
+  result: 'approved' | 'reduced' | 'refused';
+  month: number;
+  /** Montant accordé par personne (primes). */
+  amount: number;
+}
+
+/** Dernier audit surprise du siège (ou du directeur). */
+export interface TeamAudit {
+  month: number;
+  verdict: 'clean' | 'warning' | 'blame';
+}
+
+/** Bilan de fin de trimestre : sert à l'affichage (résultat et prime). */
+export interface TeamReview {
+  month: number;
+  /** Production moyenne rapportée à l'objectif (1 = objectif atteint). */
+  ratio: number;
+  outcome: 'hit' | 'partial' | 'miss';
+  /** Prime personnelle versée (0 si aucune). */
+  prime: number;
+  /** Directeur : résultat net de l'entreprise sur le trimestre. */
+  net: number | null;
+  /** Blâme reçu et pourquoi : les comptes (finance) ou l'équipe. */
+  blame: 'finance' | 'team' | null;
+  /** Prime refusée parce que les comptes sont dans le rouge. */
+  primeBlocked: boolean;
+}
+
+/** Équipe d'un poste de manager ou de directeur. Elle n'existe que tant que le joueur occupe un tel poste. */
+export interface Team {
+  level: Management['level'];
+  members: TeamMember[];
+  /** Rythme demandé à l'équipe (voir TEAM_PACES). */
+  pace: TeamPace;
+  /** Mois de la partie où le trimestre en cours a commencé. */
+  periodStart: number;
+  /** Production cumulée sur le trimestre et nombre de mois comptés. */
+  outputSum: number;
+  outputMonths: number;
+  /** Production moyenne exigée par la direction ce trimestre (1 = rythme habituel). */
+  objective: number;
+  /** Objectifs atteints de suite : ils facilitent augmentations et promotions. */
+  streak: number;
+  /** Manager : enveloppe de primes accordée pour le trimestre, et ce qu'il en reste. */
+  budget: number;
+  budgetTotal: number;
+  /** Directeur : caisse de l'entreprise. */
+  fund: number;
+  /** Directeur : résultat net du trimestre (après primes) et part dépensée en primes et sorties. */
+  periodNet: number;
+  periodSpent: number;
+  /** Mois de la dernière sortie d'équipe (voir TEAM.outing). */
+  outingMonth: number | null;
+  /** Démissions du trimestre : elles pèsent sur le bilan. */
+  quits: number;
+  /** Production du dernier mois écoulé. */
+  lastOutput: number;
+  /** Événement en attente, dernière réponse du supérieur, dernier audit, et mois avant lequel on ne peut pas redemander une approbation. */
+  event: TeamEvent | null;
+  reply: TeamReply | null;
+  audit: TeamAudit | null;
+  askWaitUntil: number;
+  review: TeamReview | null;
+}
+
 export interface GameState {
   firstName: string;
   lastName: string;
@@ -294,6 +386,8 @@ export interface GameState {
   lastField: string | null;
   /** Supérieur du poste actuel, ou null sans emploi. */
   boss: Boss | null;
+  /** Équipe encadrée (poste de manager ou de directeur), ou null. */
+  team: Team | null;
   /** Mois du début du poste ou de la dernière augmentation : une nouvelle demande est possible un an plus tard. */
   raiseSince: number;
   /** Mois avant lequel le joueur ne peut plus demander d'augmentation (après un refus). */
@@ -416,6 +510,8 @@ export interface Job {
   hours: number;
   /** Heures de trajet par semaine (2 à 12). */
   commute: number;
+  /** Poste de management : le joueur encadre une équipe (carte Équipe). */
+  management?: Management;
 }
 
 export interface Outcome {

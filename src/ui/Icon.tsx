@@ -28,6 +28,7 @@ const PATHS: Record<string, ReactNode> = {
   search: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
   wrench: <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />,
   hourglass: <><path d="M5 22h14M5 2h14" /><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" /><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" /></>,
+  users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
   coin: <><circle cx="12" cy="12" r="9" /><path d="M14.8 9.2c-.4-.8-1.4-1.2-2.8-1.2-1.6 0-2.7.7-2.7 1.8 0 2.7 5.6 1.3 5.6 3.9 0 1.2-1.2 2-2.9 2-1.5 0-2.5-.5-3-1.4M12 6v2M12 16v2" /></>,
 };
 
@@ -35,7 +36,7 @@ export type IconName = keyof typeof PATHS;
 
 /** Icône de chaque fenêtre du tableau (dock et titre). */
 export const WINDOW_ICONS: Record<string, IconName> = {
-  schedule: 'calendar', profile: 'user', wallet: 'wallet', career: 'briefcase', housing: 'home', market: 'cart', journal: 'book',
+  schedule: 'calendar', profile: 'user', wallet: 'wallet', career: 'briefcase', team: 'users', housing: 'home', market: 'cart', journal: 'book',
 };
 
 export function Icon({ name, size = 22 }: { name: IconName; size?: number }) {

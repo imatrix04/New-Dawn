@@ -6,6 +6,7 @@ import { companyById, currentSalary, gigById, gigPay, jobById, jobDrawback } fro
 import { lettingIncome } from './property';
 import { weeklyHours } from './schedule';
 import { clamp } from './shared';
+import { teamHappiness } from './team';
 import { trainingTuition } from './training';
 import { workActive } from './work';
 import { drivingVehicle, fuelCost, insuranceOf } from './vehicle';
@@ -132,7 +133,7 @@ export const experienceGoal = (field: string): number =>
   ))));
 
 /** D'où vient la variation mensuelle d'une jauge (détail de `projectNextStats`, pour l'infobulle de la barre du haut). */
-export type StatLine = { kind: 'sleep' | 'sport' | 'leisure' | 'debt' | 'style' | 'rest' | 'job' | 'gig' | 'training' | 'home'; id?: string; amount: number };
+export type StatLine = { kind: 'sleep' | 'sport' | 'leisure' | 'debt' | 'style' | 'rest' | 'job' | 'gig' | 'training' | 'home' | 'team'; id?: string; amount: number };
 
 export function statEffectLines(state: GameState, key: StatKey): StatLine[] {
   const fx = scheduleEffects(state.schedule);
@@ -153,6 +154,8 @@ export function statEffectLines(state: GameState, key: StatKey): StatLine[] {
   if (sick) lines.push({ kind: 'rest', amount: key === 'health' ? EFFICIENCY.sickRest : -1 });
   else if (workActive(state)) lines.push({ kind: 'style', amount: WORK_STYLES[state.workStyle][key] });
   lines.push({ kind: 'home', amount: comfort[key] });
+  // Une équipe heureuse met de bonne humeur son manager, une équipe à bout lui pèse.
+  if (key === 'happiness') lines.push({ kind: 'team', amount: teamHappiness(state) });
   return lines.filter((l) => l.amount !== 0);
 }
 

@@ -4,6 +4,7 @@ import type { GameState } from '../types';
 import { blameJob, probationMonths } from './job';
 import { currentSalary, jobById } from './lookup';
 import { addLog, clamp } from './shared';
+import { teamRaiseMerit } from './team';
 
 export interface RaiseStatus {
   /** Mois avant de pouvoir demander (0 = possible maintenant). */
@@ -47,8 +48,8 @@ export function requestRaise(state: GameState, pct: number): GameState {
   const ask = clamp(pct, RAISE.minAsk, RAISE.maxAsk);
   const boss = s.boss!;
   const cfg = BOSSES[boss.type];
-  // Plus on est efficace, plus le supérieur accorde ; sous 50, il rechigne.
-  const merit = clamp(((s.efficiency - 50) / 50) * RAISE.efficiencyBonus - s.jobBlames * RAISE.perBlame, -0.03, RAISE.efficiencyBonus);
+  // Plus on est efficace, plus le supérieur accorde ; sous 50, il rechigne. Une équipe qui tient ses objectifs plaide pour son manager.
+  const merit = clamp(((s.efficiency - 50) / 50) * RAISE.efficiencyBonus - s.jobBlames * RAISE.perBlame, -0.03, RAISE.efficiencyBonus) + teamRaiseMerit(s);
   const cap = Math.max(0.005, (cfg.cap + merit) * (0.85 + Math.random() * 0.3));
 
   if (ask <= cap) {

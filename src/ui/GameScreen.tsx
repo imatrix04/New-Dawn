@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Area, GameState, Home } from '../game/types';
 import { Board } from './board/Board';
@@ -16,6 +16,8 @@ import { MarketCard } from './MarketCard';
 import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
 import { SchedulePanel } from './SchedulePanel';
+import { TeamCard } from './TeamCard';
+import { useLayout } from './board/layout';
 import { DevCheats } from './DevCheats';
 import { TopBar } from './TopBar';
 import { WalletCard } from './WalletCard';
@@ -40,6 +42,16 @@ export function GameScreen({ game }: { game: GameState }) {
   const { t } = useTranslation();
   const [paused, setPaused] = useState(false);
   const scene = sceneOf(game.home);
+
+  // La carte Équipe s'ouvre toute seule quand le joueur prend la tête d'une équipe (pas au chargement d'une sauvegarde), et se range quand il la quitte.
+  const hasTeam = !!game.team;
+  const hadTeam = useRef(hasTeam);
+  useEffect(() => {
+    const layout = useLayout.getState();
+    if (hasTeam && !hadTeam.current) layout.open('team');
+    if (!hasTeam) layout.close('team');
+    hadTeam.current = hasTeam;
+  }, [hasTeam]);
 
   // Échap ouvre / ferme le menu pause.
   useEffect(() => {
@@ -69,6 +81,11 @@ export function GameScreen({ game }: { game: GameState }) {
         <BoardWindow id="career" title={t('windows.career')}>
           <CareerCard game={game} />
         </BoardWindow>
+        {game.team && (
+          <BoardWindow id="team" title={t('windows.team')}>
+            <TeamCard game={game} />
+          </BoardWindow>
+        )}
         <BoardWindow id="housing" title={t('windows.housing')}>
           <HousingCard game={game} />
         </BoardWindow>

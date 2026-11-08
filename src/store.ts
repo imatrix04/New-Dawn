@@ -5,9 +5,10 @@ import {
   withdrawProperty, withdrawSavings,
   buyVehicle, sellVehicle, setDrivingStyle, setDrivingVehicle, startRepair, takeInspection,
   answerRaiseOffer, dismissReport, requestRaise, setWorkStyle,
+  giveTeamBonus, setTeamPace, teamOuting, recruitMember, fireMember, resolveTeamEvent,
 } from './game/engine';
 import type { VehicleSource } from './game/engine';
-import type { WorkStyle } from './data/content';
+import type { TeamPace, WorkStyle } from './data/content';
 import type { DrivingStyle, GameState, LeaveAction, Profile, RepairKind, SavingsProduct, ScheduleKey } from './game/types';
 
 const SAVE_KEY = 'newdawn-save-v5';
@@ -50,6 +51,12 @@ interface Store {
   requestRaise: (pct: number) => void;
   setWorkStyle: (style: WorkStyle) => void;
   answerRaiseOffer: (accept: boolean) => void;
+  setTeamPace: (pace: TeamPace) => void;
+  giveTeamBonus: (target: string, perHead: number) => void;
+  teamOuting: () => void;
+  recruitMember: () => void;
+  fireMember: (id: string) => void;
+  resolveTeamEvent: (index: number) => void;
   dismissReport: () => void;
   quitJob: () => void;
   setGig: (id: string | null) => void;
@@ -107,6 +114,12 @@ export const useStore = create<Store>((set, get) => {
     setWorkStyle: (style) => { const g = get().game; if (g) update(setWorkStyle(g, style)); },
     requestRaise: (pct) => { const g = get().game; if (g) update(requestRaise(g, pct)); },
     answerRaiseOffer: (accept) => { const g = get().game; if (g) update(answerRaiseOffer(g, accept)); },
+    setTeamPace: (pace) => { const g = get().game; if (g) update(setTeamPace(g, pace)); },
+    giveTeamBonus: (target, perHead) => { const g = get().game; if (g) update(giveTeamBonus(g, target, perHead)); },
+    teamOuting: () => { const g = get().game; if (g) update(teamOuting(g)); },
+    recruitMember: () => { const g = get().game; if (g) update(recruitMember(g)); },
+    fireMember: (id) => { const g = get().game; if (g) update(fireMember(g, id)); },
+    resolveTeamEvent: (index) => { const g = get().game; if (g) update(resolveTeamEvent(g, index)); },
     dismissReport: () => { const g = get().game; if (g) update(dismissReport(g)); },
     quitJob: () => { const g = get().game; if (g) update(quitJob(g)); },
     setGig: (id) => { const g = get().game; if (g) update(setGig(g, id)); },

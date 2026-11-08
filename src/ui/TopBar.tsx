@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useLayout, WINDOW_IDS } from './board/layout';
+import { useStore } from '../store';
 import { Icon, WINDOW_ICONS } from './Icon';
 
 /** Dock du bas : une icône ronde par fenêtre, le nom s'affiche au survol. */
@@ -8,11 +9,13 @@ export function TopBar() {
   const windows = useLayout((s) => s.windows);
   const toggle = useLayout((s) => s.toggle);
   const reset = useLayout((s) => s.reset);
+  // L'icône Équipe n'apparaît que si le joueur encadre une équipe.
+  const hasTeam = useStore((s) => !!s.game?.team);
 
   return (
     <header className="topbar">
       <nav className="dock">
-        {WINDOW_IDS.map((id) => (
+        {WINDOW_IDS.filter((id) => id !== 'team' || hasTeam).map((id) => (
           <button
             key={id}
             className={`dock-btn${windows[id].open ? ' active' : ''}`}

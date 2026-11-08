@@ -8,6 +8,8 @@ import { monthlyExpenses, projectNextStats, skillGains } from './effects';
 import { progressHome, refreshListings, resolveHousingApplication } from './housing';
 import { blameJob, fireForSlacking, gainExperience, jobBlameChance, workedHours } from './job';
 import { currentSalary, gigById, gigPay, jobById } from './lookup';
+import { payEmployeeBonus, payProfitShare } from './bonus';
+import { progressTeam } from './management';
 import { refreshOffers, resolveApplications } from './offers';
 import { rollPromotion } from './promotion';
 import { announceRaise } from './raise';
@@ -54,6 +56,7 @@ export function endTurn(state: GameState): GameState {
     const salary = Math.round(currentSalary(s) * EFFICIENCY.sickPay);
     s.money += salary;
     addLog(s, 'log.paySick', { jobId: job.id, gender: s.gender, amount: salary }, 'good');
+    progressTeam(s); // l'équipe tourne sans son manager
   } else if (job) {
     // Heures sautées : si le patron s'en aperçoit, elles ne sont pas payées et le joueur reçoit un blâme.
     const caught = Math.random() < jobBlameChance(s);
@@ -63,6 +66,13 @@ export function endTurn(state: GameState): GameState {
     addLog(s, 'log.pay', { jobId: job.id, gender: s.gender, amount: salary }, 'good');
     gainExperience(s, job);
     if (caught) blameJob(s, job, full - salary);
+    progressTeam(s); // humeur, production et bilan de l'équipe (rien si le blâme vient de renvoyer le joueur)
+    // Primes : celle du manager pour un employé, l'intéressement si l'entreprise en a un (rien si le joueur vient d'être renvoyé).
+    const kept = jobById(s.job);
+    if (kept) {
+      payEmployeeBonus(s, kept);
+      payProfitShare(s);
+    }
   }
   const gig = gigById(s.gig);
   if (gig) {
