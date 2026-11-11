@@ -589,7 +589,17 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
-    "back": "Back"
+    "back": "Back",
+    "scene": {
+      "title": "Scenery",
+      "effects": "Background effects",
+      "on": "On",
+      "off": "Off",
+      "level": "Intensity",
+      "levels": { "low": "Soft", "normal": "Normal", "high": "Strong" },
+      "time": "Time of day",
+      "times": { "auto": "Auto", "dawn": "Dawn", "day": "Day", "dusk": "Dusk", "night": "Night" }
+    }
   },
   "create": {
     "back": "Back",

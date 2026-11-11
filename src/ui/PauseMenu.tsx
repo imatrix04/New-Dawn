@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../store';
+import { SceneOptions } from './SceneOptions';
 
 export function PauseMenu({ onResume }: { onResume: () => void }) {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ export function PauseMenu({ onResume }: { onResume: () => void }) {
           </button>
           <button className="secondary" onClick={quit}>{t('game.menu')}</button>
         </div>
+        <SceneOptions />
         <p className="muted saved-note">{saved ? t('pause.saved') : ' '}</p>
       </div>
     </div>

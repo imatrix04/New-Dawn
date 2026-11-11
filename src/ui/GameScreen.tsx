@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Area, GameState, Home } from '../game/types';
 import { Board } from './board/Board';
@@ -17,6 +17,7 @@ import { LogPanel } from './LogPanel';
 import { MarketCard } from './MarketCard';
 import { PauseMenu } from './PauseMenu';
 import { ProfileCard } from './ProfileCard';
+import { SceneBackground } from './SceneBackground';
 import { SchedulePanel } from './SchedulePanel';
 import { TeamCard } from './TeamCard';
 import { useLayout } from './board/layout';
@@ -25,6 +26,8 @@ import { TopBar } from './TopBar';
 import { WalletCard } from './WalletCard';
 
 const SCENE_FILES = import.meta.glob<string>('../asset/image/background/*.jpg', { eager: true, query: '?url', import: 'default' });
+/** Cartes de profondeur `<quartier>_<logement>_depth.png`, générées par `tools/make_depth.py`. */
+const DEPTH_FILES = import.meta.glob<string>('../asset/image/background/*_depth.png', { eager: true, query: '?url', import: 'default' });
 
 /** Préfixes des fichiers `<quartier>_<logement>_image.jpg` : quartier (Area) et logement (typeId). */
 const SCENE_AREA: Partial<Record<Area, string>> = { center: 'centre-ville', suburb: 'banlieue', country: 'campagne' };
@@ -33,11 +36,14 @@ const SCENE_HOME: Record<string, string> = {
   cottage: 'cottage', duplex: 'duplex', family: 'maison_familiale', penthouse: 'penthouse', bigHouse: 'grosse-maison',
 };
 
-/** Image de fond selon le logement et son quartier ; sans image, l'ardoise par défaut. */
-function sceneOf(home: Home): string | undefined {
+/** Photo de fond (et sa carte de profondeur, si elle existe) selon le logement et son quartier ; sans photo, l'ardoise par défaut. */
+function sceneOf(home: Home): { photo: string; depth?: string } | undefined {
   const area = SCENE_AREA[home.area];
   const type = SCENE_HOME[home.typeId];
-  return area && type ? SCENE_FILES[`../asset/image/background/${area}_${type}_image.jpg`] : undefined;
+  if (!area || !type) return undefined;
+  const base = `../asset/image/background/${area}_${type}`;
+  const photo = SCENE_FILES[`${base}_image.jpg`];
+  return photo ? { photo, depth: DEPTH_FILES[`${base}_depth.png`] } : undefined;
 }
 
 export function GameScreen({ game }: { game: GameState }) {
@@ -65,10 +71,8 @@ export function GameScreen({ game }: { game: GameState }) {
   }, []);
 
   return (
-    <section
-      className={`screen wide game-screen${scene ? ' has-scene' : ''}`}
-      style={scene ? { '--scene': `url("${scene}")` } as CSSProperties : undefined}
-    >
+    <section className="screen wide game-screen">
+      {scene && <SceneBackground photo={scene.photo} depth={scene.depth} month={game.month} paused={paused} />}
       <Hud game={game} onPause={() => setPaused(true)} />
       <Board>
         <BoardWindow id="schedule" title={t('windows.schedule')}>

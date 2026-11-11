@@ -168,9 +168,81 @@ header { display: flex; justify-content: space-between; align-items: center; mar
 /* Le tableau : transparent, il laisse voir le décor ; sans image, un dégradé crème. */
 .board { position: relative; z-index: 1; flex: 1; overflow: hidden; margin: 0; background: none; }
 
-/* Décor du logement : l'image occupe tout l'écran, avec un voile clair pour garder le texte lisible. */
-.game-screen.has-scene { background: var(--bg) var(--scene) center / cover no-repeat; }
-.game-screen.has-scene::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(255, 248, 240, .32), rgba(255, 248, 240, .08) 40%, rgba(255, 248, 240, .26)); }
+/* ---------- Décor du logement : photo étalonnée et animée, sous le tableau (voir SceneBackground) ---------- */
+
+.scene {
+  /* Étalonnage commun à toutes les photos : chaud et adouci, bords sombres, pour s'accorder au HUD.
+     Le rendu WebGL lit ces variables au chargement de chaque décor. */
+  --scene-saturate: .9;
+  --scene-contrast: .92;
+  --scene-sepia: .12;
+  --scene-brightness: 1.1;
+  --scene-tone-top: rgb(246 189 94 / .55);      /* calque soft-light : l'ambre du dégradé d'aube en haut… */
+  --scene-tone-bottom: rgb(234 111 140 / .45);  /* …vers son rose en bas */
+  --scene-tone: .6;                             /* force du calque soft-light */
+  --scene-edge: 10 8 18;                        /* couleur des bords assombris (prune nuit, comme les panneaux) */
+  --scene-veil: .3;                             /* assombrissement en haut et en bas, pour que le HUD se détache */
+  --scene-vignette: .5;
+  --scene-grain: .1;
+  /* Lumière et ciel. */
+  --scene-light: 1;                             /* force de la teinte selon l'heure (0 = aucune) */
+  --scene-glow: .6;                             /* lueur des zones claires la nuit */
+  --scene-sky: 1;                               /* opacité du ciel : voile coloré et nuages */
+  --scene-fade: 1.2s;                           /* durée des fondus de lumière (rendu de repli ; en WebGL : LIGHT_FADE) */
+  /* Moment de la journée : écrit par le code (scene/light.ts), valeurs de plein jour par défaut. */
+  --tod-mul: #fff;
+  --tod-wash: rgb(255 244 224 / 0);
+  --tod-night: 0;
+
+  position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; isolation: isolate; background: var(--bg);
+  animation: scene-in .6s ease both;
+}
+.scene > *, .scene-stage > * { position: absolute; inset: 0; }
+/* Zoom léger : la marge qui évite les bords vides quand la parallaxe déplace la photo. */
+.scene-stage { transform: scale(1.04); will-change: transform; animation: scene-in .8s ease both; }
+.scene-gl, .scene-fx { width: 100%; height: 100%; }
+.scene-vignette {
+  background:
+    radial-gradient(125% 95% at 50% 45%, transparent 48%, rgb(var(--scene-edge) / var(--scene-vignette))),
+    linear-gradient(180deg, rgb(var(--scene-edge) / var(--scene-veil)), transparent 36%, transparent 64%, rgb(var(--scene-edge) / var(--scene-veil)));
+}
+
+/* Rendu de repli, sans WebGL : les mêmes effets que le shader (scene/gl.ts), en calques empilés. */
+.scene-photo {
+  background: var(--scene) center / cover no-repeat;
+  filter: saturate(var(--scene-saturate)) contrast(var(--scene-contrast)) sepia(var(--scene-sepia)) brightness(var(--scene-brightness));
+}
+/* Ciel : voile coloré et nuages peints sur un petit canvas (scene/sky.ts), agrandi ici. */
+.scene-sky { width: 100%; height: 100%; opacity: var(--scene-sky); }
+/* Lueur nocturne : la photo réduite à ses zones claires (fenêtres, lampes) et floutée, ajoutée en « screen » sous la teinte de nuit. */
+.scene-glow {
+  background: var(--scene) center / cover no-repeat; filter: brightness(.74) contrast(5) blur(18px);
+  mix-blend-mode: screen; opacity: calc(var(--tod-night) * var(--scene-glow)); transition: opacity var(--scene-fade) linear;
+}
+.scene-light { background-color: color-mix(in srgb, var(--tod-mul) calc(var(--scene-light) * 100%), #fff); mix-blend-mode: multiply; transition: background-color var(--scene-fade) linear; }
+.scene-tone {
+  background: linear-gradient(180deg, var(--scene-tone-top), transparent 50%, var(--scene-tone-bottom)) var(--tod-wash);
+  mix-blend-mode: soft-light; opacity: var(--scene-tone); transition: background-color var(--scene-fade) linear;
+}
+.scene-grain {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay; opacity: var(--scene-grain);
+}
+
+@keyframes scene-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .scene, .scene-stage { animation: none; }
+  .scene-glow, .scene-light, .scene-tone { transition: none; }
+}
+
+/* Réglages du décor (menu pause et paramètres). */
+.scene-opts { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+.pause-menu .scene-opts { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.scene-opt { display: flex; flex-direction: column; gap: 6px; }
+.scene-opt > span { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.scene-opt > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.scene-opt button { padding: 5px 13px; font-size: .8rem; background: var(--chip); color: var(--muted); }
+.scene-opt button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 
 .win {
   position: absolute; display: flex; flex-direction: column; max-height: calc(100% - 24px);
@@ -880,13 +952,6 @@ h4 { text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
 [data-rarity="2"] { --rc: #5bd48a; }
 [data-rarity="3"] { --rc: #a77bf5; }
 [data-rarity="4"] { --rc: #f5c85b; }
-
-/* Décor : une ombre douce sur les bords pour que les panneaux se détachent et que la scène reste lisible. */
-.game-screen.has-scene::before {
-  background:
-    radial-gradient(120% 95% at 50% 45%, rgba(0, 0, 0, 0) 45%, rgba(4, 5, 9, .6)),
-    linear-gradient(180deg, rgba(8, 10, 16, .38), rgba(8, 10, 16, .04) 38%, rgba(8, 10, 16, .42));
-}
 
 /* Fenêtres : panneau anthracite, titre en capitales condensées avec son icône. */
 .win {

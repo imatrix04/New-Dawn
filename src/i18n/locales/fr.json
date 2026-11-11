@@ -589,7 +589,17 @@
   "settings": {
     "title": "Paramètres",
     "language": "Langue",
-    "back": "Retour"
+    "back": "Retour",
+    "scene": {
+      "title": "Décor",
+      "effects": "Effets de fond",
+      "on": "Activés",
+      "off": "Désactivés",
+      "level": "Intensité",
+      "levels": { "low": "Douce", "normal": "Normale", "high": "Forte" },
+      "time": "Moment de la journée",
+      "times": { "auto": "Auto", "dawn": "Aube", "day": "Jour", "dusk": "Soir", "night": "Nuit" }
+    }
   },
   "create": {
     "back": "Retour",
